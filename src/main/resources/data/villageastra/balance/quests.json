@@ -1,0 +1,326 @@
+{
+ "schema": 1,
+ "note": "AD-040. Quests are posted from real settlement needs and completed by real deeds. Rewards are paid once per completion id: coins plus reputation. Abandoning or failing costs reputation. Deadlines are in active simulation ticks. Distant templates need a scouted camp lead; their rewards scale with the part actually delivered.",
+ "max_open": 4,
+ "post_every": 2400,
+ "pay_note": "AD-088: quests pay like the trade beside them (AD-102 pacing): reputation_per_hour and coins_per_hour are what an hour of plain selling brings; a quest pays them for its minutes, plus the village price of goods it brings or spends. Supply and donation already pay through the trade itself, so their quest adds only a small bonus.",
+ "reputation_per_hour": 64,
+ "coins_per_hour": 32,
+ "supply": {
+  "reward_percent": 25,
+  "reputation_per_coin": 2,
+  "deadline": 72000,
+  "min_coins": 1,
+  "trust": 0
+ },
+ "donation": {
+  "target_coins": 4,
+  "reputation_per_coin": 2,
+  "deadline": 72000,
+  "trust": 0
+ },
+ "clearing": {
+  "count": 5,
+  "radius": 48,
+  "deadline": 48000,
+  "minutes": 6,
+  "trust": 0
+ },
+ "defence": {
+  "count": 3,
+  "radius": 32,
+  "deadline": 24000,
+  "minutes": 6,
+  "trust": 0
+ },
+ "abandon_reputation": 8,
+ "fail_reputation": 16,
+ "kill_reputation": 64,
+ "arrive_radius": 12,
+ "cargo": {
+  "count": 16,
+  "deadline": 96000,
+  "minutes": 20,
+  "trust": 0
+ },
+ "bring": {
+  "deadline": 96000,
+  "minutes": 20,
+  "trust": 0
+ },
+ "rescue": {
+  "count": 3,
+  "deadline": 96000,
+  "minutes": 25,
+  "trust": 32
+ },
+ "adventure_note": "AD-075. Adventure quests send the player out of the village: a far seam to mine, a bandit stockade holding a captive, a wrecked expedition to treat and walk home, a sealed barrow with an ancient volume. Every one of them needs a scouted lead and a site the mod really builds there; the reward is reputation that leads to the office of mayor.",
+ "adventure_every": 7200,
+ "adventure_max_open": 2,
+ "lode": {
+  "count": 12,
+  "seam": 14,
+  "deadline": 96000,
+  "minutes": 15,
+  "trust": 0
+ },
+ "captive": {
+  "count": 1,
+  "fighters": 4,
+  "deadline": 120000,
+  "minutes": 25,
+  "trust": 128
+ },
+ "lost": {
+  "count": 3,
+  "fighters": 2,
+  "care": 3,
+  "bandage_care": 3,
+  "food_care": 1,
+  "deadline": 120000,
+  "minutes": 25,
+  "trust": 32
+ },
+ "relic": {
+  "count": 1,
+  "fighters": 3,
+  "research_ticks": 6000,
+  "deadline": 120000,
+  "minutes": 25,
+  "trust": 128
+ },
+ "wild_note": "AD-088..AD-091. Crop and sapling quests open what the village may plant (CropUnlocks); the raiders' lair, the mine collapse, the beast's den and the signal tower are sites built at scouted leads; the caravan escort follows a real trip, the embassy carries a sealed letter to a real neighbour, the ruin sends the player into a real structure of the world and the survey walks unknown land into a new lead.",
+ "crop": {
+  "every": 4800,
+  "count": 16,
+  "sugar_cane": 8,
+  "sapling_count": 4,
+  "deadline": 120000,
+  "biome_radius": 1600,
+  "minutes": 15,
+  "trust": 0
+ },
+ "lair": {
+  "count": 1,
+  "fighters": 5,
+  "deadline": 72000,
+  "after_raid": 48000,
+  "calm": 96000,
+  "minutes": 25,
+  "trust": 128
+ },
+ "collapse": {
+  "count": 2,
+  "deadline": 36000,
+  "minutes": 15,
+  "trust": 32
+ },
+ "beast": {
+  "count": 1,
+  "fighters": 1,
+  "health": 120,
+  "deadline": 96000,
+  "prey_every": 12000,
+  "minutes": 20,
+  "trust": 128
+ },
+ "beacon": {
+  "count": 1,
+  "stone": 24,
+  "coal": 8,
+  "deadline": 96000,
+  "reach": 24,
+  "minutes": 20,
+  "trust": 128
+ },
+ "escort": {
+  "count": 1,
+  "fighters": 3,
+  "deadline": 48000,
+  "near": 32,
+  "share": 50,
+  "ambush_at": 35,
+  "shortest": 64,
+  "minutes": 20,
+  "relations": 5,
+  "trust": 32
+ },
+ "embassy": {
+  "count": 1,
+  "guest_reputation": 24,
+  "deadline": 120000,
+  "reach": 2000,
+  "minutes": 30,
+  "guest_share": 50,
+  "relations": 10,
+  "trust": 128
+ },
+ "ruin": {
+  "count": 1,
+  "deadline": 120000,
+  "radius_chunks": 32,
+  "minutes": 20,
+  "trust": 32
+ },
+ "survey": {
+  "count": 6,
+  "deadline": 96000,
+  "distance": 176,
+  "minutes": 20,
+  "trust": 32
+ },
+ "trust_note": "AD-097: a quest is given only to a player the village already trusts that far — the reputation of about half an hour of trade (32) for rescues and far errands, two hours (128) for fights, relics and embassies. A stage of a chain is kept for the player who finished the one before and needs no more trust.",
+ "plea": {
+  "every": 6000,
+  "minutes": 10,
+  "most": 16,
+  "gratitude": 50,
+  "deadline": 72000,
+  "count": 1,
+  "trust": 0
+ },
+ "plea_note": "AD-098: a named resident asks for what their own workshop really lacks; it is handed over at that workshop, and a personal request earns gratitude on top of the pay. Rescues of captives, survivors and prospectors are kin of a resident, and a relative who comes home moves into that resident's house when there is room.",
+ "sanctuary": {
+  "count": 1,
+  "fighters": 3,
+  "minutes": 30,
+  "deadline": 144000,
+  "research_ticks": 8000
+ },
+ "crypt": {
+  "count": 1,
+  "fighters": 3,
+  "health": 100,
+  "minutes": 40,
+  "deadline": 144000,
+  "research_ticks": 16000
+ },
+ "warcamp": {
+  "count": 1,
+  "fighters": 7,
+  "health": 60,
+  "minutes": 40,
+  "deadline": 144000,
+  "calm": 288000
+ },
+ "richlode": {
+  "count": 10,
+  "seam": 12,
+  "minutes": 25,
+  "deadline": 144000
+ },
+ "animals": {
+  "every": 1200,
+  "retry": 24000,
+  "pair": 2,
+  "levels": {
+   "sheep": 1,
+   "cow": 2,
+   "chicken": 3,
+   "pig": 3,
+   "wolf": 4
+  },
+  "npc_fallback": true,
+  "fallback_expiries": 2,
+  "kill_reputation": 16,
+  "note": "AD-140 (owner 2026-09-23: every new animal of the livestock yard comes through its own quest). A kind is locked for a village until the quest brings a founding pair into a pen of that kind; the card asks for the first locked kind the yard keeps, one card at a time, and a failed kind waits retry ticks while the next one may be asked for. levels: the yard level that first keeps a kind while pens are not yet in the game."
+ },
+ "flock": {
+  "deadline": 72000,
+  "minutes": 30,
+  "trust": 0,
+  "count": 2,
+  "flock": 4,
+  "fighters": 3,
+  "distance": 96,
+  "biome_radius": 256,
+  "lamb_bonus": 16
+ },
+ "sinkhole": {
+  "deadline": 72000,
+  "minutes": 40,
+  "trust": 0,
+  "count": 2,
+  "depth": 5,
+  "distance": 96,
+  "biome_radius": 256
+ },
+ "brood": {
+  "deadline": 72000,
+  "minutes": 45,
+  "trust": 32,
+  "count": 4,
+  "eggs": 6,
+  "hatch_ticks": 2400,
+  "foxes": 2,
+  "spare_bonus": 24,
+  "distance": 128,
+  "biome_radius": 256
+ },
+ "sow": {
+  "deadline": 72000,
+  "minutes": 45,
+  "trust": 32,
+  "count": 3,
+  "piglets": 4,
+  "wander": 24,
+  "distance": 112,
+  "biome_radius": 320
+ },
+ "far": {
+  "least": 1200,
+  "most": 5200,
+  "rings": 3,
+  "biome_radius": 2048,
+  "step": 800,
+  "tries": 4,
+  "every": 28800,
+  "max_open": 1,
+  "paper": 2,
+  "bread": 4,
+  "note": "QUEST-002 (owner: distances are thousands of blocks). A far lead is looked for from a point already at the village's reach along one of eight roads, and kept only when the world really holds such a place between least and most blocks away, on ground above the sea. rings: how many rings of the world's structure grid the search walks before giving up; step: how much farther out the next attempt starts; every: how often the office may learn of one more far place."
+ },
+ "tidings": {
+  "deadline": 120000,
+  "minutes": 35,
+  "trust": 32,
+  "count": 1,
+  "seen": 24
+ },
+ "chains": {
+  "barrow": [
+   "relic",
+   "sanctuary",
+   "crypt"
+  ],
+  "band": [
+   "lair",
+   "warcamp"
+  ],
+  "expedition": [
+   "lost",
+   "richlode"
+  ]
+ },
+ "chain_step": 96,
+ "chain_note": "AD-099: some adventures lead on. The barrow's volume names a lost sanctuary, whose tablet opens a king's crypt; the raiders' lair leads to the war camp of their warlord; the survivors of the expedition tell of the gold seam they found. The next stage is kept for the player who finished the last one and lies farther out along the same road; its site is built when that land is in the world.",
+ "cages": {
+  "deadline": 96000,
+  "minutes": 40,
+  "trust": 8,
+  "count": 2,
+  "catchers": 3,
+  "distance": 320,
+  "biome_radius": 512,
+  "every": 1200,
+  "note": "AD-150 «Серые в клетках»: волки будки приходят не за деньги, а из клеток живодёров. count — сколько волков просят разом (не больше свободных мест в будке), catchers — ловчие в лагере, distance — как далеко в волчьей стороне стоит лагерь."
+ },
+ "freight": {
+  "deadline": 144000,
+  "minutes": 55,
+  "trust": 40,
+  "count": 12,
+  "guards": 3,
+  "note": "QUEST-002 (грузы): деревня посылает за грузом каравана, не дошедшего домой, в место, о котором она знает по слову (Far). Ящики схрона держат ровно то, что просят; count — сколько вещей, guards — кто держит схрон сейчас."
+ }
+}

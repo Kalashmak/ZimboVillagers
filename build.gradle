@@ -1,0 +1,220 @@
+plugins {
+    id 'java'
+    id 'net.minecraftforge.gradle' version '6.0.36'
+}
+
+group = 'org.villageastra'
+version = '0.9.1-preview'
+base { archivesName = 'ZimboVillagers' }
+java.toolchain.languageVersion = JavaLanguageVersion.of(17)
+
+minecraft {
+    mappings channel: 'official', version: '1.20.1'
+    runs {
+        configureEach {
+            workingDirectory project.file('run')
+            property 'forge.logging.console.level', 'info'
+            property 'forge.enabledGameTestNamespaces', 'villageastra'
+            mods { villageastra { source sourceSets.main } }
+        }
+        client {
+            workingDirectory project.file('run-client')
+            if(project.hasProperty('autonomySmoke')) { property 'villageastra.smoke','true'; property 'villageastra.autonomySmoke','true' }
+            if(project.hasProperty('autonomyGrowthSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.naturalSmoke','true'; property 'villageastra.autonomyGrowthSmoke','true' }
+            if(project.hasProperty('autonomyGrowthTicks')) property 'villageastra.autonomyGrowthTicks', project.property('autonomyGrowthTicks').toString()
+            if(project.hasProperty('firstHouseSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.naturalSmoke','true'; property 'villageastra.firstHouseSmoke','true' }
+            if(project.hasProperty('firstHouseTicks')) property 'villageastra.firstHouseTicks', project.property('firstHouseTicks').toString()
+            if(project.hasProperty('creativeTradeSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.tradeSmoke','true'; property 'villageastra.creativeTradeSmoke','true' }
+            if(project.hasProperty('tradeSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.tradeSmoke','true' }
+            if(project.hasProperty('giftSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.giftSmoke','true' }
+            if(project.hasProperty('atlasSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.atlasSmoke','true' }
+            if(project.hasProperty('planSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.planSmoke','true' }
+            if(project.hasProperty('warSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.warSmoke','true' }
+            if(project.hasProperty('loadSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.loadSmoke','true' }
+            if(project.hasProperty('mapSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.mapSmoke','true' }
+            if(project.hasProperty('mapToolsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.mapToolsSmoke','true' }
+            if(project.hasProperty('raidSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.raidSmoke','true' }
+            if(project.hasProperty('battleSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.battleSmoke','true' }
+            if(project.hasProperty('nightSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.nightSmoke','true' }
+            if(project.hasProperty('gallerySmoke')) { property 'villageastra.smoke','true'; property 'villageastra.gallerySmoke','true' }
+            if(project.hasProperty('galleryLevels')) { property 'villageastra.galleryLevels','true' }
+            if(project.hasProperty('galleryDesigns')) { property 'villageastra.galleryDesigns',project.property('galleryDesigns') }
+            if(project.hasProperty('galleryViews')) { property 'villageastra.galleryViews',project.property('galleryViews') }
+            if(project.hasProperty('levelSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.levelSmoke','true' }
+            if(project.hasProperty('coreSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.coreSmoke','true' }
+            if(project.hasProperty('farmLevelsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.farmLevelsSmoke','true' }
+            if(project.hasProperty('foresterProbe')) { property 'villageastra.smoke','true'; property 'villageastra.foresterProbe','true' }
+            if(project.hasProperty('livestockProbe')) { property 'villageastra.smoke','true'; property 'villageastra.livestockProbe','true' }
+            if(project.hasProperty('schoolProbe')) { property 'villageastra.smoke','true'; property 'villageastra.schoolProbe','true' }
+            if(project.hasProperty('medicineProbe')) { property 'villageastra.smoke','true'; property 'villageastra.medicineProbe','true' }
+            if(project.hasProperty('constructionLadderProbe')) { property 'villageastra.smoke','true'; property 'villageastra.constructionLadderProbe','true' }
+            if(project.hasProperty('wolfKennelProbe')) { property 'villageastra.smoke','true'; property 'villageastra.wolfKennelProbe','true' }
+            if(project.hasProperty('grazingProbe')) { property 'villageastra.smoke','true'; property 'villageastra.grazingProbe','true' }
+            if(project.hasProperty('autoYardProbe')) { property 'villageastra.smoke','true'; property 'villageastra.autoYardProbe','true' }
+            if(project.hasProperty('warehouseProbe')) { property 'villageastra.smoke','true'; property 'villageastra.warehouseProbe','true' }
+            if(project.hasProperty('dialogProbe')) { property 'villageastra.smoke','true'; property 'villageastra.dialogProbe','true' }
+            if(project.hasProperty('questTalkProbe')) { property 'villageastra.smoke','true'; property 'villageastra.questTalkProbe','true' }
+            if(project.hasProperty('wolfRescueProbe')) { property 'villageastra.smoke','true'; property 'villageastra.wolfRescueProbe','true' }
+            if(project.hasProperty('housingBedsProbe')) { property 'villageastra.smoke','true'; property 'villageastra.housingBedsProbe','true' }
+            if(project.hasProperty('framedWindowProbe')) { property 'villageastra.smoke','true'; property 'villageastra.framedWindowProbe','true' }
+            if(project.hasProperty('furnitureProbe')) { property 'villageastra.smoke','true'; property 'villageastra.furnitureProbe','true' }
+            if(project.hasProperty('researchTreeV2Probe')) { property 'villageastra.smoke','true'; property 'villageastra.researchTreeV2Probe','true' }
+            if(project.hasProperty('annexProbe')) { property 'villageastra.smoke','true'; property 'villageastra.annexProbe','true' }
+            // AD-139: the restaurant — diners seated in the hall, a courier feeding a miner at his work, levels I/IV/VI.
+            if(project.hasProperty('restaurantSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.restaurantSmoke','true' }
+            // AD-135: which annex the probe builds (annexes.json type), default carpentry_annex.
+            if(project.hasProperty('annexType')) property 'villageastra.annexType', project.property('annexType')
+            if(project.hasProperty('wallSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.wallSmoke','true' }
+            if(project.hasProperty('wallRingSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.wallRingSmoke','true' }
+            if(project.hasProperty('relocateSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.relocateSmoke','true' }
+            if(project.hasProperty('drillSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.drillSmoke','true' }
+            if(project.hasProperty('cartRecoverySmoke')) { property 'villageastra.smoke','true'; property 'villageastra.cartRecoverySmoke','true' }
+            if(project.hasProperty('quarrySmoke')) { property 'villageastra.smoke','true'; property 'villageastra.quarrySmoke','true' }
+            if(project.hasProperty('roadSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.roadSmoke','true' }
+            if(project.hasProperty('caravanSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.caravanSmoke','true' }
+            if(project.hasProperty('engineeringTrapSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.engineeringTrapSmoke','true' }
+            if(project.hasProperty('labDeskSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.labDeskSmoke','true' }
+            if(project.hasProperty('patrolSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.patrolSmoke','true' }
+            if(project.hasProperty('smithyWolfSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.smithyWolfSmoke','true' }
+            if(project.hasProperty('medicineWolfSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.medicineWolfSmoke','true' }
+            if(project.hasProperty('medicineReloadSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.medicineReloadSmoke','true'; property 'villageastra.reloadSmoke','true' }
+            if(project.hasProperty('medicinePickupSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.medicinePickupSmoke','true' }
+            if(project.hasProperty('buildingSignsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.buildingSignsSmoke','true' }
+            if(project.hasProperty('ballistaSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.ballistaSmoke','true' }
+            if(project.hasProperty('towerStagesSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.towerStagesSmoke','true' }
+            if(project.hasProperty('liveUpgradeSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.liveUpgradeSmoke','true' }
+            if(project.hasProperty('liveProductionSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.liveProductionSmoke','true' }
+            if(project.hasProperty('liveProductionSmeltSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.liveProductionSmoke','true'; property 'villageastra.liveProductionSmeltSmoke','true' }
+            if(project.hasProperty('liveProductionReloadSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.liveProductionSmoke','true'; property 'villageastra.liveProductionReloadSmoke','true'; property 'villageastra.reloadSmoke','true' }
+            if(project.hasProperty('liveUpgradeReloadSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.liveUpgradeReloadSmoke','true'; property 'villageastra.reloadSmoke','true' }
+            if(project.hasProperty('smithyCourierSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.smithyCourierSmoke','true' }
+            if(project.hasProperty('raidUnloadSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.raidUnloadSmoke','true' }
+            if(project.hasProperty('caravanRestartSmoke')) property 'villageastra.caravanRestartSmoke','true'
+            if(project.hasProperty('caravanHorseSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.caravanSmoke','true'; property 'villageastra.caravanHorseSmoke','true' }
+            if(project.hasProperty('caravanDogSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.caravanSmoke','true'; property 'villageastra.caravanDogSmoke','true' }
+            if(project.hasProperty('caravanEscortSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.caravanSmoke','true'; property 'villageastra.caravanEscortSmoke','true' }
+            if(project.hasProperty('cartSmoke')) { property 'villageastra.cartSmoke','true' }
+            if(project.hasProperty('questSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.questSmoke','true' }
+            if(project.hasProperty('animalSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.animalSmoke','true' }
+            if(project.hasProperty('campSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.campSmoke','true' }
+            if(project.hasProperty('adventureSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.adventureSmoke','true' }
+            if(project.hasProperty('wildSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.wildSmoke','true' }
+            if(project.hasProperty('chainSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.chainSmoke','true' }
+            if(project.hasProperty('escortSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.escortSmoke','true' }
+            if(project.hasProperty('buildDesign')) property 'villageastra.buildDesign',project.property('buildDesign').toString()
+            if(project.hasProperty('buildingOrderSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.buildingOrderSmoke','true' }
+            if(project.hasProperty('mayorToolSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.mayorToolSmoke','true' }
+            if(project.hasProperty('worldInteractionSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.worldInteractionSmoke','true' }
+            if(project.hasProperty('cargoSmoke')||project.hasProperty('cargoCrash')||project.hasProperty('cargoRecover')) { property 'villageastra.smoke','true'; property 'villageastra.cargoSmoke','true' }
+            if(project.hasProperty('cargoCrash')) property 'villageastra.cargoCrash',project.property('cargoCrash').toString()
+            if(project.hasProperty('cargoRecover')) property 'villageastra.reloadSmoke','true'
+            if(project.hasProperty('officeSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.officeSmoke','true' }
+            if(project.hasProperty('electionSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.electionSmoke','true' }
+            if(project.hasProperty('draftSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.draftSmoke','true' }
+            if(project.hasProperty('scienceSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.scienceSmoke','true' }
+            if(project.hasProperty('logisticsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.logisticsSmoke','true' }
+            if(project.hasProperty('researchGraphSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.researchGraphSmoke','true' }
+            if(project.hasProperty('researchFactsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.researchFactsSmoke','true' }
+            if(project.hasProperty('cropsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.cropsSmoke','true' }
+            if(project.hasProperty('constructionSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.constructionSmoke','true' }
+            if(project.hasProperty('farmSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.farmSmoke','true' }
+            if(project.hasProperty('starterFoodSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.starterFoodSmoke','true' }
+            if(project.hasProperty('architectureMigrationSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.architectureMigrationSmoke','true' }
+            if(project.hasProperty('residentMarkersSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.residentMarkersSmoke','true' }
+            if(project.hasProperty('growthPlotsSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.growthPlotsSmoke','true' }
+            if(project.hasProperty('naturalSupplySmoke')) { property 'villageastra.smoke','true'; property 'villageastra.naturalSupplySmoke','true' }
+            if(project.hasProperty('officeUiSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.officeUiSmoke','true' }
+            if(project.hasProperty('remoteVillageSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.remoteVillageSmoke','true' }
+            if(project.hasProperty('deepMineSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.deepMineSmoke','true' }
+            if(project.hasProperty('researchSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.researchSmoke','true' }
+            if(project.hasProperty('hallThreeSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.hallSmoke','true'; property 'villageastra.hallThreeSmoke','true'; property 'villageastra.reloadSmoke','true' }
+            if(project.hasProperty('hallSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.hallSmoke','true' }
+            if(project.hasProperty('resourceSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.resourceSmoke','true' }
+            if(project.hasProperty('schematicSmoke')) { property 'villageastra.smoke','true'; property 'villageastra.schematicSmoke','true' }
+            if(project.hasProperty('designGallery')) {
+                property 'villageastra.smoke','true'
+                property 'villageastra.designGallery','true'
+            }
+            if(project.hasProperty('journalCrash')) {
+                property 'villageastra.smoke','true'
+                property 'villageastra.journalCrash',project.property('journalCrash').toString()
+            }
+            if(project.hasProperty('journalRecover')) {
+                property 'villageastra.smoke','true'
+                property 'villageastra.reloadSmoke','true'
+                property 'villageastra.journalRecover','true'
+            }
+            if(project.hasProperty('probeWarp')) property 'villageastra.probeWarp', project.property('probeWarp').toString()
+            if(project.hasProperty('smokeSeed')) property 'villageastra.smokeSeed', project.property('smokeSeed').toString()
+            if (project.hasProperty('smoke')) property 'villageastra.smoke', 'true'
+            if (project.hasProperty('naturalSmoke')) {
+                property 'villageastra.smoke', 'true'
+                property 'villageastra.naturalSmoke', 'true'
+            }
+            if (project.hasProperty('reloadSmoke')) {
+                property 'villageastra.smoke', 'true'
+                property 'villageastra.reloadSmoke', 'true'
+            }
+            if (project.hasProperty('blockWorkSmoke')) {
+                property 'villageastra.smoke', 'true'
+                property 'villageastra.naturalSmoke', 'true'
+                property 'villageastra.blockWorkSmoke', 'true'
+            }
+        }
+        server { args '--nogui' }
+        gameTestServer {
+            workingDirectory project.file('run-gametest/session-' + new Date().format('yyyyMMdd-HHmmss'))
+            // Dev-only: -PgtOnly=word1,word2 runs only the GameTests whose name or batch contains a word (gametest/GameTestFilter).
+            if(project.hasProperty('gtOnly')) property 'villageastra.gtOnly', project.property('gtOnly')
+            // Dev-only: -PgtWarp=N runs the GameTest server N times faster, 0 = no wait between ticks (server/ProbeWarp; tick counts unchanged).
+            if(project.hasProperty('gtWarp')) property 'villageastra.gtWarp', project.property('gtWarp')
+            // Dev-only: -PstyleAll adds the builder move of every movable village-style design at levels I and VI (StyleBuilderGameTests).
+            if(project.hasProperty('styleAll')) property 'villageastra.styleAll', 'true'
+            // Dev-only: -PlayoutDump=<dir> writes every design at every level as voxel.py plans (LayoutDumpGameTests; with -PgtOnly=layout_dump).
+            if(project.hasProperty('layoutDump')) property 'villageastra.layoutDump', project.property('layoutDump')
+            // Dev-only (AD-148): -PequipmentTable=<file> writes the frozen level equipment of this build (EquipmentTableGameTests; with -PgtOnly=equipment_table).
+            if(project.hasProperty('equipmentTable')) property 'villageastra.equipmentTable', project.property('equipmentTable')
+        }
+    }
+}
+
+// tools/astra.py probes: `runClient -PastraLaunchOnly` writes the exact client launch (JVM arguments, main class, arguments, classpath,
+// environment) as ForgeGradle prepares it, then the JVM only prints its version: several clients start straight from one build, each in its
+// own game directory with its own -Dvillageastra.* flags. The provider is added only with that flag, so ordinary runs are unchanged.
+if(project.hasProperty('astraLaunchOnly')) tasks.withType(JavaExec).matching { it.name == 'runClient' }.configureEach { JavaExec run ->
+    def inside = new ThreadLocal<Boolean>()
+    run.jvmArgumentProviders.add({
+        if(inside.get()) return []
+        inside.set(true)
+        try {
+            def env = run.environment.findAll { k, v -> System.getenv(k.toString()) != v?.toString() }.collectEntries { k, v -> [(k.toString()): v.toString()] }
+            def data = [javaHome: run.javaLauncher.present ? run.javaLauncher.get().metadata.installationPath.asFile.absolutePath : null,
+                        mainClass: run.mainClass.get(), jvmArgs: run.allJvmArgs, args: run.args, classpath: run.classpath.files*.absolutePath,
+                        environment: env, workingDir: run.workingDir.absolutePath]
+            def out = layout.buildDirectory.file('astra-launch/client.json').get().asFile
+            out.parentFile.mkdirs()
+            out.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(data))
+            println "ASTRA_LAUNCH written ${out} (${data.classpath.size()} classpath entries)"
+        } finally { inside.set(false) }
+        return ['-version']
+    } as CommandLineArgumentProvider)
+}
+
+dependencies {
+    minecraft 'net.minecraftforge:forge:1.20.1-47.4.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.2'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher:1.10.2'
+}
+
+tasks.named('test') { useJUnitPlatform() }
+tasks.named('processResources') {
+    inputs.property 'modVersion', project.version
+    filesMatching('META-INF/mods.toml') { expand modVersion: project.version }
+    from('docs/addenda/v0.7/data') { include 'balance.json'; into 'data/villageastra/catalog' }
+}
+tasks.withType(JavaCompile).configureEach { options.encoding = 'UTF-8' }
+tasks.withType(AbstractArchiveTask).configureEach {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+tasks.named('jar') { finalizedBy 'reobfJar' }

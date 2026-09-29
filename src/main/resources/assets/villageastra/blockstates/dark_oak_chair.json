@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "villageastra:block/dark_oak_chair"
+    },
+    "facing=east": {
+      "model": "villageastra:block/dark_oak_chair",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "villageastra:block/dark_oak_chair",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "villageastra:block/dark_oak_chair",
+      "y": 270
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PBP",
+    "SRS",
+    "PBP"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "B": {
+      "item": "villageastra:bandage"
+    },
+    "S": {
+      "item": "minecraft:sugar"
+    },
+    "R": {
+      "item": "minecraft:barrel"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_clinic",
+    "count": 1
+  }
+}

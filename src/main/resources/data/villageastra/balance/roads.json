@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "note": "AD-038, AD-123 (cobblestone x1.5 with roads.4, stone bricks x2 with roads.6). Tiers follow ROAD-003: prepared dirt, gravel, cobbled, improved paving. speed_bonus multiplies base movement speed of any living user standing on a registered cell; the bonus fades linearly to half at wear 100. samples_per_wear: moving-entity samples (one per 10 ticks) that add one wear point. Light target is block light on the walking layer, independent of daylight. A fenced corridor adds posts on both sides, a gate every gate_spacing cells and a guard post with a lantern every post_spacing cells; guards of the settlement patrol between the village and those posts.",
+  "tiers": [
+    {
+      "block": "minecraft:dirt_path",
+      "item": "minecraft:dirt",
+      "speed_bonus": 0.1,
+      "samples_per_wear": 60
+    },
+    {
+      "block": "minecraft:gravel",
+      "item": "minecraft:gravel",
+      "speed_bonus": 0.2,
+      "samples_per_wear": 120
+    },
+    {
+      "block": "minecraft:cobblestone",
+      "item": "minecraft:cobblestone",
+      "speed_bonus": 0.5,
+      "samples_per_wear": 240
+    },
+    {
+      "block": "minecraft:stone_bricks",
+      "item": "minecraft:stone_bricks",
+      "speed_bonus": 1.0,
+      "samples_per_wear": 480
+    }
+  ],
+  "repair_wear": 50,
+  "light_target": 8,
+  "lamp_spacing": 8,
+  "carry": 32,
+  "gate_spacing": 12,
+  "post_spacing": 32,
+  "patrol_radius": 96,
+  "hostile_bonus_cap": 0.35,
+  "hostile_note": "AD-123: hostile mobs (Enemy) get at most the pre-rework best surface bonus, so paving x1.5/x2 speeds residents, players and animals, not zombies. Set to 1.0 to let monsters use the full surface.",
+  "trail_cell_ticks": 20,
+  "trail_segment": 96,
+  "trail_max_distance": 1024
+}

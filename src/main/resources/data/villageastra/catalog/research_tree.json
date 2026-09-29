@@ -1,0 +1,2991 @@
+{
+ "schema_version": 2,
+ "kind": "research_tree",
+ "decision": "AD-136",
+ "note": "Research tree v2 by the owner's ladders of 2026-09-23 (docs/plans/research-v2-spec.md, owner answers). Level I is paid in resources (cost.resources, CF2: only what a village makes without research or quests); levels II..VI cost works_per_tier*(tier-1) scientific works from balance/science.json and carry no cost here. status: ACTIVE = the owner's words work; INTERIM = older behaviour works and the card shows the owner's words as «Будет»; PLANNED = only «Будет»; PREREQUISITE_ONLY = only opens the next node. Supersedes docs/addenda/v0.7/data/research_tree.json.",
+ "branches": [
+  {
+   "id": "agriculture",
+   "title_ru": "Земледелие",
+   "title_en": "Agriculture",
+   "group": "food",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "livestock",
+   "title_ru": "Животноводство",
+   "title_en": "Livestock",
+   "group": "food",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "baking",
+   "title_ru": "Ресторанное дело",
+   "title_en": "Restaurant",
+   "group": "food",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "milling",
+   "title_ru": "Мельница при ресторане",
+   "title_en": "Mill Annex",
+   "group": "food",
+   "tiers": [
+    2,
+    2
+   ],
+   "side_of": "baking"
+  },
+  {
+   "id": "forestry",
+   "title_ru": "Лесное дело",
+   "title_en": "Forestry",
+   "group": "resources",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "carpentry",
+   "title_ru": "Плотницкая при хижине",
+   "title_en": "Carpentry Annex",
+   "group": "resources",
+   "tiers": [
+    3,
+    3
+   ],
+   "side_of": "forestry"
+  },
+  {
+   "id": "mining",
+   "title_ru": "Горное дело",
+   "title_en": "Mining",
+   "group": "resources",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "masonry",
+   "title_ru": "Каменотёсная при шахте",
+   "title_en": "Masonry Annex",
+   "group": "resources",
+   "tiers": [
+    3,
+    3
+   ],
+   "side_of": "mining"
+  },
+  {
+   "id": "metallurgy",
+   "title_ru": "Металлургия",
+   "title_en": "Metallurgy",
+   "group": "resources",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "town_hall",
+   "title_ru": "Ратуша",
+   "title_en": "Town Hall",
+   "group": "city",
+   "tiers": [
+    2,
+    6
+   ]
+  },
+  {
+   "id": "construction",
+   "title_ru": "Строительство",
+   "title_en": "Construction",
+   "group": "city",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "housing",
+   "title_ru": "Жильё",
+   "title_en": "Housing",
+   "group": "city",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "roads",
+   "title_ru": "Дороги",
+   "title_en": "Roads",
+   "group": "city",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "logistics",
+   "title_ru": "Логистика",
+   "title_en": "Logistics",
+   "group": "city",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "engineering",
+   "title_ru": "Инженерия",
+   "title_en": "Engineering",
+   "group": "city",
+   "tiers": [
+    1,
+    5
+   ]
+  },
+  {
+   "id": "research",
+   "title_ru": "Наука",
+   "title_en": "Science",
+   "group": "knowledge",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "education",
+   "title_ru": "Образование",
+   "title_en": "Education",
+   "group": "knowledge",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "cartography",
+   "title_ru": "Картография",
+   "title_en": "Cartography",
+   "group": "knowledge",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "medicine",
+   "title_ru": "Медицина",
+   "title_en": "Medicine",
+   "group": "knowledge",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "defense",
+   "title_ru": "Оборона",
+   "title_en": "Defence",
+   "group": "power",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "military",
+   "title_ru": "Военное дело",
+   "title_en": "Military",
+   "group": "power",
+   "tiers": [
+    1,
+    6
+   ]
+  },
+  {
+   "id": "caravans",
+   "title_ru": "Внешняя торговля",
+   "title_en": "External Trade",
+   "group": "power",
+   "tiers": [
+    1,
+    6
+   ]
+  }
+ ],
+ "nodes": [
+  {
+   "id": "agriculture.1",
+   "branch": "agriculture",
+   "tier": 1,
+   "title": {
+    "ru_ru": "подкормка",
+    "en_us": "Bone Meal Feeding"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:wheat",
+      "count": 32
+     },
+     {
+      "item": "minecraft:wheat_seeds",
+      "count": 16
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "I 1 field 9x9 (the starter farm); the node gives bone meal feeding",
+   "legacy_titles": {
+    "ru_ru": "Севооборот",
+    "en_us": "Crop Planning"
+   }
+  },
+  {
+   "id": "agriculture.2",
+   "branch": "agriculture",
+   "tier": 2,
+   "title": {
+    "ru_ru": "четыре поля",
+    "en_us": "Four Fields"
+   },
+   "requires_all": [
+    "agriculture.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "II 4 fields 9x9 flush together",
+   "legacy_titles": {
+    "ru_v1": "поле на 2 модуля",
+    "en_v1": "Two-Module Field",
+    "ru_ru": "Орошаемые делянки",
+    "en_us": "Irrigated Plots"
+   }
+  },
+  {
+   "id": "agriculture.3",
+   "branch": "agriculture",
+   "tier": 3,
+   "title": {
+    "ru_ru": "шесть полей в ряд",
+    "en_us": "Six Fields in a Row"
+   },
+   "requires_all": [
+    "agriculture.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "III 6 fields in a row away from the building, flush",
+   "legacy_titles": {
+    "ru_v1": "поле на 4 модуля",
+    "en_v1": "Four-Module Field",
+    "ru_ru": "Отбор посевного материала",
+    "en_us": "Seed Selection"
+   }
+  },
+  {
+   "id": "agriculture.4",
+   "branch": "agriculture",
+   "tier": 4,
+   "title": {
+    "ru_ru": "амбар и второй этаж",
+    "en_us": "Barn and Second Floor"
+   },
+   "requires_all": [
+    "agriculture.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "IV a building around them, 2nd floor, 12 fields total, 2 farmers",
+   "legacy_titles": {
+    "ru_v1": "поле на 6 модулей, привод",
+    "en_v1": "Six Modules, Powered",
+    "ru_ru": "Механизированная уборка",
+    "en_us": "Mechanical Harvesting"
+   }
+  },
+  {
+   "id": "agriculture.5",
+   "branch": "agriculture",
+   "tier": 5,
+   "title": {
+    "ru_ru": "третий этаж",
+    "en_us": "Third Floor"
+   },
+   "requires_all": [
+    "agriculture.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "V 3rd floor, 18 fields, 3 farmers",
+   "legacy_titles": {
+    "ru_v1": "автополе на 10 модулей",
+    "en_v1": "Ten-Module Automatic Field",
+    "ru_ru": "Автоматическая ферма",
+    "en_us": "Automatic Farm"
+   }
+  },
+  {
+   "id": "agriculture.6",
+   "branch": "agriculture",
+   "tier": 6,
+   "title": {
+    "ru_ru": "машина полей",
+    "en_us": "Field Machine"
+   },
+   "requires_all": [
+    "agriculture.5",
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "VI automatic planting and harvesting",
+   "legacy_titles": {
+    "ru_v1": "поле на 16 модулей",
+    "en_v1": "Sixteen-Module Field",
+    "ru_ru": "Многокультурный агрокомплекс",
+    "en_us": "Multi-Crop Complex"
+   }
+  },
+  {
+   "id": "livestock.1",
+   "branch": "livestock",
+   "tier": 1,
+   "title": {
+    "ru_ru": "скотный двор",
+    "en_us": "Livestock Yard"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:wheat",
+      "count": 32
+     },
+     {
+      "tag": "minecraft:logs",
+      "count": 16
+     }
+    ]
+   },
+   "status": "INTERIM",
+   "phase": "B4",
+   "owner_en": "yard level 1: one 5x5 pen with a feeder and a water trough inside; breeds animals and slaughters them when a pen holds more than 16",
+   "future": {
+    "ru_ru": "один загон 5×5 с кормушкой и поилкой; животновод забивает лишних, когда в загоне больше 16 голов",
+    "en_us": "one 5×5 pen with a feeder and a trough; the herder culls the surplus above 16 in a pen"
+   },
+   "legacy_titles": {
+    "ru_ru": "Управление стадами",
+    "en_us": "Herd Management"
+   }
+  },
+  {
+   "id": "livestock.2",
+   "branch": "livestock",
+   "tier": 2,
+   "title": {
+    "ru_ru": "скотный двор II",
+    "en_us": "Livestock Yard II"
+   },
+   "requires_all": [
+    "livestock.1"
+   ],
+   "status": "INTERIM",
+   "phase": "B4",
+   "owner_en": "two pens, each with its own trough and feeder; different animals allowed per pen",
+   "future": {
+    "ru_ru": "второй загон со своей кормушкой и поилкой, вид животных — на загон; двор держит 32 головы",
+    "en_us": "a second pen with its own feeder and trough, the animal chosen per pen; the yard keeps 32 head"
+   },
+   "legacy_titles": {
+    "ru_v1": "стадо 10",
+    "en_v1": "Herd 10",
+    "ru_ru": "Кормовые резервы",
+    "en_us": "Feed Reserves"
+   }
+  },
+  {
+   "id": "livestock.3",
+   "branch": "livestock",
+   "tier": 3,
+   "title": {
+    "ru_ru": "скотный двор III",
+    "en_us": "Livestock Yard III"
+   },
+   "requires_all": [
+    "livestock.2",
+    "research.2"
+   ],
+   "status": "INTERIM",
+   "phase": "B4",
+   "owner_en": "yard level 3 with 4 pens",
+   "future": {
+    "ru_ru": "четыре загона; двор держит 64 головы",
+    "en_us": "four pens; the yard keeps 64 head"
+   },
+   "legacy_titles": {
+    "ru_v1": "стадо 12",
+    "en_v1": "Herd 12",
+    "ru_ru": "Продуктовые цепочки",
+    "en_us": "Livestock Products"
+   }
+  },
+  {
+   "id": "livestock.4",
+   "branch": "livestock",
+   "tier": 4,
+   "title": {
+    "ru_ru": "волчья будка",
+    "en_us": "Wolf Kennel"
+   },
+   "requires_all": [
+    "livestock.3",
+    "research.3"
+   ],
+   "status": "INTERIM",
+   "phase": "B4",
+   "owner_en": "WOLF KENNEL placed as an ANNEX; a quest appears: rescue wolves",
+   "future": {
+    "ru_ru": "когда будка стоит, деревня просит на доске спасти волков и привести их домой",
+    "en_us": "once the kennel stands, the village asks on the board for wolves to be rescued and brought home"
+   },
+   "legacy_titles": {
+    "ru_v1": "стадо 14",
+    "en_v1": "Herd 14",
+    "ru_ru": "Механические кормушки",
+    "en_us": "Mechanical Feeders"
+   }
+  },
+  {
+   "id": "livestock.5",
+   "branch": "livestock",
+   "tier": 5,
+   "title": {
+    "ru_ru": "выпас",
+    "en_us": "Grazing"
+   },
+   "requires_all": [
+    "livestock.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B4",
+   "owner_en": "animals may leave the pen and graze; the wolves drive them back",
+   "legacy_titles": {
+    "ru_v1": "стадо 16",
+    "en_v1": "Herd 16",
+    "ru_ru": "Автоматический скотный двор",
+    "en_us": "Automatic Livestock Yard"
+   }
+  },
+  {
+   "id": "livestock.6",
+   "branch": "livestock",
+   "tier": 6,
+   "title": {
+    "ru_ru": "автоматический двор",
+    "en_us": "Automatic Yard"
+   },
+   "requires_all": [
+    "engineering.5",
+    "livestock.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B4",
+   "owner_en": "feeders are filled automatically, surplus slaughtered automatically by the wolves",
+   "legacy_titles": {
+    "ru_v1": "стадо 18",
+    "en_v1": "Herd 18",
+    "ru_ru": "Связанные пастбища",
+    "en_us": "Linked Pastures"
+   }
+  },
+  {
+   "id": "baking.1",
+   "branch": "baking",
+   "tier": 1,
+   "title": {
+    "ru_ru": "ресторан",
+    "en_us": "Restaurant"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:wheat",
+      "count": 32
+     },
+     {
+      "tag": "minecraft:coals",
+      "count": 8
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "B1",
+   "owner_en": "residents can sit inside and eat; the cook produces food",
+   "legacy_titles": {
+    "ru_v1": "пекарня",
+    "en_v1": "Bakery",
+    "ru_ru": "Общинная пекарня",
+    "en_us": "Community Bakery"
+   }
+  },
+  {
+   "id": "baking.2",
+   "branch": "baking",
+   "tier": 2,
+   "title": {
+    "ru_ru": "мясо и места",
+    "en_us": "Meat and Seats"
+   },
+   "requires_all": [
+    "baking.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B1",
+   "owner_en": "the cook can cook meat; more seats inside",
+   "legacy_titles": {
+    "ru_v1": "труд 40",
+    "en_v1": "Labour 40",
+    "ru_ru": "Пекарные партии",
+    "en_us": "Baking Batches"
+   }
+  },
+  {
+   "id": "baking.3",
+   "branch": "baking",
+   "tier": 3,
+   "title": {
+    "ru_ru": "быстрая кухня",
+    "en_us": "Faster Kitchen"
+   },
+   "requires_all": [
+    "baking.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B1",
+   "owner_en": "faster food production",
+   "legacy_titles": {
+    "ru_v1": "труд 60",
+    "en_v1": "Labour 60",
+    "ru_ru": "Сохранение продовольствия",
+    "en_us": "Food Reserves"
+   }
+  },
+  {
+   "id": "baking.4",
+   "branch": "baking",
+   "tier": 4,
+   "title": {
+    "ru_ru": "курьер",
+    "en_us": "Courier"
+   },
+   "requires_all": [
+    "baking.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B1",
+   "owner_en": "adds a courier who carries food to residents",
+   "legacy_titles": {
+    "ru_v1": "труд 80",
+    "en_v1": "Labour 80",
+    "ru_ru": "Механическая печь",
+    "en_us": "Mechanical Oven"
+   }
+  },
+  {
+   "id": "baking.5",
+   "branch": "baking",
+   "tier": 5,
+   "title": {
+    "ru_ru": "второй курьер",
+    "en_us": "Second Courier"
+   },
+   "requires_all": [
+    "baking.4",
+    "logistics.2",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B1",
+   "owner_en": "a second courier; couriers may take a dog with a cart",
+   "legacy_titles": {
+    "ru_v1": "труд 100",
+    "en_v1": "Labour 100",
+    "ru_ru": "Автоматическая пекарня",
+    "en_us": "Automatic Bakery"
+   }
+  },
+  {
+   "id": "baking.6",
+   "branch": "baking",
+   "tier": 6,
+   "title": {
+    "ru_ru": "кухня без повара",
+    "en_us": "Kitchen Without a Cook"
+   },
+   "requires_all": [
+    "baking.5",
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B1",
+   "owner_en": "food is cooked automatically, the cook is no longer needed",
+   "legacy_titles": {
+    "ru_v1": "труд 120",
+    "en_v1": "Labour 120",
+    "ru_ru": "Пекарная сеть",
+    "en_us": "Bakery Network"
+   }
+  },
+  {
+   "id": "milling.2",
+   "branch": "milling",
+   "tier": 2,
+   "title": {
+    "ru_ru": "мельница-пристройка",
+    "en_us": "Mill Annex"
+   },
+   "requires_all": [
+    "agriculture.1",
+    "baking.2"
+   ],
+   "status": "INTERIM",
+   "phase": "B1",
+   "owner_en": "MILLING becomes an ANNEX to the RESTAURANT at restaurant level 2, and a side-branch research",
+   "future": {
+    "ru_ru": "мельница — пристройка ресторана и растёт вместе с ним",
+    "en_us": "the mill is an annex of the restaurant and grows with it"
+   },
+   "legacy_titles": {
+    "ru_v1": "труд 40",
+    "en_v1": "Labour 40",
+    "ru_ru": "Сортировка зерна",
+    "en_us": "Grain Sorting",
+    "ru_v1_1": "мельница",
+    "ru_v1_2": "труд 40",
+    "ru_v1_3": "труд 60",
+    "ru_v1_4": "труд 80",
+    "ru_v1_5": "труд 100",
+    "ru_v1_6": "труд 120"
+   }
+  },
+  {
+   "id": "forestry.1",
+   "branch": "forestry",
+   "tier": 1,
+   "title": {
+    "ru_ru": "рубка вокруг",
+    "en_us": "Felling Around"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:logs",
+      "count": 32
+     },
+     {
+      "item": "minecraft:stone_axe",
+      "count": 1
+     }
+    ]
+   },
+   "status": "PREREQUISITE_ONLY",
+   "phase": "T",
+   "owner_en": "I walks and fells the forest around (the starter hut)",
+   "legacy_titles": {
+    "ru_v1": "основы",
+    "en_v1": "Foundations",
+    "ru_ru": "Питомник саженцев",
+    "en_us": "Sapling Nursery"
+   }
+  },
+  {
+   "id": "forestry.2",
+   "branch": "forestry",
+   "tier": 2,
+   "title": {
+    "ru_ru": "посадка за собой",
+    "en_us": "Replanting"
+   },
+   "requires_all": [
+    "forestry.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "II replants behind himself",
+   "legacy_titles": {
+    "ru_ru": "Лесные кварталы",
+    "en_us": "Forest Compartments"
+   }
+  },
+  {
+   "id": "forestry.3",
+   "branch": "forestry",
+   "tier": 3,
+   "title": {
+    "ru_ru": "разные породы",
+    "en_us": "Mixed Species"
+   },
+   "requires_all": [
+    "forestry.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "III asks the player for new saplings and plants mixed species",
+   "legacy_titles": {
+    "en_v1": "Mixed kinds",
+    "ru_ru": "Устойчивая заготовка",
+    "en_us": "Sustainable Logging"
+   }
+  },
+  {
+   "id": "forestry.4",
+   "branch": "forestry",
+   "tier": 4,
+   "title": {
+    "ru_ru": "пилорама",
+    "en_us": "Sawmill"
+   },
+   "requires_all": [
+    "forestry.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "IV adds a sawmill: one tree -> 6 planks",
+   "legacy_titles": {
+    "ru_ru": "Механическая лесозаготовка",
+    "en_us": "Powered Logging"
+   }
+  },
+  {
+   "id": "forestry.5",
+   "branch": "forestry",
+   "tier": 5,
+   "title": {
+    "ru_ru": "быстрая рубка",
+    "en_us": "Faster Felling"
+   },
+   "requires_all": [
+    "forestry.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "V faster felling",
+   "legacy_titles": {
+    "en_v1": "Fast felling",
+    "ru_ru": "Автоматический лесной участок",
+    "en_us": "Automatic Tree Plot"
+   }
+  },
+  {
+   "id": "forestry.6",
+   "branch": "forestry",
+   "tier": 6,
+   "title": {
+    "ru_ru": "двор-роща",
+    "en_us": "Courtyard Grove"
+   },
+   "requires_all": [
+    "engineering.5",
+    "forestry.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "VI courtyard grove; an automatic saw fells it without the player",
+   "legacy_titles": {
+    "en_v1": "Courtyard grove",
+    "ru_ru": "Сеть лесных участков",
+    "en_us": "Forest Network"
+   }
+  },
+  {
+   "id": "carpentry.3",
+   "branch": "carpentry",
+   "tier": 3,
+   "title": {
+    "ru_ru": "плотницкая-пристройка",
+    "en_us": "Carpentry Annex"
+   },
+   "requires_all": [
+    "forestry.3",
+    "research.2"
+   ],
+   "status": "INTERIM",
+   "phase": "B3",
+   "owner_en": "CARPENTRY: a side-branch at FORESTRY level 3 — an annex to the forester's hut",
+   "future": {
+    "ru_ru": "плотницкая — пристройка хижины лесника и растёт вместе с ней",
+    "en_us": "the carpentry is an annex of the forester's hut and grows with it"
+   },
+   "legacy_titles": {
+    "ru_v1": "труд 60",
+    "en_v1": "Labour 60",
+    "ru_ru": "Фермы и перекрытия",
+    "en_us": "Timber Frames",
+    "ru_v1_1": "плотницкая",
+    "ru_v1_2": "труд 40",
+    "ru_v1_3": "труд 60",
+    "ru_v1_4": "труд 80",
+    "ru_v1_5": "труд 100",
+    "ru_v1_6": "труд 120"
+   }
+  },
+  {
+   "id": "mining.1",
+   "branch": "mining",
+   "tier": 1,
+   "title": {
+    "ru_ru": "глубокий карьер",
+    "en_us": "Deep Quarry"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:cobblestone",
+      "count": 64
+     },
+     {
+      "item": "minecraft:stone_pickaxe",
+      "count": 1
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "mine core -> deeper mine (AD-112); quarry 24 -> 32",
+   "legacy_titles": {
+    "en_v1": "Deeper Quarry",
+    "ru_ru": "Разметка штолен",
+    "en_us": "Tunnel Layout"
+   }
+  },
+  {
+   "id": "mining.2",
+   "branch": "mining",
+   "tier": 2,
+   "title": {
+    "ru_ru": "шахта до Y 8",
+    "en_us": "Mine to Y 8"
+   },
+   "requires_all": [
+    "metallurgy.1",
+    "mining.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "the mine reaches Y 8",
+   "legacy_titles": {
+    "ru_ru": "Глубокие железные выработки",
+    "en_us": "Deep Iron Workings"
+   }
+  },
+  {
+   "id": "mining.3",
+   "branch": "mining",
+   "tier": 3,
+   "title": {
+    "ru_ru": "шахта до Y −8",
+    "en_us": "Mine to Y −8"
+   },
+   "requires_all": [
+    "metallurgy.2",
+    "mining.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "the mine reaches Y −8",
+   "legacy_titles": {
+    "en_v1": "Mine to Y -8",
+    "ru_ru": "Алмазное бурение",
+    "en_us": "Diamond Drilling"
+   }
+  },
+  {
+   "id": "mining.4",
+   "branch": "mining",
+   "tier": 4,
+   "title": {
+    "ru_ru": "шахта до Y −24",
+    "en_us": "Mine to Y −24"
+   },
+   "requires_all": [
+    "mining.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "the mine reaches Y −24",
+   "legacy_titles": {
+    "en_v1": "Mine to Y -24",
+    "ru_ru": "Подъёмник и буровая рама",
+    "en_us": "Hoist and Drill Frame"
+   }
+  },
+  {
+   "id": "mining.5",
+   "branch": "mining",
+   "tier": 5,
+   "title": {
+    "ru_ru": "машина копает",
+    "en_us": "Digging Machine"
+   },
+   "requires_all": [
+    "mining.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "the mine reaches Y −40; the machine digs on its own (AD-122)",
+   "legacy_titles": {
+    "ru_v1": "шахта до Y −40",
+    "en_v1": "Mine to Y -40",
+    "ru_ru": "Автоматический карьер",
+    "en_us": "Automatic Quarry"
+   }
+  },
+  {
+   "id": "mining.6",
+   "branch": "mining",
+   "tier": 6,
+   "title": {
+    "ru_ru": "шахта до Y −56",
+    "en_us": "Mine to Y −56"
+   },
+   "requires_all": [
+    "engineering.5",
+    "mining.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "the mine reaches Y −56",
+   "legacy_titles": {
+    "en_v1": "Mine to Y -56",
+    "ru_ru": "Сеть карьеров",
+    "en_us": "Quarry Network"
+   }
+  },
+  {
+   "id": "masonry.3",
+   "branch": "masonry",
+   "tier": 3,
+   "title": {
+    "ru_ru": "каменотёсная-пристройка",
+    "en_us": "Masonry Annex"
+   },
+   "requires_all": [
+    "mining.3",
+    "research.2"
+   ],
+   "status": "INTERIM",
+   "phase": "B2",
+   "owner_en": "MASONRY: an ANNEX to the MINE at level 3, a side-branch research",
+   "future": {
+    "ru_ru": "каменотёсная — пристройка шахты и растёт вместе с ней",
+    "en_us": "the masonry is an annex of the mine and grows with it"
+   },
+   "legacy_titles": {
+    "ru_v1": "труд 60",
+    "en_v1": "Labour 60",
+    "ru_ru": "Точные каменные детали",
+    "en_us": "Precision Stonework",
+    "ru_v1_1": "каменотёсная",
+    "ru_v1_2": "труд 40",
+    "ru_v1_3": "труд 60",
+    "ru_v1_4": "труд 80",
+    "ru_v1_5": "труд 100",
+    "ru_v1_6": "труд 120"
+   }
+  },
+  {
+   "id": "metallurgy.1",
+   "branch": "metallurgy",
+   "tier": 1,
+   "title": {
+    "ru_ru": "кузница",
+    "en_us": "Smithy"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:raw_iron",
+      "count": 16
+     },
+     {
+      "tag": "minecraft:coals",
+      "count": 16
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "I opens the smithy: iron picks, axes, swords and armour",
+   "legacy_titles": {
+    "ru_ru": "Железное дело",
+    "en_us": "Ironworking"
+   }
+  },
+  {
+   "id": "metallurgy.2",
+   "branch": "metallurgy",
+   "tier": 2,
+   "title": {
+    "ru_ru": "фонари и алмазы",
+    "en_us": "Lanterns and Diamonds"
+   },
+   "requires_all": [
+    "metallurgy.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B5",
+   "owner_en": "II lanterns for the village, diamond tools and armour",
+   "legacy_titles": {
+    "ru_v1": "труд 40",
+    "en_v1": "Labour 40",
+    "ru_ru": "Алмазные инструменты",
+    "en_us": "Diamond Tools"
+   }
+  },
+  {
+   "id": "metallurgy.3",
+   "branch": "metallurgy",
+   "tier": 3,
+   "title": {
+    "ru_ru": "курьер кузницы",
+    "en_us": "Smithy Courier"
+   },
+   "requires_all": [
+    "metallurgy.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B5",
+   "owner_en": "III adds a courier who delivers what is made to whoever needs it, and speeds the smith up",
+   "legacy_titles": {
+    "ru_v1": "труд 60",
+    "en_v1": "Labour 60",
+    "ru_ru": "Сменные механические узлы",
+    "en_us": "Replaceable Machine Parts"
+   }
+  },
+  {
+   "id": "metallurgy.4",
+   "branch": "metallurgy",
+   "tier": 4,
+   "title": {
+    "ru_ru": "броня для волка",
+    "en_us": "Wolf Armour"
+   },
+   "requires_all": [
+    "metallurgy.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B5",
+   "owner_en": "IV makes WOLF ARMOUR (new content in the mod)",
+   "legacy_titles": {
+    "ru_v1": "труд 80",
+    "en_v1": "Labour 80",
+    "ru_ru": "Механический молот",
+    "en_us": "Powered Hammer"
+   }
+  },
+  {
+   "id": "metallurgy.5",
+   "branch": "metallurgy",
+   "tier": 5,
+   "title": {
+    "ru_ru": "волки-посыльные",
+    "en_us": "Wolf Messengers"
+   },
+   "requires_all": [
+    "metallurgy.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B5",
+   "owner_en": "V wolves deliver tools to whoever needs them, the courier is no longer needed",
+   "legacy_titles": {
+    "ru_v1": "труд 100",
+    "en_v1": "Labour 100",
+    "ru_ru": "Автоматическая кузница",
+    "en_us": "Automatic Smithy"
+   }
+  },
+  {
+   "id": "metallurgy.6",
+   "branch": "metallurgy",
+   "tier": 6,
+   "title": {
+    "ru_ru": "кузница без кузнеца",
+    "en_us": "Smithy Without a Smith"
+   },
+   "requires_all": [
+    "engineering.5",
+    "metallurgy.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B5",
+   "owner_en": "VI the smith is no longer needed — everything is made automatically, by the village's needs",
+   "legacy_titles": {
+    "ru_v1": "труд 120",
+    "en_v1": "Labour 120",
+    "ru_ru": "Кузнечный комплекс",
+    "en_us": "Smithing Complex"
+   }
+  },
+  {
+   "id": "town_hall.2",
+   "branch": "town_hall",
+   "tier": 2,
+   "title": {
+    "ru_ru": "ратуша II",
+    "en_us": "Town Hall II"
+   },
+   "requires_all": [],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "Owner answer 2026-09-23: a separate research branch «Ратуша» (town_hall.N) opens the next hall level",
+   "legacy_titles": {
+    "ru_civic": "ратуша II",
+    "en_civic": "Town Hall II"
+   }
+  },
+  {
+   "id": "town_hall.3",
+   "branch": "town_hall",
+   "tier": 3,
+   "title": {
+    "ru_ru": "ратуша III",
+    "en_us": "Town Hall III"
+   },
+   "requires_all": [
+    "research.2",
+    "town_hall.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "town_hall.3 opens hall level III",
+   "legacy_titles": {
+    "ru_civic": "ратуша III",
+    "en_civic": "Town Hall III"
+   }
+  },
+  {
+   "id": "town_hall.4",
+   "branch": "town_hall",
+   "tier": 4,
+   "title": {
+    "ru_ru": "ратуша IV",
+    "en_us": "Town Hall IV"
+   },
+   "requires_all": [
+    "research.3",
+    "town_hall.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "town_hall.4 opens hall level IV",
+   "legacy_titles": {
+    "ru_civic": "ратуша IV",
+    "en_civic": "Town Hall IV"
+   }
+  },
+  {
+   "id": "town_hall.5",
+   "branch": "town_hall",
+   "tier": 5,
+   "title": {
+    "ru_ru": "ратуша V",
+    "en_us": "Town Hall V"
+   },
+   "requires_all": [
+    "research.4",
+    "town_hall.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "town_hall.5 opens hall level V",
+   "legacy_titles": {
+    "ru_civic": "ратуша V",
+    "en_civic": "Town Hall V"
+   }
+  },
+  {
+   "id": "town_hall.6",
+   "branch": "town_hall",
+   "tier": 6,
+   "title": {
+    "ru_ru": "ратуша VI",
+    "en_us": "Town Hall VI"
+   },
+   "requires_all": [
+    "engineering.5",
+    "research.5",
+    "town_hall.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "town_hall.6 opens hall level VI",
+   "legacy_titles": {
+    "ru_civic": "ратуша VI",
+    "en_civic": "Town Hall VI"
+   }
+  },
+  {
+   "id": "construction.1",
+   "branch": "construction",
+   "tier": 1,
+   "title": {
+    "ru_ru": "второй строитель",
+    "en_us": "Second Builder"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:cobblestone",
+      "count": 64
+     },
+     {
+      "tag": "minecraft:planks",
+      "count": 32
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "B14",
+   "owner_en": "I a second builder slot in the town hall",
+   "legacy_titles": {
+    "ru_v1": "фундамент 4",
+    "en_v1": "Foundation 4",
+    "ru_ru": "Организация площадки",
+    "en_us": "Construction Site Planning"
+   }
+  },
+  {
+   "id": "construction.2",
+   "branch": "construction",
+   "tier": 2,
+   "title": {
+    "ru_ru": "сумка строителя",
+    "en_us": "Builder's Bag"
+   },
+   "requires_all": [
+    "construction.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B14",
+   "owner_en": "II the builder gets a builder's bag — carries 3x more items",
+   "legacy_titles": {
+    "ru_v1": "фундамент 5",
+    "en_v1": "Foundation 5",
+    "ru_ru": "Строительные бригады",
+    "en_us": "Construction Crews"
+   }
+  },
+  {
+   "id": "construction.3",
+   "branch": "construction",
+   "tier": 3,
+   "title": {
+    "ru_ru": "четыре строителя",
+    "en_us": "Four Builders"
+   },
+   "requires_all": [
+    "construction.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B14",
+   "owner_en": "III four builders",
+   "legacy_titles": {
+    "ru_v1": "фундамент 6",
+    "en_v1": "Foundation 6",
+    "ru_ru": "Сборные детали",
+    "en_us": "Prefabricated Parts"
+   }
+  },
+  {
+   "id": "construction.4",
+   "branch": "construction",
+   "tier": 4,
+   "title": {
+    "ru_ru": "шесть строителей",
+    "en_us": "Six Builders"
+   },
+   "requires_all": [
+    "construction.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B14",
+   "owner_en": "IV six builders and 2x the reach",
+   "legacy_titles": {
+    "ru_v1": "фундамент 8",
+    "en_v1": "Foundation 8",
+    "ru_ru": "Подъёмные механизмы",
+    "en_us": "Lifting Mechanisms"
+   }
+  },
+  {
+   "id": "construction.5",
+   "branch": "construction",
+   "tier": 5,
+   "title": {
+    "ru_ru": "восемь строителей",
+    "en_us": "Eight Builders"
+   },
+   "requires_all": [
+    "construction.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B14",
+   "owner_en": "V eight builders and a wolf helper that brings the builder materials",
+   "legacy_titles": {
+    "ru_v1": "ратуша V",
+    "en_v1": "Town Hall V",
+    "ru_ru": "Автоматизированный монтаж",
+    "en_us": "Automated Assembly"
+   }
+  },
+  {
+   "id": "construction.6",
+   "branch": "construction",
+   "tier": 6,
+   "title": {
+    "ru_ru": "десять строителей",
+    "en_us": "Ten Builders"
+   },
+   "requires_all": [
+    "construction.5",
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B14",
+   "owner_en": "VI ten builders and 3x the original reach",
+   "legacy_titles": {
+    "ru_v1": "ратуша VI",
+    "en_v1": "Town Hall VI",
+    "ru_ru": "Сеть строительных работ",
+    "en_us": "Construction Work Network"
+   }
+  },
+  {
+   "id": "housing.1",
+   "branch": "housing",
+   "tier": 1,
+   "title": {
+    "ru_ru": "дом на двоих",
+    "en_us": "Two-Resident House"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:planks",
+      "count": 32
+     },
+     {
+      "item": "minecraft:cobblestone",
+      "count": 32
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "HOUSING: turn the capacity on (level_beds=true) — housing levels really give more residents per house",
+   "legacy_titles": {
+    "ru_ru": "Жилые дома второго уровня",
+    "en_us": "Level Two Homes"
+   }
+  },
+  {
+   "id": "housing.2",
+   "branch": "housing",
+   "tier": 2,
+   "title": {
+    "ru_ru": "дом на 4 жителя",
+    "en_us": "Four-Resident House"
+   },
+   "requires_all": [
+    "housing.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "HOUSING: turn the capacity on (level_beds=true) — housing levels really give more residents per house",
+   "legacy_titles": {
+    "ru_ru": "Многоместные дома",
+    "en_us": "Shared Homes"
+   }
+  },
+  {
+   "id": "housing.3",
+   "branch": "housing",
+   "tier": 3,
+   "title": {
+    "ru_ru": "семейные дома",
+    "en_us": "Family Homes"
+   },
+   "requires_all": [
+    "housing.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "HOUSING: turn the capacity on (level_beds=true) — housing levels really give more residents per house",
+   "legacy_titles": {
+    "ru_ru": "Плановые переселения",
+    "en_us": "Planned Relocation"
+   }
+  },
+  {
+   "id": "housing.4",
+   "branch": "housing",
+   "tier": 4,
+   "title": {
+    "ru_ru": "большой дом на 6",
+    "en_us": "Big House for Six"
+   },
+   "requires_all": [
+    "housing.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "HOUSING: turn the capacity on (level_beds=true) — housing levels really give more residents per house",
+   "legacy_titles": {
+    "en_v1": "Six-Resident Big House",
+    "ru_ru": "Домовые устройства",
+    "en_us": "Domestic Devices"
+   }
+  },
+  {
+   "id": "housing.5",
+   "branch": "housing",
+   "tier": 5,
+   "title": {
+    "ru_ru": "большой дом на 8",
+    "en_us": "Big House for Eight"
+   },
+   "requires_all": [
+    "housing.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "HOUSING: turn the capacity on (level_beds=true) — housing levels really give more residents per house",
+   "legacy_titles": {
+    "en_v1": "Eight-Resident Big House",
+    "ru_ru": "Автоматизированное обслуживание жилья",
+    "en_us": "Automatic Home Service"
+   }
+  },
+  {
+   "id": "housing.6",
+   "branch": "housing",
+   "tier": 6,
+   "title": {
+    "ru_ru": "дом на 10",
+    "en_us": "House for Ten"
+   },
+   "requires_all": [
+    "engineering.5",
+    "housing.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "HOUSING: turn the capacity on (level_beds=true) — housing levels really give more residents per house",
+   "legacy_titles": {
+    "ru_v1": "жилой квартал: дом на 10",
+    "en_v1": "Ten-Resident Big House",
+    "ru_ru": "Жилые кварталы",
+    "en_us": "Residential Districts"
+   }
+  },
+  {
+   "id": "roads.1",
+   "branch": "roads",
+   "tier": 1,
+   "title": {
+    "ru_ru": "дороги в деревне",
+    "en_us": "Village Roads"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:cobblestone",
+      "count": 32
+     },
+     {
+      "item": "minecraft:dirt",
+      "count": 32
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "roads ladder AD-123",
+   "legacy_titles": {
+    "ru_ru": "Гравийное покрытие",
+    "en_us": "Gravel Surfacing"
+   }
+  },
+  {
+   "id": "roads.2",
+   "branch": "roads",
+   "tier": 2,
+   "title": {
+    "ru_ru": "тропы между деревнями",
+    "en_us": "Trails Between Villages"
+   },
+   "requires_all": [
+    "roads.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "roads ladder AD-123",
+   "legacy_titles": {
+    "ru_ru": "Каменное мощение",
+    "en_us": "Stone Paving"
+   }
+  },
+  {
+   "id": "roads.3",
+   "branch": "roads",
+   "tier": 3,
+   "title": {
+    "ru_ru": "освещение и коридоры",
+    "en_us": "Lighting and Corridors"
+   },
+   "requires_all": [
+    "metallurgy.2",
+    "research.2",
+    "roads.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "roads ladder AD-123",
+   "legacy_titles": {
+    "ru_ru": "Освещение и коридоры",
+    "en_us": "Lighting and Road Corridors"
+   }
+  },
+  {
+   "id": "roads.4",
+   "branch": "roads",
+   "tier": 4,
+   "title": {
+    "ru_ru": "мощение ×1,5",
+    "en_us": "Cobblestone ×1.5"
+   },
+   "requires_all": [
+    "research.3",
+    "roads.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "roads ladder AD-123",
+   "legacy_titles": {
+    "en_v1": "Cobbled Surface ×1.5",
+    "ru_ru": "Механизация дорожных работ",
+    "en_us": "Powered Road Works"
+   }
+  },
+  {
+   "id": "roads.5",
+   "branch": "roads",
+   "tier": 5,
+   "title": {
+    "ru_ru": "мосты и тоннели",
+    "en_us": "Bridges and Tunnels"
+   },
+   "requires_all": [
+    "research.4",
+    "roads.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "roads ladder AD-123",
+   "legacy_titles": {
+    "ru_ru": "Автоматическое обслуживание дорог",
+    "en_us": "Automatic Road Service"
+   }
+  },
+  {
+   "id": "roads.6",
+   "branch": "roads",
+   "tier": 6,
+   "title": {
+    "ru_ru": "мощение ×2 и ремонт машинами",
+    "en_us": "Stone Bricks ×2 and Machine Repair"
+   },
+   "requires_all": [
+    "engineering.5",
+    "research.5",
+    "roads.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "roads ladder AD-123; machines of the village repair worn roads (moved from mechanics.5, D9)",
+   "legacy_titles": {
+    "ru_v1": "мощение ×2 и магистрали",
+    "en_v1": "Paved Surface ×2 and Arteries",
+    "ru_ru": "Транспортные магистрали",
+    "en_us": "Transport Arteries"
+   }
+  },
+  {
+   "id": "logistics.1",
+   "branch": "logistics",
+   "tier": 1,
+   "title": {
+    "ru_ru": "склад и носильщик",
+    "en_us": "Warehouse and Courier"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:chest",
+      "count": 2
+     },
+     {
+      "tag": "minecraft:planks",
+      "count": 32
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "I opens the warehouse and a courier inside it (the courier decides himself what to carry and where, by need)",
+   "legacy_titles": {
+    "ru_v1": "основы",
+    "en_v1": "Foundations",
+    "ru_ru": "Складские зоны",
+    "en_us": "Warehouse Zones"
+   }
+  },
+  {
+   "id": "logistics.2",
+   "branch": "logistics",
+   "tier": 2,
+   "title": {
+    "ru_ru": "телеги",
+    "en_us": "Carts"
+   },
+   "requires_all": [
+    "logistics.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B7",
+   "owner_en": "II opens CARTS — the courier carries 5 extra stacks in a cart",
+   "legacy_titles": {
+    "ru_v1": "груз 24",
+    "en_v1": "Load 24",
+    "ru_ru": "Запас и резервирование",
+    "en_us": "Stock and Reservation"
+   }
+  },
+  {
+   "id": "logistics.3",
+   "branch": "logistics",
+   "tier": 3,
+   "title": {
+    "ru_ru": "второй этаж склада",
+    "en_us": "Second Warehouse Floor"
+   },
+   "requires_all": [
+    "logistics.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B7",
+   "owner_en": "III the warehouse doubles, an extra floor",
+   "legacy_titles": {
+    "ru_v1": "груз 32",
+    "en_v1": "Load 32",
+    "ru_ru": "Районные склады",
+    "en_us": "District Warehouses"
+   }
+  },
+  {
+   "id": "logistics.4",
+   "branch": "logistics",
+   "tier": 4,
+   "title": {
+    "ru_ru": "широкий склад",
+    "en_us": "Wider Warehouse"
+   },
+   "requires_all": [
+    "logistics.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B7",
+   "owner_en": "IV the warehouse gets wider, more space",
+   "legacy_titles": {
+    "ru_v1": "груз 40",
+    "en_v1": "Load 40",
+    "ru_ru": "Погрузочные устройства",
+    "en_us": "Loading Devices"
+   }
+  },
+  {
+   "id": "logistics.5",
+   "branch": "logistics",
+   "tier": 5,
+   "title": {
+    "ru_ru": "упряжь для волков",
+    "en_us": "Wolf Harness"
+   },
+   "requires_all": [
+    "logistics.4",
+    "research.4"
+   ],
+   "status": "INTERIM",
+   "phase": "B7",
+   "owner_en": "V wolves can be harnessed to carts and pull an extra cart together with the couriers",
+   "future": {
+    "ru_ru": "волк в упряжи тянет вторую телегу за курьером (+5 стопок) — когда в деревне появятся волки (будка животноводства и её задание)",
+    "en_us": "a harnessed wolf pulls a second cart behind the courier (+5 stacks) — once the village has wolves (the livestock kennel and its quest)"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 48",
+    "en_v1": "Load 48",
+    "ru_ru": "Автоматическая местная доставка",
+    "en_us": "Automatic Local Delivery"
+   }
+  },
+  {
+   "id": "logistics.6",
+   "branch": "logistics",
+   "tier": 6,
+   "title": {
+    "ru_ru": "склад без курьеров",
+    "en_us": "Warehouse Without Couriers"
+   },
+   "requires_all": [
+    "engineering.5",
+    "logistics.5",
+    "research.5"
+   ],
+   "status": "INTERIM",
+   "phase": "B7",
+   "owner_en": "VI couriers are no longer needed — wolves carry everything in carts and the warehouse sorts itself (castle style)",
+   "future": {
+    "ru_ru": "курьеры не нужны: волки возят всё в телегах — когда в деревне появятся волки (будка животноводства и её задание); до тех пор возят курьеры",
+    "en_us": "no couriers: wolves carry everything in carts — once the village has wolves (the livestock kennel and its quest); until then the couriers carry"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 64",
+    "en_v1": "Load 64",
+    "ru_ru": "Складская сеть",
+    "en_us": "Warehouse Network"
+   }
+  },
+  {
+   "id": "engineering.1",
+   "branch": "engineering",
+   "tier": 1,
+   "title": {
+    "ru_ru": "ремесло ратуши",
+    "en_us": "Hall Crafts"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:logs",
+      "count": 32
+     },
+     {
+      "item": "minecraft:crafting_table",
+      "count": 1
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "I residents learn to craft basic resources (planks, stairs, everything needed for the first buildings)",
+   "legacy_titles": {
+    "ru_v1": "инженерное бюро",
+    "en_v1": "Engineering Office",
+    "ru_ru": "Инженерное бюро"
+   }
+  },
+  {
+   "id": "engineering.2",
+   "branch": "engineering",
+   "tier": 2,
+   "title": {
+    "ru_ru": "сложное ремесло",
+    "en_us": "Complex Crafts"
+   },
+   "requires_all": [
+    "engineering.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "II residents learn more complex crafts",
+   "legacy_titles": {
+    "ru_v1": "террасы 7/5",
+    "en_v1": "Terracing 7/5",
+    "ru_ru": "Мосты и подпорные стены",
+    "en_us": "Bridges and Retaining Walls"
+   }
+  },
+  {
+   "id": "engineering.3",
+   "branch": "engineering",
+   "tier": 3,
+   "title": {
+    "ru_ru": "механизмы на продажу",
+    "en_us": "Mechanisms for Sale"
+   },
+   "requires_all": [
+    "caravans.1",
+    "engineering.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B15",
+   "owner_en": "III the village crafts redstone mechanisms and puts them up for sale",
+   "legacy_titles": {
+    "ru_v1": "террасы 8/6",
+    "en_v1": "Terracing 8/6",
+    "ru_ru": "Тоннели и террасы",
+    "en_us": "Tunnels and Terraces"
+   }
+  },
+  {
+   "id": "engineering.4",
+   "branch": "engineering",
+   "tier": 4,
+   "title": {
+    "ru_ru": "ловушки для мобов",
+    "en_us": "Mob Traps"
+   },
+   "requires_all": [
+    "engineering.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B15",
+   "owner_en": "IV mob traps can be placed on village land",
+   "legacy_titles": {
+    "ru_v1": "террасы 9/7",
+    "en_v1": "Terracing 9/7",
+    "ru_ru": "Приводные конструкции",
+    "en_us": "Powered Structures"
+   }
+  },
+  {
+   "id": "engineering.5",
+   "branch": "engineering",
+   "tier": 5,
+   "title": {
+    "ru_ru": "ключ к VI",
+    "en_us": "Key to VI"
+   },
+   "requires_all": [
+    "engineering.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "V a mandatory research to take ANY other branch to level VI",
+   "legacy_titles": {
+    "ru_v1": "террасы 10/8",
+    "en_v1": "Terracing 10/8",
+    "ru_ru": "Автоматическое проектное бюро",
+    "en_us": "Automatic Engineering Office"
+   }
+  },
+  {
+   "id": "research.1",
+   "branch": "research",
+   "tier": 1,
+   "title": {
+    "ru_ru": "лаборатория",
+    "en_us": "Laboratory"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:planks",
+      "count": 32
+     },
+     {
+      "item": "minecraft:torch",
+      "count": 16
+     },
+     {
+      "item": "minecraft:crafting_table",
+      "count": 1
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "I opens the lab where a scientist produces SCIENTIFIC WORKS; one work per 30 REAL minutes",
+   "legacy_titles": {
+    "ru_v1": "очередь исследований",
+    "en_v1": "Research Queue",
+    "ru_ru": "Каталог научных книг",
+    "en_us": "Research Book Catalog"
+   }
+  },
+  {
+   "id": "research.2",
+   "branch": "research",
+   "tier": 2,
+   "title": {
+    "ru_ru": "два учёных",
+    "en_us": "Two Scientists"
+   },
+   "requires_all": [
+    "research.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "lab level 2: 2 scientist seats",
+   "legacy_titles": {
+    "ru_v1": "лаборатория 40",
+    "en_v1": "Lab 40",
+    "ru_ru": "Научные столы",
+    "en_us": "Research Desks"
+   }
+  },
+  {
+   "id": "research.3",
+   "branch": "research",
+   "tier": 3,
+   "title": {
+    "ru_ru": "три учёных",
+    "en_us": "Three Scientists"
+   },
+   "requires_all": [
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "lab level 3: 3 scientist seats",
+   "legacy_titles": {
+    "ru_v1": "лаборатория 60",
+    "en_v1": "Lab 60",
+    "ru_ru": "Тематические лаборатории",
+    "en_us": "Specialist Laboratories"
+   }
+  },
+  {
+   "id": "research.4",
+   "branch": "research",
+   "tier": 4,
+   "title": {
+    "ru_ru": "четыре учёных",
+    "en_us": "Four Scientists"
+   },
+   "requires_all": [
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "lab level 4: 4 scientist seats",
+   "legacy_titles": {
+    "ru_v1": "лаборатория 80",
+    "en_v1": "Lab 80",
+    "ru_ru": "Механическое письмо",
+    "en_us": "Mechanical Scribing"
+   }
+  },
+  {
+   "id": "research.5",
+   "branch": "research",
+   "tier": 5,
+   "title": {
+    "ru_ru": "пять учёных",
+    "en_us": "Five Scientists"
+   },
+   "requires_all": [
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "lab level 5: 5 scientist seats",
+   "legacy_titles": {
+    "ru_v1": "лаборатория 100",
+    "en_v1": "Lab 100",
+    "ru_ru": "Автоматический скрипторий",
+    "en_us": "Automatic Scriptorium"
+   }
+  },
+  {
+   "id": "research.6",
+   "branch": "research",
+   "tier": 6,
+   "title": {
+    "ru_ru": "шесть учёных",
+    "en_us": "Six Scientists"
+   },
+   "requires_all": [
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "T",
+   "owner_en": "lab level 6: 6 scientist seats",
+   "legacy_titles": {
+    "ru_v1": "лаборатория 120",
+    "en_v1": "Lab 120",
+    "ru_ru": "Научная сеть",
+    "en_us": "Research Network"
+   }
+  },
+  {
+   "id": "education.1",
+   "branch": "education",
+   "tier": 1,
+   "title": {
+    "ru_ru": "школа",
+    "en_us": "School"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:planks",
+      "count": 32
+     },
+     {
+      "item": "minecraft:chest",
+      "count": 2
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "B6",
+   "owner_en": "I opens the school, teaches 1 pupil at a time",
+   "legacy_titles": {
+    "ru_v1": "основы",
+    "en_v1": "Foundations",
+    "ru_ru": "Школьные материалы",
+    "en_us": "School Materials"
+   }
+  },
+  {
+   "id": "education.2",
+   "branch": "education",
+   "tier": 2,
+   "title": {
+    "ru_ru": "два ученика",
+    "en_us": "Two Pupils"
+   },
+   "requires_all": [
+    "education.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B6",
+   "owner_en": "II teaches 2 at a time (bigger classroom)",
+   "legacy_titles": {
+    "ru_v1": "урок 24",
+    "en_v1": "Lesson 24",
+    "ru_ru": "Учебные группы",
+    "en_us": "Study Groups"
+   }
+  },
+  {
+   "id": "education.3",
+   "branch": "education",
+   "tier": 3,
+   "title": {
+    "ru_ru": "военный класс",
+    "en_us": "Military Class"
+   },
+   "requires_all": [
+    "education.2",
+    "military.1",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B6",
+   "owner_en": "III opens the MILITARY CLASS (a child grows up a soldier)",
+   "legacy_titles": {
+    "ru_v1": "урок 28",
+    "en_v1": "Lesson 28",
+    "ru_ru": "Практические пособия",
+    "en_us": "Practical Learning Aids"
+   }
+  },
+  {
+   "id": "education.4",
+   "branch": "education",
+   "tier": 4,
+   "title": {
+    "ru_ru": "четыре ученика",
+    "en_us": "Four Pupils"
+   },
+   "requires_all": [
+    "education.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B6",
+   "owner_en": "IV teaches 4 at a time",
+   "legacy_titles": {
+    "ru_v1": "урок 32",
+    "en_v1": "Lesson 32",
+    "ru_ru": "Обучающие устройства",
+    "en_us": "Teaching Devices"
+   }
+  },
+  {
+   "id": "education.5",
+   "branch": "education",
+   "tier": 5,
+   "title": {
+    "ru_ru": "восемь учеников",
+    "en_us": "Eight Pupils"
+   },
+   "requires_all": [
+    "education.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B6",
+   "owner_en": "V teaches 8 at a time",
+   "legacy_titles": {
+    "ru_v1": "урок 36",
+    "en_v1": "Lesson 36",
+    "ru_ru": "Автоматизированный класс",
+    "en_us": "Automated Classroom"
+   }
+  },
+  {
+   "id": "education.6",
+   "branch": "education",
+   "tier": 6,
+   "title": {
+    "ru_ru": "библиотека",
+    "en_us": "Library"
+   },
+   "requires_all": [
+    "education.5",
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B6",
+   "owner_en": "VI adds a LIBRARY — children learn twice as fast",
+   "legacy_titles": {
+    "ru_v1": "урок 40",
+    "en_v1": "Lesson 40",
+    "ru_ru": "Образовательная сеть",
+    "en_us": "Education Network"
+   }
+  },
+  {
+   "id": "cartography.1",
+   "branch": "cartography",
+   "tier": 1,
+   "title": {
+    "ru_ru": "картограф",
+    "en_us": "Cartographer"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:planks",
+      "count": 32
+     },
+     {
+      "item": "minecraft:raw_iron",
+      "count": 8
+     }
+    ]
+   },
+   "status": "INTERIM",
+   "phase": "B13",
+   "owner_en": "I opens the cartographer, slowly maps the village area",
+   "future": {
+    "ru_ru": "картограф медленно снимает землю деревни",
+    "en_us": "the cartographer slowly maps the village area"
+   },
+   "legacy_titles": {
+    "ru_v1": "дом картографа",
+    "en_v1": "Cartographer House",
+    "ru_ru": "Дом картографа"
+   }
+  },
+  {
+   "id": "cartography.2",
+   "branch": "cartography",
+   "tier": 2,
+   "title": {
+    "ru_ru": "свет в тёмных местах",
+    "en_us": "Lighting Dark Spots"
+   },
+   "requires_all": [
+    "cartography.1"
+   ],
+   "status": "INTERIM",
+   "phase": "B13",
+   "owner_en": "II once the whole village is in the atlas, he lights its dark spots (if there are torches)",
+   "future": {
+    "ru_ru": "когда деревня вся в атласе, картограф ставит факелы в тёмных местах",
+    "en_us": "once the village is mapped, he lights its dark spots with torches"
+   },
+   "legacy_titles": {
+    "ru_v1": "съёмка на 3 чанка",
+    "en_v1": "Survey 3 Chunks",
+    "ru_ru": "Обследование коридоров",
+    "en_us": "Corridor Surveying"
+   }
+  },
+  {
+   "id": "cartography.3",
+   "branch": "cartography",
+   "tier": 3,
+   "title": {
+    "ru_ru": "разведчик",
+    "en_us": "Scout"
+   },
+   "requires_all": [
+    "cartography.2",
+    "research.2"
+   ],
+   "status": "INTERIM",
+   "phase": "B13",
+   "owner_en": "III adds a second cartographer who goes looking for villages around; only then do quests to neighbouring villages start",
+   "future": {
+    "ru_ru": "второй картограф-разведчик ищет соседние деревни",
+    "en_us": "a second cartographer scouts for neighbouring villages"
+   },
+   "legacy_titles": {
+    "ru_v1": "съёмка на 4 чанка",
+    "en_v1": "Survey 4 Chunks",
+    "ru_ru": "Высотная съёмка",
+    "en_us": "Elevation Survey"
+   }
+  },
+  {
+   "id": "cartography.4",
+   "branch": "cartography",
+   "tier": 4,
+   "title": {
+    "ru_ru": "съёмка +1 чанк",
+    "en_us": "Survey +1 Chunk"
+   },
+   "requires_all": [
+    "cartography.3",
+    "research.3"
+   ],
+   "status": "INTERIM",
+   "phase": "B13",
+   "owner_en": "IV the cartographer studies his chunk +1 around",
+   "future": {
+    "ru_ru": "картограф снимает свой чанк и ещё один вокруг",
+    "en_us": "the cartographer maps his chunk and one around it"
+   },
+   "legacy_titles": {
+    "ru_v1": "съёмка на 5 чанков",
+    "en_v1": "Survey 5 Chunks",
+    "ru_ru": "Полевые приборы",
+    "en_us": "Field Instruments"
+   }
+  },
+  {
+   "id": "cartography.5",
+   "branch": "cartography",
+   "tier": 5,
+   "title": {
+    "ru_ru": "волк-патруль",
+    "en_us": "Wolf Patrol"
+   },
+   "requires_all": [
+    "cartography.4",
+    "research.4"
+   ],
+   "status": "INTERIM",
+   "phase": "B13",
+   "owner_en": "V +2 chunks around and can train a wolf to patrol the village area and light it",
+   "future": {
+    "ru_ru": "+2 чанка вокруг и волк-патруль с факелами",
+    "en_us": "two chunks around and a wolf patrol with torches"
+   },
+   "legacy_titles": {
+    "ru_v1": "съёмка на 6 чанков",
+    "en_v1": "Survey 6 Chunks",
+    "ru_ru": "Механический разведчик",
+    "en_us": "Mechanical Surveyor"
+   }
+  },
+  {
+   "id": "cartography.6",
+   "branch": "cartography",
+   "tier": 6,
+   "title": {
+    "ru_ru": "съёмка сама",
+    "en_us": "Self-Mapping"
+   },
+   "requires_all": [
+    "cartography.5",
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "INTERIM",
+   "phase": "B13",
+   "owner_en": "VI mapping the village area happens automatically",
+   "future": {
+    "ru_ru": "земля деревни снимается сама",
+    "en_us": "the village area maps itself"
+   },
+   "legacy_titles": {
+    "ru_v1": "съёмка на 8 чанков",
+    "en_v1": "Survey 8 Chunks",
+    "ru_ru": "Картографическая сеть",
+    "en_us": "Survey Network"
+   }
+  },
+  {
+   "id": "medicine.1",
+   "branch": "medicine",
+   "tier": 1,
+   "title": {
+    "ru_ru": "больница",
+    "en_us": "Hospital"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:wheat",
+      "count": 32
+     },
+     {
+      "tag": "minecraft:planks",
+      "count": 16
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "B9",
+   "owner_en": "I opens the hospital (residents sometimes fall ill or get hurt; they can only be healed there)",
+   "legacy_titles": {
+    "ru_v1": "лечебница",
+    "en_v1": "Infirmary",
+    "ru_ru": "Лечебница"
+   }
+  },
+  {
+   "id": "medicine.2",
+   "branch": "medicine",
+   "tier": 2,
+   "title": {
+    "ru_ru": "две койки",
+    "en_us": "Two Beds"
+   },
+   "requires_all": [
+    "medicine.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B9",
+   "owner_en": "II two beds — two patients at a time",
+   "legacy_titles": {
+    "ru_v1": "радиус 56",
+    "en_v1": "Radius 56",
+    "ru_ru": "Перевязочные материалы",
+    "en_us": "Medical Supplies"
+   }
+  },
+  {
+   "id": "medicine.3",
+   "branch": "medicine",
+   "tier": 3,
+   "title": {
+    "ru_ru": "четыре койки",
+    "en_us": "Four Beds"
+   },
+   "requires_all": [
+    "medicine.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B9",
+   "owner_en": "III four beds",
+   "legacy_titles": {
+    "ru_v1": "радиус 64",
+    "en_v1": "Radius 64",
+    "ru_ru": "Полевое восстановление",
+    "en_us": "Field Recovery"
+   }
+  },
+  {
+   "id": "medicine.4",
+   "branch": "medicine",
+   "tier": 4,
+   "title": {
+    "ru_ru": "визиты на дом",
+    "en_us": "House Calls"
+   },
+   "requires_all": [
+    "medicine.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B9",
+   "owner_en": "IV six beds and two medics who visit residents at home and heal them there",
+   "legacy_titles": {
+    "ru_v1": "радиус 72",
+    "en_v1": "Radius 72",
+    "ru_ru": "Лечебное оборудование",
+    "en_us": "Medical Equipment"
+   }
+  },
+  {
+   "id": "medicine.5",
+   "branch": "medicine",
+   "tier": 5,
+   "title": {
+    "ru_ru": "лекарства",
+    "en_us": "Medicines"
+   },
+   "requires_all": [
+    "medicine.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B9",
+   "owner_en": "V eight beds and medicine production that residents can carry or that wolves bring them",
+   "legacy_titles": {
+    "ru_v1": "радиус 80",
+    "en_v1": "Radius 80",
+    "ru_ru": "Автоматизированная лечебница",
+    "en_us": "Automated Infirmary"
+   }
+  },
+  {
+   "id": "medicine.6",
+   "branch": "medicine",
+   "tier": 6,
+   "title": {
+    "ru_ru": "лечение само",
+    "en_us": "Self-Healing"
+   },
+   "requires_all": [
+    "engineering.5",
+    "medicine.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B9",
+   "owner_en": "VI twelve beds and everyone is healed automatically, without medics",
+   "legacy_titles": {
+    "ru_v1": "радиус 96",
+    "en_v1": "Radius 96",
+    "ru_ru": "Лечебная сеть",
+    "en_us": "Medical Network"
+   }
+  },
+  {
+   "id": "defense.1",
+   "branch": "defense",
+   "tier": 1,
+   "title": {
+    "ru_ru": "деревянные стены",
+    "en_us": "Wooden Walls"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "tag": "minecraft:logs",
+      "count": 64
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "B10",
+   "owner_en": "I opens building WOODEN walls around the village",
+   "legacy_titles": {
+    "ru_v1": "караульня и стена",
+    "en_v1": "Guard House and Wall",
+    "ru_ru": "Охранные посты",
+    "en_us": "Guard Posts"
+   }
+  },
+  {
+   "id": "defense.2",
+   "branch": "defense",
+   "tier": 2,
+   "title": {
+    "ru_ru": "башни лучников",
+    "en_us": "Archer Towers"
+   },
+   "requires_all": [
+    "defense.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B10",
+   "owner_en": "II wooden archer towers (built into existing walls with one button from the town hall), shooting range 24 blocks",
+   "future": {
+    "ru_ru": "деревянные башни встраиваются в стену одной кнопкой, дальность 24",
+    "en_us": "wooden towers set into the wall with one button, range 24"
+   },
+   "legacy_titles": {
+    "ru_ru": "Посты лучников",
+    "en_us": "Archer Stations"
+   }
+  },
+  {
+   "id": "defense.3",
+   "branch": "defense",
+   "tier": 3,
+   "title": {
+    "ru_ru": "малый камень",
+    "en_us": "Small Stone"
+   },
+   "requires_all": [
+    "defense.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B10",
+   "owner_en": "III upgrade the walls to small stone",
+   "legacy_titles": {
+    "ru_v1": "охрана 56",
+    "en_v1": "Defence 56",
+    "ru_ru": "Охраняемые дороги",
+    "en_us": "Protected Roads"
+   }
+  },
+  {
+   "id": "defense.4",
+   "branch": "defense",
+   "tier": 4,
+   "title": {
+    "ru_ru": "большой камень",
+    "en_us": "Big Stone"
+   },
+   "requires_all": [
+    "defense.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B10",
+   "owner_en": "IV big stone and the archer towers to small stone (range 48)",
+   "future": {
+    "ru_ru": "стены из большого камня, башни из малого (дальность 48)",
+    "en_us": "walls of big stone, towers of small stone (range 48)"
+   },
+   "legacy_titles": {
+    "ru_v1": "охрана 64",
+    "en_v1": "Defence 64",
+    "ru_ru": "Механические ворота",
+    "en_us": "Mechanical Gates"
+   }
+  },
+  {
+   "id": "defense.5",
+   "branch": "defense",
+   "tier": 5,
+   "title": {
+    "ru_ru": "каменные башни",
+    "en_us": "Stone Towers"
+   },
+   "requires_all": [
+    "defense.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B10",
+   "owner_en": "V upgrade the archer towers to big stone (range 64)",
+   "legacy_titles": {
+    "ru_v1": "охрана 72",
+    "en_v1": "Defence 72",
+    "ru_ru": "Автоматическая оборона",
+    "en_us": "Automatic Defense"
+   }
+  },
+  {
+   "id": "defense.6",
+   "branch": "defense",
+   "tier": 6,
+   "title": {
+    "ru_ru": "баллисты",
+    "en_us": "Ballistas"
+   },
+   "requires_all": [
+    "defense.5",
+    "engineering.5",
+    "metallurgy.3",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B10",
+   "owner_en": "DEFENCE VI: ballistas on the towers",
+   "legacy_titles": {
+    "ru_v1": "охрана 80",
+    "en_v1": "Defence 80",
+    "ru_ru": "Сеть обороны",
+    "en_us": "Defense Network"
+   }
+  },
+  {
+   "id": "military.1",
+   "branch": "military",
+   "tier": 1,
+   "title": {
+    "ru_ru": "казарма",
+    "en_us": "Barracks"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:cobblestone",
+      "count": 64
+     },
+     {
+      "tag": "minecraft:logs",
+      "count": 16
+     }
+    ]
+   },
+   "status": "ACTIVE",
+   "phase": "B11",
+   "owner_en": "I lets the village build barracks (8 places) and hire soldiers with stone swords",
+   "legacy_titles": {
+    "ru_ru": "Военные казармы",
+    "en_us": "Military Barracks"
+   }
+  },
+  {
+   "id": "military.2",
+   "branch": "military",
+   "tier": 2,
+   "title": {
+    "ru_ru": "железо",
+    "en_us": "Iron Gear"
+   },
+   "requires_all": [
+    "metallurgy.1",
+    "military.1"
+   ],
+   "status": "ACTIVE",
+   "phase": "B11",
+   "owner_en": "II soldiers may wear iron gear, barracks grow to 12 places",
+   "legacy_titles": {
+    "ru_v1": "строевая 24",
+    "en_v1": "Drill 24",
+    "ru_ru": "Снабжение похода",
+    "en_us": "Campaign Supply"
+   }
+  },
+  {
+   "id": "military.3",
+   "branch": "military",
+   "tier": 3,
+   "title": {
+    "ru_ru": "алмазы",
+    "en_us": "Diamond Gear"
+   },
+   "requires_all": [
+    "metallurgy.2",
+    "military.2",
+    "research.2"
+   ],
+   "status": "ACTIVE",
+   "phase": "B11",
+   "owner_en": "III barracks 16 places, diamond armour and weapons",
+   "legacy_titles": {
+    "ru_v1": "строевая 28",
+    "en_v1": "Drill 28",
+    "ru_ru": "Осадные лагеря",
+    "en_us": "Siege Camps"
+   }
+  },
+  {
+   "id": "military.4",
+   "branch": "military",
+   "tier": 4,
+   "title": {
+    "ru_ru": "специальности",
+    "en_us": "Specialities"
+   },
+   "requires_all": [
+    "military.3",
+    "research.3"
+   ],
+   "status": "ACTIVE",
+   "phase": "B11",
+   "owner_en": "IV soldiers choose a speciality (archer, defender with a shield, berserker with an axe and extra damage)",
+   "legacy_titles": {
+    "ru_v1": "строевая 32",
+    "en_v1": "Drill 32",
+    "ru_ru": "Осадное оборудование",
+    "en_us": "Siege Equipment"
+   }
+  },
+  {
+   "id": "military.5",
+   "branch": "military",
+   "tier": 5,
+   "title": {
+    "ru_ru": "школа собак",
+    "en_us": "Dog Academy"
+   },
+   "requires_all": [
+    "military.4",
+    "research.4"
+   ],
+   "status": "ACTIVE",
+   "phase": "B11",
+   "owner_en": "V every soldier gets a dog helper and the barracks gain a \"dog academy\" annex",
+   "legacy_titles": {
+    "ru_v1": "строевая 36",
+    "en_v1": "Drill 36",
+    "ru_ru": "Автоматизация казарм",
+    "en_us": "Barracks Automation"
+   }
+  },
+  {
+   "id": "military.6",
+   "branch": "military",
+   "tier": 6,
+   "title": {
+    "ru_ru": "захват городов",
+    "en_us": "Capturing Towns"
+   },
+   "requires_all": [
+    "cartography.3",
+    "engineering.5",
+    "military.5",
+    "research.5"
+   ],
+   "status": "ACTIVE",
+   "phase": "B11",
+   "owner_en": "VI soldiers can capture towns on their own — the player just picks the target in the atlas; they may also fail",
+   "legacy_titles": {
+    "ru_v1": "строевая 40",
+    "en_v1": "Drill 40",
+    "ru_ru": "Военная логистика",
+    "en_us": "Military Logistics"
+   }
+  },
+  {
+   "id": "caravans.1",
+   "branch": "caravans",
+   "tier": 1,
+   "title": {
+    "ru_ru": "центр внешней торговли",
+    "en_us": "External Trade Centre"
+   },
+   "requires_all": [],
+   "cost": {
+    "resources": [
+     {
+      "item": "minecraft:chest",
+      "count": 2
+     },
+     {
+      "item": "minecraft:wheat",
+      "count": 32
+     },
+     {
+      "item": "minecraft:cobblestone",
+      "count": 32
+     }
+    ]
+   },
+   "status": "INTERIM",
+   "phase": "B12",
+   "owner_en": "I opens the \"external trade centre\" building, which lets the village put resources up for sale to other villages",
+   "future": {
+    "ru_ru": "деревня выставляет ресурсы на продажу другим деревням",
+    "en_us": "the village puts resources up for sale to other villages"
+   },
+   "legacy_titles": {
+    "ru_v1": "караванный двор",
+    "en_v1": "Caravan Yard",
+    "ru_ru": "Караванный двор"
+   }
+  },
+  {
+   "id": "caravans.2",
+   "branch": "caravans",
+   "tier": 2,
+   "title": {
+    "ru_ru": "дальняя торговля",
+    "en_us": "Remote Trade"
+   },
+   "requires_all": [
+    "caravans.1",
+    "cartography.3"
+   ],
+   "status": "INTERIM",
+   "phase": "B12",
+   "owner_en": "II remote trade with other villages (you must meet them first and they must have the same centre)",
+   "future": {
+    "ru_ru": "дальняя торговля с известными деревнями, у которых есть такой же центр",
+    "en_us": "remote trade with known villages that have the same centre"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 96",
+    "en_v1": "Cargo 96",
+    "ru_ru": "Грузовая телега",
+    "en_us": "Cargo Cart"
+   }
+  },
+  {
+   "id": "caravans.3",
+   "branch": "caravans",
+   "tier": 3,
+   "title": {
+    "ru_ru": "пять стопок за рейс",
+    "en_us": "Five Stacks a Trip"
+   },
+   "requires_all": [
+    "caravans.2",
+    "logistics.2",
+    "research.2"
+   ],
+   "status": "INTERIM",
+   "phase": "B12",
+   "owner_en": "III caravaneers carry 5 stacks per trip",
+   "future": {
+    "ru_ru": "торговец везёт 5 стопок за рейс",
+    "en_us": "a trader carries 5 stacks a trip"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 128",
+    "en_v1": "Cargo 128",
+    "ru_ru": "Маршрутные договоры",
+    "en_us": "Route Contracts"
+   }
+  },
+  {
+   "id": "caravans.4",
+   "branch": "caravans",
+   "tier": 4,
+   "title": {
+    "ru_ru": "охрана каравана",
+    "en_us": "Caravan Guards"
+   },
+   "requires_all": [
+    "caravans.3",
+    "military.1",
+    "research.3"
+   ],
+   "status": "INTERIM",
+   "phase": "B12",
+   "owner_en": "IV caravaneers may take soldiers as guards (if the soldiers are free)",
+   "future": {
+    "ru_ru": "свободные солдаты охраняют караван",
+    "en_us": "free soldiers guard the caravan"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 160",
+    "en_v1": "Cargo 160",
+    "ru_ru": "Механизированная погрузка",
+    "en_us": "Mechanized Caravan Loading"
+   }
+  },
+  {
+   "id": "caravans.5",
+   "branch": "caravans",
+   "tier": 5,
+   "title": {
+    "ru_ru": "телега с собакой",
+    "en_us": "Dog Cart"
+   },
+   "requires_all": [
+    "caravans.4",
+    "research.4"
+   ],
+   "status": "INTERIM",
+   "phase": "B12",
+   "owner_en": "V a caravaneer may take an extra cart pulled by a dog",
+   "future": {
+    "ru_ru": "ещё одна телега, её тянет собака",
+    "en_us": "an extra cart pulled by a dog"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 192",
+    "en_v1": "Cargo 192",
+    "ru_ru": "Самоходная грузовая повозка",
+    "en_us": "Self-Propelled Cargo Wagon"
+   }
+  },
+  {
+   "id": "caravans.6",
+   "branch": "caravans",
+   "tier": 6,
+   "title": {
+    "ru_ru": "караван без торговца",
+    "en_us": "Caravan Without a Trader"
+   },
+   "requires_all": [
+    "caravans.5",
+    "engineering.5",
+    "research.5"
+   ],
+   "status": "INTERIM",
+   "phase": "B12",
+   "owner_en": "VI a caravan can be harnessed to a horse and sent automatically, with no worker",
+   "future": {
+    "ru_ru": "караван с лошадью уходит сам, без работника",
+    "en_us": "a horse caravan leaves on its own, with no worker"
+   },
+   "legacy_titles": {
+    "ru_v1": "груз 256",
+    "en_v1": "Cargo 256",
+    "ru_ru": "Караванная сеть",
+    "en_us": "Caravan Network"
+   }
+  }
+ ]
+}

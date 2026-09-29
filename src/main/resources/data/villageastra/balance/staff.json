@@ -1,0 +1,23 @@
+{
+  "schema": 1,
+  "note": "AD-138: the workers a workplace takes on its own, by the level it is kept at (I..VI). A type not named here takes one. The farm is FarmField.farmers (AD-130, with its legacy rule), not listed. livestock: one keeper for one or two pens, two for four, one again at VI (the machine feeds and the wolves cull; the keeper shears and brings in new stock). AD-139 restaurant: its own trade (workers: the cook, a baker) one at I..V and none at VI (the kitchen machine cooks), and its couriers (porter) 0/0/0/1/2/2; a row of that shape names the other trades a workplace posts besides its own. kennel_annex (AD-138 IV): equipment, nobody works there. clinic (AD-152): one medic, two from IV (they visit the sick at home), none at VI (everyone is healed without medics). smithy (AD-155): one smith, none at VI (the bench turns by itself). AD-147 warehouse: its couriers (its own trade, porters) 1/1/1/2/2/2; at VI none while the village's harnessed wolves carry and no courier holds a load (CartWolves.relieved).",
+  "slots": {
+    "warehouse": {
+      "workers": [1, 1, 1, 2, 2, 2]
+    },
+    "livestock": [1, 1, 2, 2, 2, 1],
+    "kennel_annex": [0, 0, 0, 0, 0, 0],
+    "dog_academy_annex": [0, 0, 0, 0, 0, 0],
+    "clinic": [1, 1, 1, 2, 2, 0],
+    "barracks": [8, 12, 16, 16, 16, 16],
+    "cartographer": [1, 1, 2, 2, 2, 2],
+    "smithy": {
+      "workers": [1, 1, 1, 1, 1, 0],
+      "porter": [0, 0, 1, 1, 0, 0]
+    },
+    "restaurant": {
+      "workers": [1, 1, 1, 1, 1, 0],
+      "porter": [0, 0, 0, 1, 2, 2]
+    }
+  }
+}

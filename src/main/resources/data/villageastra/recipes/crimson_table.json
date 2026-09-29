@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "table",
+  "pattern": [
+    "PPP",
+    "S S"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "P": {
+      "item": "minecraft:crimson_planks"
+    }
+  },
+  "result": {
+    "item": "villageastra:crimson_table",
+    "count": 1
+  }
+}

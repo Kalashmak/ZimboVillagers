@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "table",
+  "pattern": [
+    "PPP",
+    "S S"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "P": {
+      "item": "minecraft:mangrove_planks"
+    }
+  },
+  "result": {
+    "item": "villageastra:mangrove_table",
+    "count": 1
+  }
+}

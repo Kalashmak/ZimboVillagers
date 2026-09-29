@@ -1,0 +1,11 @@
+{
+  "structures": [
+    {
+      "structure": "minecraft:village_plains",
+      "weight": 1
+    }
+  ],
+  "placement": {
+    "type": "villageastra:sectors"
+  }
+}

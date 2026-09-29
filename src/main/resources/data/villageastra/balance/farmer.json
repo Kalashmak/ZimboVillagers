@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "note": "AD-104 P2. The farmer reaps a ripe plot and sows it again at once from the seed it gave, and carries the batch to the farm chest in one visit: when it holds batch_items, when the hoe is gone, in the evening_ticks before dusk, when the next ripe plot lies more than reach blocks from the last plot he worked (a 9x9 module is 11.3 corner to corner, and he stands up to 2.5 from a plot), or after wait_calls one-second calls with nothing to do. Reaping a crop wears no hoe (vanilla: crops break instantly); tilling does. Of wheat and beetroot seeds he takes home only what keeps seed_keep in the farm chest, plus the one he sows; the rest stays in the soil.",
+  "batch_items": 48,
+  "reach": 14,
+  "wait_calls": 60,
+  "evening_ticks": 1200,
+  "seed_keep": 32
+}

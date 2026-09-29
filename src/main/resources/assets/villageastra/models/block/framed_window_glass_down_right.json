@@ -1,0 +1,42 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "minecraft:block/glass",
+    "glass": "minecraft:block/glass"
+  },
+  "elements": [
+    {
+      "from": [
+        14,
+        0,
+        7
+      ],
+      "to": [
+        16,
+        2,
+        9
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            12,
+            12,
+            14,
+            14
+          ],
+          "texture": "#glass"
+        },
+        "south": {
+          "uv": [
+            12,
+            12,
+            14,
+            14
+          ],
+          "texture": "#glass"
+        }
+      }
+    }
+  ]
+}

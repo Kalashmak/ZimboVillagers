@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "note": "AD-044. Peaceful annexation is earned by sustained useful deliveries, agreed in a contract, paid from existing coins and finished by one transfer of ownership. Prices scale with what the settlement really has.",
+  "supply_window": 216000,
+  "supply_value": 12,
+  "price_per_resident": 32,
+  "price_per_building": 16,
+  "goods_share_percent": 25,
+  "confirm_ticks": 24000
+}

@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "DPD",
+    "PLP",
+    "DPD"
+  ],
+  "key": {
+    "D": {
+      "item": "minecraft:polished_diorite"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "L": {
+      "item": "minecraft:lantern"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_laboratory",
+    "count": 1
+  }
+}

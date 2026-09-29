@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "note": "AD-139 restaurant (owner 2026-09-23). A resident whose meal is due walks to a free seat of the restaurant, eats there sit_ticks and goes back to work. An invitation lives wait_ticks of the village clock; one that expires is eaten from the pantries by the old way (AD-104) with the same due, so no meal is ever lost. A resident who finds the hall full waits at most wait_ticks for a seat, then eats from the pantries. The hall serves portions: a dish is opened once and what a meal leaves of it (in rations) feeds the next diner, up to leftover_max; it cools at dusk. seat_groups: table groups (a table and two seats) standing at levels I..VI. From level IV a courier (a porter posted at the restaurant) carries portions to residents working further than near_work_radius from the hall, within courier_radius; with a dog of the village (livestock kennel) and a cart the load is courier_cart_portions and the radius courier_cart_radius. keep_items: the food a restaurant keeps in its own chest for the hall before the rest goes to the stock.",
+  "sit_ticks": 600,
+  "wait_ticks": 2400,
+  "dine_radius": 64,
+  "near_work_radius": 24,
+  "leftover_max": 19,
+  "keep_items": 16,
+  "seat_groups": {"1": 2, "2": 4, "3": 4, "4": 6, "5": 6, "6": 8},
+  "courier_radius": 48,
+  "courier_cart_radius": 96,
+  "courier_hand_portions": 16,
+  "courier_cart_portions": 54,
+  "courier_lookahead_ticks": 1200,
+  "courier_serve_ticks": 100,
+  "courier_reserve_ticks": 4800
+}

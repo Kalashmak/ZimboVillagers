@@ -1,0 +1,7 @@
+{
+  "parent": "villageastra:block/chair",
+  "textures": {
+    "planks": "minecraft:block/birch_planks",
+    "log": "minecraft:block/stripped_birch_log"
+  }
+}

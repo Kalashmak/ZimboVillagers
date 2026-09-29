@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "CLC",
+    "LXL",
+    "CLC"
+  ],
+  "key": {
+    "C": {
+      "item": "minecraft:cobblestone"
+    },
+    "L": {
+      "tag": "minecraft:logs"
+    },
+    "X": {
+      "item": "minecraft:chest"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_town_hall",
+    "count": 1
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "minecraft:block/scaffolding_stable",
+  "textures": {
+    "particle": "minecraft:block/oak_planks",
+    "top": "minecraft:block/scaffolding_top",
+    "side": "minecraft:block/scaffolding_side",
+    "bottom": "minecraft:block/scaffolding_bottom"
+  }
+}

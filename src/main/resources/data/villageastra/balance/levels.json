@@ -1,0 +1,852 @@
+{
+ "_comment": "AD-073, AD-112: building levels II-VI. Each level rebuilds more of the shell in dearer materials and adds its own equipment (kits); every work building holds one core from level II, and levels III-VI each add a ring to it (III copper, IV iron, V gold, VI netherite), so level VI takes a netherite block through its ring. Kits use only blocks the village's own workshops make: no iron, gold, diamond, emerald, copper or netherite blocks and no redstone machines. Kit cells are placed automatically inside the building; the level a building works at is read from its kits standing in place and the grade of its core. Values weigh items so every next upgrade is dearer.",
+ "schema": 2,
+ "labor_bonus": 2,
+ "catalog": {
+  "town_hall": "town_hall",
+  "guard_house": "guard_house",
+  "archery": "archer_post",
+  "forester": "forest_lodge",
+  "mine": "mine",
+  "farm": "farm",
+  "school": "school",
+  "cartographer": "cartographer_house",
+  "smithy": "smithy",
+  "laboratory": "research_house",
+  "expedition": "expedition_office",
+  "warehouse": "warehouse",
+  "barracks": "barracks",
+  "livestock": "livestock_yard",
+  "mill": "mill",
+  "bakery": "restaurant",
+  "restaurant": "restaurant",
+  "masonry": "stoneworks",
+  "carpentry": "carpentry_shop",
+  "caravan": "caravan_yard",
+  "clinic": "infirmary",
+  "engineering": "engineering_office",
+  "home": "residential_house",
+  "home_2": "residential_house",
+  "quarry": "mine"
+ },
+ "kits": {
+  "home": {
+   "2": [
+    "minecraft:bookshelf",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:crafting_table",
+    "minecraft:lectern",
+    "minecraft:composter"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:smoker",
+    "minecraft:furnace",
+    "minecraft:chiseled_stone_bricks"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:barrel",
+    "minecraft:chiseled_bookshelf",
+    "minecraft:polished_granite",
+    "minecraft:lantern"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "town_hall": {
+   "2": [
+    "minecraft:lectern",
+    "minecraft:bookshelf"
+   ],
+   "3": [
+    "minecraft:cartography_table",
+    "minecraft:bookshelf",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:furnace",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "farm": {
+   "2": [
+    "minecraft:composter",
+    "minecraft:hay_block"
+   ],
+   "3": [
+    "minecraft:barrel",
+    "minecraft:composter",
+    "minecraft:hay_block"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:furnace",
+    "minecraft:smooth_stone",
+    "minecraft:lantern",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "forester": {
+      "2": ["minecraft:composter", "minecraft:barrel"],
+      "3": ["minecraft:barrel", "minecraft:barrel", "minecraft:lectern"],
+      "4": ["minecraft:stonecutter", "minecraft:barrel", "minecraft:grindstone"],
+      "5": ["minecraft:chest", "minecraft:lantern", "minecraft:furnace"],
+      "6": ["minecraft:stonecutter", "minecraft:chiseled_deepslate", "minecraft:polished_deepslate"]
+    },
+  "mine": {
+   "2": [
+    "minecraft:barrel",
+    "minecraft:stonecutter"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:barrel",
+    "minecraft:stonecutter"
+   ],
+   "4": [
+    "minecraft:furnace",
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:furnace",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:smooth_stone",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "quarry": {
+   "2": [
+    "minecraft:stonecutter",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:barrel",
+    "minecraft:stonecutter"
+   ],
+   "4": [
+    "minecraft:furnace",
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "guard_house": {
+   "2": [
+    "minecraft:smithing_table",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:hay_block",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:furnace",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:furnace",
+    "minecraft:smooth_stone",
+    "minecraft:hay_block",
+    "minecraft:lantern",
+    "minecraft:polished_diorite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "archery": {
+   "2": [
+    "minecraft:fletching_table",
+    "minecraft:hay_block"
+   ],
+   "3": [
+    "minecraft:hay_block",
+    "minecraft:barrel",
+    "minecraft:fletching_table"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:furnace",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:polished_diorite",
+    "minecraft:hay_block"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "school": {
+   "2": [
+    "minecraft:lectern",
+    "minecraft:bookshelf"
+   ],
+   "3": [
+    "minecraft:bookshelf",
+    "minecraft:bookshelf",
+    "minecraft:cartography_table"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:barrel",
+    "minecraft:chiseled_bookshelf",
+    "minecraft:smooth_stone",
+    "minecraft:lectern"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "cartographer": {
+   "2": [
+    "minecraft:cartography_table",
+    "minecraft:bookshelf"
+   ],
+   "3": [
+    "minecraft:lectern",
+    "minecraft:bookshelf",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "smithy": {
+   "2": [
+    "minecraft:smithing_table",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:furnace",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:furnace",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:lantern",
+    "minecraft:furnace",
+    "minecraft:smooth_stone",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "laboratory": {
+   "2": [
+    "minecraft:lantern",
+    "minecraft:bookshelf"
+   ],
+   "3": [
+    "minecraft:bookshelf",
+    "minecraft:lectern",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:smooth_stone",
+    "minecraft:lantern",
+    "minecraft:furnace",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "expedition": {
+   "2": [
+    "minecraft:cartography_table",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:barrel",
+    "minecraft:lectern",
+    "minecraft:bookshelf"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "warehouse": {
+   "2": [
+    "minecraft:barrel",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:barrel",
+    "minecraft:barrel",
+    "minecraft:lectern"
+   ],
+   "4": [
+    "minecraft:barrel",
+    "minecraft:barrel",
+    "minecraft:grindstone"
+   ],
+   "5": [
+    "minecraft:barrel",
+    "minecraft:hay_block",
+    "minecraft:hay_block"
+   ],
+   "6": [
+    "minecraft:cartography_table",
+    "minecraft:lectern"
+   ]
+  },
+  "barracks": {
+   "2": [
+    "minecraft:smithing_table",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:hay_block",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:furnace",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:furnace",
+    "minecraft:smooth_stone",
+    "minecraft:polished_diorite",
+    "minecraft:lantern",
+    "minecraft:hay_block"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "livestock": {
+   "2": [
+    "minecraft:hay_block",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:hay_block",
+    "minecraft:barrel",
+    "minecraft:hay_block"
+   ],
+   "4": [
+    "minecraft:barrel",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:furnace",
+    "minecraft:smooth_stone",
+    "minecraft:lantern",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "mill": {
+   "2": [
+    "minecraft:composter",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:barrel",
+    "minecraft:hay_block"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:lantern",
+    "minecraft:smooth_stone",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:furnace",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "restaurant": {
+   "2": ["minecraft:smoker", "minecraft:barrel"],
+   "3": ["minecraft:furnace", "minecraft:barrel"],
+   "4": ["minecraft:smoker", "minecraft:composter"],
+   "5": ["minecraft:lantern", "minecraft:smooth_stone"],
+   "6": ["minecraft:smoker", "minecraft:polished_deepslate"]
+  },
+  "bakery": {
+   "2": [
+    "minecraft:smoker",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:furnace",
+    "minecraft:barrel",
+    "minecraft:crafting_table"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:smoker",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:lantern",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:polished_diorite",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "masonry": {
+   "2": [
+    "minecraft:stonecutter",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:stonecutter",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:furnace",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "carpentry": {
+   "2": [
+    "minecraft:crafting_table",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:stonecutter",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "caravan": {
+   "2": [
+    "minecraft:barrel",
+    "minecraft:cartography_table"
+   ],
+   "3": [
+    "minecraft:barrel",
+    "minecraft:barrel",
+    "minecraft:lectern"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:lantern",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:polished_diorite",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "clinic": {
+   "2": [
+    "minecraft:lantern",
+    "minecraft:barrel"
+   ],
+   "3": [
+    "minecraft:lectern",
+    "minecraft:bookshelf",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:lantern"
+   ],
+   "5": [
+    "minecraft:polished_diorite",
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  },
+  "engineering": {
+   "2": [
+    "minecraft:smithing_table",
+    "minecraft:stonecutter"
+   ],
+   "3": [
+    "minecraft:grindstone",
+    "minecraft:lectern",
+    "minecraft:barrel"
+   ],
+   "4": [
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:composter",
+    "minecraft:lantern",
+    "minecraft:furnace"
+   ],
+   "5": [
+    "minecraft:smooth_stone",
+    "minecraft:furnace",
+    "minecraft:lantern",
+    "minecraft:polished_diorite",
+    "minecraft:polished_granite"
+   ],
+   "6": [
+    "minecraft:lectern",
+    "minecraft:chiseled_deepslate",
+    "minecraft:deepslate_tiles",
+    "minecraft:bookshelf",
+    "minecraft:polished_deepslate",
+    "minecraft:lantern"
+   ]
+  }
+ },
+ "value": {
+  "minecraft:cobblestone": 1,
+  "minecraft:stone": 1,
+  "minecraft:oak_planks": 1,
+  "minecraft:spruce_planks": 1,
+  "minecraft:birch_planks": 1,
+  "minecraft:dark_oak_planks": 1,
+  "minecraft:stone_bricks": 2,
+  "minecraft:polished_andesite": 2,
+  "minecraft:chiseled_stone_bricks": 3,
+  "minecraft:bricks": 4,
+  "minecraft:brick_stairs": 6,
+  "minecraft:brick_slab": 2,
+  "minecraft:deepslate_bricks": 4,
+  "minecraft:polished_deepslate": 3,
+  "minecraft:deepslate_tiles": 5,
+  "minecraft:deepslate_brick_stairs": 6,
+  "minecraft:deepslate_brick_slab": 2,
+  "minecraft:spruce_log": 2,
+  "minecraft:stripped_dark_oak_log": 3,
+  "minecraft:lantern": 10,
+  "minecraft:barrel": 7,
+  "minecraft:bookshelf": 15,
+  "minecraft:lectern": 18,
+  "minecraft:composter": 4,
+  "minecraft:crafting_table": 4,
+  "minecraft:stonecutter": 12,
+  "minecraft:grindstone": 12,
+  "minecraft:smithing_table": 30,
+  "minecraft:fletching_table": 6,
+  "minecraft:cartography_table": 12,
+  "minecraft:hay_block": 9,
+  "minecraft:furnace": 8,
+  "minecraft:stripped_oak_log": 2,
+  "minecraft:smoker": 20,
+  "minecraft:chest": 8,
+  "minecraft:polished_diorite": 2,
+  "minecraft:chiseled_deepslate": 8,
+  "minecraft:deepslate_tile_stairs": 9,
+  "minecraft:deepslate_tile_slab": 3,
+  "minecraft:chiseled_bookshelf": 20,
+  "minecraft:smooth_stone": 2,
+  "minecraft:polished_granite": 2,
+  "minecraft:polished_granite_stairs": 3,
+  "minecraft:stone_brick_wall": 2,
+  "minecraft:stone_brick_stairs": 3,
+  "minecraft:stone_brick_slab": 1,
+  "villageastra:oak_framed_window": 5,
+  "villageastra:spruce_framed_window": 5,
+  "villageastra:birch_framed_window": 5,
+  "villageastra:jungle_framed_window": 5,
+  "villageastra:acacia_framed_window": 5,
+  "villageastra:dark_oak_framed_window": 5,
+  "villageastra:mangrove_framed_window": 5,
+  "villageastra:cherry_framed_window": 5,
+  "villageastra:bamboo_framed_window": 5,
+  "villageastra:crimson_framed_window": 5,
+  "villageastra:warped_framed_window": 5,
+  "villageastra:oak_chair": 2,
+  "villageastra:spruce_chair": 2,
+  "villageastra:birch_chair": 2,
+  "villageastra:jungle_chair": 2,
+  "villageastra:acacia_chair": 2,
+  "villageastra:dark_oak_chair": 2,
+  "villageastra:mangrove_chair": 2,
+  "villageastra:cherry_chair": 2,
+  "villageastra:bamboo_chair": 2,
+  "villageastra:crimson_chair": 2,
+  "villageastra:warped_chair": 2,
+  "villageastra:oak_table": 3,
+  "villageastra:spruce_table": 3,
+  "villageastra:birch_table": 3,
+  "villageastra:jungle_table": 3,
+  "villageastra:acacia_table": 3,
+  "villageastra:dark_oak_table": 3,
+  "villageastra:mangrove_table": 3,
+  "villageastra:cherry_table": 3,
+  "villageastra:bamboo_table": 3,
+  "villageastra:crimson_table": 3,
+  "villageastra:warped_table": 3,
+  "villageastra:core_farm": 60,
+  "villageastra:core_livestock": 60,
+  "villageastra:core_forester": 60,
+  "villageastra:core_mine": 60,
+  "villageastra:core_smithy": 60,
+  "villageastra:core_carpentry": 60,
+  "villageastra:core_masonry": 60,
+  "villageastra:core_mill": 60,
+  "villageastra:core_bakery": 60,
+  "villageastra:core_clinic": 60,
+  "villageastra:core_town_hall": 60,
+  "villageastra:core_guard_house": 60,
+  "villageastra:core_archery": 60,
+  "villageastra:core_barracks": 60,
+  "villageastra:core_school": 60,
+  "villageastra:core_laboratory": 60,
+  "villageastra:core_cartographer": 60,
+  "villageastra:core_expedition": 60,
+  "villageastra:core_warehouse": 60,
+  "villageastra:core_caravan": 60,
+  "villageastra:core_engineering": 60,
+  "villageastra:core_ring_3": 80,
+  "villageastra:core_ring_4": 150,
+  "villageastra:core_ring_5": 300,
+  "villageastra:core_ring_6": 2000
+ },
+ "default_value": 1
+}

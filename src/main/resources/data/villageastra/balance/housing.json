@@ -1,0 +1,19 @@
+{
+  "minimum_solid_floor_cells": 40,
+  "minimum_solid_roof_cells": 40,
+  "note": "AD-123 housing ladder (owner, AD-115: I - 2 residents, II - 4, III-VI as the beds allow). beds: residents per house level I..VI; they become capacity only when level_beds is true and a finished project placed the beds. design_research: research a design needs before it may be ordered. birth_interval_research: active ticks between births once the node is done (base population.json birth_interval_ticks).",
+  "beds": { "home": [2, 2, 4, 4, 4, 4], "home_2": [4, 4, 4, 6, 8, 10] },
+  "level_beds": true,
+  "level_beds_note": "On since OWNER-HOUSING-BEDS (2026-09-23): level_bed_cells gives every home@N / home_2@N the beds of its level; HousingLadderGameTests.layoutsMatchBedTargets holds the targets.",
+  "level_bed_cells_note": "Beds a level adds to the level-I design: foot cell (local x,y,z) and the way the head lies; the cell behind the foot stays free to get in, and no equipment takes any of these cells. home: the ground floor at III (its upper storey has no stair); home_2: the upper storey, reached by its stair, at IV, V and VI.",
+  "level_bed_cells": {
+    "home": [ {"level": 3, "foot": [2, 1, 5], "facing": "west"}, {"level": 3, "foot": [4, 1, 5], "facing": "east"} ],
+    "home_2": [ {"level": 4, "foot": [4, 5, 2], "facing": "north"}, {"level": 4, "foot": [6, 5, 2], "facing": "north"},
+                {"level": 5, "foot": [2, 5, 2], "facing": "north"}, {"level": 5, "foot": [8, 5, 2], "facing": "north"},
+                {"level": 6, "foot": [7, 5, 6], "facing": "south"}, {"level": 6, "foot": [8, 5, 6], "facing": "south"} ]
+  },
+  "way_up_note": "Cells no equipment of any level may take, so the people reach their beds: in the big house the way from the door lane along z 5 to the foot of the stair at (2,1,7) (the level kits used to fill it and wall the stair in).",
+  "way_up": { "home_2": [ [5, 1, 4], [5, 1, 5], [4, 1, 5], [3, 1, 5], [2, 1, 5], [2, 1, 6], [1, 1, 7] ] },
+  "design_research": { "home_2": "housing.2" },
+  "birth_interval_research": { "housing.3": 54000 }
+}

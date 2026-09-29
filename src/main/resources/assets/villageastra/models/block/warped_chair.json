@@ -1,0 +1,7 @@
+{
+  "parent": "villageastra:block/chair",
+  "textures": {
+    "planks": "minecraft:block/warped_planks",
+    "log": "minecraft:block/stripped_warped_stem"
+  }
+}

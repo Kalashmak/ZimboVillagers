@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "table",
+  "pattern": [
+    "PPP",
+    "S S"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "P": {
+      "item": "minecraft:spruce_planks"
+    }
+  },
+  "result": {
+    "item": "villageastra:spruce_table",
+    "count": 1
+  }
+}

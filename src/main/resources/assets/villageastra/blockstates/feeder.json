@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "feed=0": {
+      "model": "villageastra:block/feeder"
+    },
+    "feed=1": {
+      "model": "villageastra:block/feeder_low"
+    },
+    "feed=2": {
+      "model": "villageastra:block/feeder_low"
+    },
+    "feed=3": {
+      "model": "villageastra:block/feeder_full"
+    },
+    "feed=4": {
+      "model": "villageastra:block/feeder_full"
+    }
+  }
+}

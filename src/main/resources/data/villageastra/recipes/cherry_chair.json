@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "chair",
+  "pattern": [
+    "S  ",
+    "SPP",
+    "S S"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "P": {
+      "item": "minecraft:cherry_planks"
+    }
+  },
+  "result": {
+    "item": "villageastra:cherry_chair",
+    "count": 1
+  }
+}

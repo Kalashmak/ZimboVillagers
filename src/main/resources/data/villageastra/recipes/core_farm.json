@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SHS",
+    "WCW",
+    "SHS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:wheat_seeds"
+    },
+    "H": {
+      "item": "minecraft:hay_block"
+    },
+    "W": {
+      "item": "minecraft:wheat"
+    },
+    "C": {
+      "item": "minecraft:composter"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_farm",
+    "count": 1
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "note": "AD-123: research knobs that are not core effects. Each array is indexed by the highest rung of its branch the village has completed (0 = none). The cards read the same accessors (ResearchKnobs).",
+  "foundation": [3, 4, 5, 6, 8],
+  "foundation_research": "construction",
+  "builders": [1, 2, 2, 4, 6, 8, 10],
+  "builder_bag": [1, 1, 3, 3, 3, 3, 3],
+  "builder_reach": [1, 1, 1, 1, 2, 2, 3],
+  "builder_wolf": [0, 0, 0, 0, 0, 1, 1],
+  "builders_note": "AD-153 (owner's construction ladder, same branch as foundation): builders of the hall I..VI 2/2/4/6/8/10 (1 without research); the bag at II carries three times as much (the project's funding takes 3 stacks per visit to the hall chest, a road or wall load is 3x roads.carry); reach x2 at IV and x3 at VI (6 -> 12 -> 18 blocks: runtime work checks and the scaffold plans of new surveys); at V a kennel wolf fetches the road and wall materials from the hall chest to the builder (VillageDogs send/near).",
+  "drive_fixed": 64,
+  "drive_note": "AD-136 (D9, CF14): the mechanics branch is gone; the shaft from the mill wheel reaches 64 blocks in every village (the old Mechanics III reach, so old worlds lose nothing).",
+  "quarry_depth": [24, 32],
+  "quarry_research": "mining",
+  "quarry_note": "When AD-112 activates the core mine.quarry_depth, that core replaces this knob; the two are never live together.",
+  "bone_meal_per_module": { "agriculture.1": 1 },
+  "bone_meal_active": true,
+  "bone_meal_note": "Bone meal each crop gets right after planting, taken from the farm chest (ResourceWorkGoal plant stage -> ResearchKnobs.feedCrop); false hides the card line and stops the feeding."
+}

@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "villageastra:oak_chair",
+    "villageastra:spruce_chair",
+    "villageastra:birch_chair",
+    "villageastra:jungle_chair",
+    "villageastra:acacia_chair",
+    "villageastra:dark_oak_chair",
+    "villageastra:mangrove_chair",
+    "villageastra:cherry_chair",
+    "villageastra:bamboo_chair",
+    "villageastra:crimson_chair",
+    "villageastra:warped_chair"
+  ]
+}

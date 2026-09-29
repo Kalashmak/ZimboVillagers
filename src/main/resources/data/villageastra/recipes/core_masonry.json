@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SAS",
+    "AXA",
+    "SAS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone_bricks"
+    },
+    "A": {
+      "item": "minecraft:polished_andesite"
+    },
+    "X": {
+      "item": "minecraft:stonecutter"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_masonry",
+    "count": 1
+  }
+}

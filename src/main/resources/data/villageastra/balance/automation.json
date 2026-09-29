@@ -1,0 +1,14 @@
+{
+  "schema": 1,
+  "note": "AD-136 (D9): the machinery of a building is the top of its own ladder, not a shared mechanics branch. A building of this type works its machine from the listed working level (that level itself needs the branch's research). bench: its workshop station turns without a worker; cycle: its own field cycle; dig: the adit or the quarry digs itself; haul: it takes one delivery of the village's logistics per turn; sort (AD-147): the warehouse keeps its store sorted by category (WarehouseSort), without couriers or wolves. A drive from the mill wheel (AD-055) still turns any workshop bench, at the fixed reach of research_knobs.json drive_fixed. legacy_level: the level of a farm that keeps the AD-104 field table.",
+  "buildings": {
+    "farm": { "level": 6, "legacy_level": 5, "cycle": true, "haul": true },
+    "mine": { "level": 5, "dig": true },
+    "quarry": { "level": 5, "dig": true },
+    "restaurant": { "level": 6, "bench": true, "haul": true },
+    "smithy": { "level": 6, "bench": true, "haul": true },
+    "livestock": { "level": 6, "cycle": true, "haul": true },
+    "clinic": { "level": 6, "bench": true },
+    "warehouse": { "level": 6, "sort": true }
+  }
+}

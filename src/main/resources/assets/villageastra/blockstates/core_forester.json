@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "grade=2": {
+      "model": "villageastra:block/core_forester_g2"
+    },
+    "grade=3": {
+      "model": "villageastra:block/core_forester_g3"
+    },
+    "grade=4": {
+      "model": "villageastra:block/core_forester_g4"
+    },
+    "grade=5": {
+      "model": "villageastra:block/core_forester_g5"
+    },
+    "grade=6": {
+      "model": "villageastra:block/core_forester_g6"
+    }
+  }
+}

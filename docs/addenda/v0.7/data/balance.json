@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "status": "INITIAL_DESIGN_NOT_PLAYTESTED",
+  "author_fixed_values_preserved": true,
+  "clock": "persisted_active_simulation_seconds",
+  "research": {
+    "tiers": 6,
+    "branches": 24,
+    "base_books": 7,
+    "book_cost_formula": "7 * tier",
+    "book_work_seconds": 300,
+    "books_per_human_work_hour": 12,
+    "slots_per_science_building_level": [
+      1,
+      2,
+      3,
+      4,
+      6,
+      8
+    ],
+    "one_operator_per_slot": true,
+    "parallel_research_slots": 1,
+    "higher_parallel_slots_are_queue_only_not_multiplier": true,
+    "completed_knowledge_persists": true,
+    "price_book_reference_zindbo": 40,
+    "book_import_quota_formula": "min(12, max(2, floor(population / 4)))",
+    "book_import_quota_active_seconds": 7200
+  },
+  "recipes": {
+    "paper": {
+      "inputs": {
+        "sugar_cane": 3
+      },
+      "outputs": {
+        "paper": 3
+      },
+      "worker_seconds": 10
+    },
+    "wood_binding": {
+      "inputs": {
+        "planks": 1
+      },
+      "outputs": {
+        "research_binding": 4
+      },
+      "worker_seconds": 10
+    },
+    "leather_binding_alternative": {
+      "inputs": {
+        "leather": 1
+      },
+      "outputs": {
+        "research_binding": 4
+      },
+      "worker_seconds": 10
+    },
+    "writing_tool": {
+      "inputs": {
+        "stick": 1,
+        "charcoal": 1
+      },
+      "outputs": {
+        "writing_tool": 1
+      },
+      "book_uses": 32,
+      "worker_seconds": 10
+    },
+    "research_volume": {
+      "inputs": {
+        "paper": 6,
+        "research_binding": 1
+      },
+      "tool_use": {
+        "writing_tool": 1
+      },
+      "outputs": {
+        "research_volume": 1
+      },
+      "work_seconds": 300,
+      "manual_operator": "scientist",
+      "automation_replaces_operator": true
+    },
+    "maintenance_kit": {
+      "inputs": {
+        "iron_ingot": 2,
+        "planks": 1,
+        "redstone": 1
+      },
+      "outputs": {
+        "maintenance_kit": 1
+      },
+      "worker_seconds": 30
+    },
+    "farm_compost": {
+      "inputs": {
+        "surplus_plant_items": 4,
+        "dirt": 1
+      },
+      "outputs": {
+        "compost": 4
+      },
+      "worker_seconds": 20,
+      "producer": "farmer",
+      "protected_food_and_seed_reserves_excluded": true
+    }
+  },
+  "building_levels": {
+    "names_ru": [
+      "Ручной",
+      "Расширенный",
+      "Налаженный",
+      "Механизированный",
+      "Автоматический",
+      "Комплексный"
+    ],
+    "automation_min_level": 5,
+    "housing_capacity": [
+      2,
+      4,
+      6,
+      8,
+      10,
+      12
+    ],
+    "barracks_assignment_capacity_all_levels": 8,
+    "baseline_slots_only_for_science": "research.slots_per_science_building_level"
+  },
+  "mechanical_power": {
+    "fuel_charcoal_work_units": 1600,
+    "drive_capacity_work_units_per_second": [
+      8,
+      16,
+      32
+    ],
+    "no_global_wireless_pool": true,
+    "scientific_auto_extra_work_units_per_volume": 400,
+    "public_setting_can_disable_automation": false
+  },
+  "automatic_farm": {
+    "module_valid_plot_count": 16,
+    "cycle_seconds": 120,
+    "yield_per_cycle": 4,
+    "drive_work_units_per_cycle": 40,
+    "compost_cycles_per_item": 32,
+    "maintenance_cycles_per_kit": 128,
+    "initial_crop_reserve": 16,
+    "sugar_cane_cycle_seconds": 180,
+    "offline_mode_same_cycle": true,
+    "vanilla_growth_duplicate_disabled_for_managed_cells": true,
+    "max_modules_per_level": [
+      0,
+      0,
+      0,
+      1,
+      2,
+      4
+    ]
+  },
+  "automatic_quarry": {
+    "block_cycle_seconds": 3,
+    "natural_soft_block_work_units": 8,
+    "hard_block_work_units": 16,
+    "maintenance_blocks_per_kit": 256,
+    "working_chunks_per_unit": 1,
+    "depth_requires_research_and_tool": true,
+    "move_requires_new_order": true,
+    "no_generated_ore": true
+  },
+  "policies": {
+    "global_food_reserve_active_hours": 2,
+    "npc_equipment_sale_forbidden": true,
+    "research_inputs_lower_priority_than_emergency_food": true,
+    "cane_starting_material_count": 8,
+    "cane_replant_reserve_fraction": 0.25,
+    "max_visible_npc_dialogue_seconds_when_danger": 0
+  },
+  "timing_note": "300 is a configurable default from the author example, not a hard immutable biological/game-engine constant. Fixed author 1h/3h timers are unchanged. Material, travel, research prerequisites and building cost add to theoretical book labour.",
+  "upgrade_kit_recipes": {
+    "2": {
+      "inputs": {
+        "planks": 16,
+        "cobblestone": 16,
+        "iron_ingot": 2
+      },
+      "output": "upgrade_kit_2",
+      "assembly_worker_seconds": 60
+    },
+    "3": {
+      "inputs": {
+        "stone_bricks": 16,
+        "iron_ingot": 8,
+        "redstone": 4
+      },
+      "output": "upgrade_kit_3",
+      "assembly_worker_seconds": 120
+    },
+    "4": {
+      "inputs": {
+        "iron_ingot": 24,
+        "copper_ingot": 16,
+        "redstone": 24,
+        "piston": 4
+      },
+      "output": "upgrade_kit_4",
+      "assembly_worker_seconds": 180
+    },
+    "5": {
+      "inputs": {
+        "iron_ingot": 48,
+        "copper_ingot": 32,
+        "redstone": 64,
+        "gold_ingot": 8,
+        "diamond": 2
+      },
+      "output": "upgrade_kit_5",
+      "assembly_worker_seconds": 300
+    },
+    "6": {
+      "inputs": {
+        "iron_ingot": 96,
+        "copper_ingot": 64,
+        "redstone": 128,
+        "gold_ingot": 16,
+        "diamond": 4
+      },
+      "output": "upgrade_kit_6",
+      "assembly_worker_seconds": 600
+    }
+  },
+  "kit_use": {
+    "default_per_upgrade": 1,
+    "quarry_per_upgrade": 2,
+    "exclude_blueprint_shell": true,
+    "no_double_charge_installed_components": true
+  }
+}

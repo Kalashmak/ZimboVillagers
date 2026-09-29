@@ -1,0 +1,8 @@
+{
+  "parent": "villageastra:block/core_base",
+  "textures": {
+    "side": "minecraft:block/cartography_table_side3",
+    "top": "minecraft:block/cartography_table_side3",
+    "band": "minecraft:block/gold_block"
+  }
+}

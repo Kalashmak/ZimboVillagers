@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "villageastra:oak_framed_window",
+    "villageastra:spruce_framed_window",
+    "villageastra:birch_framed_window",
+    "villageastra:jungle_framed_window",
+    "villageastra:acacia_framed_window",
+    "villageastra:dark_oak_framed_window",
+    "villageastra:mangrove_framed_window",
+    "villageastra:cherry_framed_window",
+    "villageastra:bamboo_framed_window",
+    "villageastra:crimson_framed_window",
+    "villageastra:warped_framed_window"
+  ]
+}

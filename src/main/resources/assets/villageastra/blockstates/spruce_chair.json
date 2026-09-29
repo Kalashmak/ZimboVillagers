@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "villageastra:block/spruce_chair"
+    },
+    "facing=east": {
+      "model": "villageastra:block/spruce_chair",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "villageastra:block/spruce_chair",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "villageastra:block/spruce_chair",
+      "y": 270
+    }
+  }
+}

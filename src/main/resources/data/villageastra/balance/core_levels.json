@@ -1,0 +1,782 @@
+{
+ "_comment": "AD-112: what each building's core does. values are the numbers at working levels I..VI (level I is the building without a core; the working level is min(equipment level, core grade)). Only an effect with active:true is shown with numbers, and every active effect names the test that holds it to the live knob; an effect with active:false is shown as 'not yet active' and has no values. mine: the absolute floor Y the mine drives to at each working level, the minimum stair length per level, and its galleries at the floor.",
+ "schema": 1,
+ "cores": {
+  "farm": {
+   "core": "villageastra:core_farm",
+   "effects": [
+    {
+     "id": "field",
+     "values": [
+      1,
+      4,
+      6,
+      12,
+      18,
+      18
+     ],
+     "unit": "modules",
+     "active": true,
+     "test": "org.villageastra.gametest.FarmLevelGameTests#aFarmWorksTheModulesItsCoreAllows"
+    },
+    {
+     "id": "feeds",
+     "values": [
+      6,
+      25,
+      39,
+      78,
+      117,
+      117
+     ],
+     "unit": "residents",
+     "active": true,
+     "test": "org.villageastra.gametest.FarmLevelGameTests#everyLevelOfTheFieldFeedsItsTarget"
+    },
+    {
+     "id": "floors",
+     "values": [
+      1,
+      1,
+      1,
+      2,
+      3,
+      3
+     ],
+     "unit": "floors",
+     "active": true,
+     "test": "org.villageastra.gametest.FarmBarnGameTests#theBarnLaysItsFloorsWithTheirLanterns"
+    },
+    {
+     "id": "machine_fields",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      18
+     ],
+     "unit": "modules",
+     "active": true,
+     "test": "org.villageastra.gametest.FarmStaffGameTests#theMachineWorksEveryFloorAtSix"
+    }
+   ]
+  },
+  "livestock": {
+   "core": "villageastra:core_livestock",
+   "effects": [
+    {
+     "id": "herd",
+     "values": [
+      16,
+      32,
+      64,
+      64,
+      64,
+      64
+     ],
+     "unit": "animals",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theHerdCapFollowsThePastureLevel"
+    },
+    {
+     "id": "pens",
+     "values": [
+      1,
+      2,
+      4,
+      4,
+      4,
+      4
+     ],
+     "unit": "pens",
+     "active": true,
+     "test": "org.villageastra.gametest.LivestockPenGameTests#thePensFollowTheYardLevel"
+    }
+   ]
+  },
+  "forester": {
+   "core": "villageastra:core_forester",
+   "effects": [
+    {
+     "id": "felling",
+     "values": [
+      20,
+      30,
+      40,
+      50,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.ForestWorkGameTests#fellingLabourFollowsTheLevel"
+    },
+    {
+     "id": "radius",
+     "values": [
+      32,
+      32,
+      40,
+      40,
+      48,
+      48
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.ForestWorkGameTests#aTreeBeyondTheRadiusIsNotHis"
+    },
+    {
+     "id": "planks",
+     "values": [
+      4,
+      4,
+      4,
+      6,
+      6,
+      6
+     ],
+     "unit": "planks_per_log",
+     "active": true,
+     "test": "org.villageastra.gametest.SawmillGameTests#aLevelFourHutSawsOneLogIntoSixPlanksOfItsKind"
+    },
+    {
+     "id": "grove",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      6
+     ],
+     "unit": "cells",
+     "active": true,
+     "test": "org.villageastra.gametest.ForestGroveGameTests#theCourtyardGroveGrowsAndIsFelledWithoutAnyone"
+    }
+   ]
+  },
+  "mine": {
+   "core": "villageastra:core_mine",
+   "effects": [
+    {
+     "id": "floor",
+     "values": [
+      32,
+      8,
+      -8,
+      -24,
+      -40,
+      -56
+     ],
+     "unit": "y",
+     "active": true,
+     "test": "org.villageastra.gametest.MineDepthGameTests#levelOneStopsAtItsFloorAndTurnsIntoTheGallery"
+    },
+    {
+     "id": "quarry_depth",
+     "values": null,
+     "unit": "blocks",
+     "active": false,
+     "test": null
+    }
+   ]
+  },
+  "smithy": {
+   "core": "villageastra:core_smithy",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    }
+   ]
+  },
+  "carpentry": {
+   "core": "villageastra:core_carpentry",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    }
+   ]
+  },
+  "masonry": {
+   "core": "villageastra:core_masonry",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    }
+   ]
+  },
+  "mill": {
+   "core": "villageastra:core_mill",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    }
+   ]
+  },
+  "bakery": {
+   "core": "villageastra:core_bakery",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    },
+    {
+     "id": "seats",
+     "values": [
+      4,
+      8,
+      8,
+      12,
+      12,
+      16
+     ],
+     "unit": "seats",
+     "active": true,
+     "test": "org.villageastra.gametest.DiningGameTests#seatsFollowTheRestaurantLevel"
+    },
+    {
+     "id": "couriers",
+     "staff": "restaurant/porter",
+     "unit": "couriers",
+     "active": true,
+     "test": "org.villageastra.gametest.CourierGameTests#courierPostsFollowTheLevel"
+    }
+   ]
+  },
+  "clinic": {
+   "core": "villageastra:core_clinic",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    },
+    {
+     "id": "reserve",
+     "values": [
+      4,
+      6,
+      8,
+      10,
+      12,
+      16
+     ],
+     "unit": "bandages",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theClinicReserveFollowsItsLevel"
+    },
+    {
+     "id": "radius",
+     "values": [
+      48,
+      56,
+      64,
+      72,
+      80,
+      96
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theDoctorRadiusFollowsTheClinicLevel"
+    },
+    {
+     "id": "beds",
+     "values": [
+      1,
+      2,
+      4,
+      6,
+      8,
+      12
+     ],
+     "unit": "patients",
+     "active": true,
+     "test": "org.villageastra.gametest.MedicineGameTests#theHospitalCuresAsManyAsItHasBeds"
+    }
+   ]
+  },
+  "town_hall": {
+   "core": "villageastra:core_town_hall",
+   "effects": [
+    {
+     "id": "labour",
+     "values": [
+      20,
+      40,
+      60,
+      80,
+      100,
+      120
+     ],
+     "unit": "labour",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#workshopLabourFollowsTheLevel"
+    }
+   ]
+  },
+  "guard_house": {
+   "core": "villageastra:core_guard_house",
+   "effects": [
+    {
+     "id": "defend",
+     "values": [
+      40,
+      48,
+      56,
+      64,
+      72,
+      80
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theGuardRadiusAndSightFollowThePostLevel"
+    },
+    {
+     "id": "sight",
+     "values": [
+      24,
+      28,
+      32,
+      36,
+      40,
+      44
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theGuardRadiusAndSightFollowThePostLevel"
+    }
+   ]
+  },
+  "archery": {
+   "core": "villageastra:core_archery",
+   "effects": [
+    {
+     "id": "reach",
+     "values": [
+      16,
+      18,
+      20,
+      22,
+      24,
+      26
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theArcherReachAndSightFollowTheRangeLevel"
+    },
+    {
+     "id": "sight",
+     "values": [
+      24,
+      28,
+      32,
+      36,
+      40,
+      44
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theArcherReachAndSightFollowTheRangeLevel"
+    }
+   ]
+  },
+  "barracks": {
+   "core": "villageastra:core_barracks",
+   "effects": [
+    {
+     "id": "drill",
+     "values": [
+      20,
+      24,
+      28,
+      32,
+      36,
+      40
+     ],
+     "unit": "credit",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#drillAndLessonCreditFollowTheBestLevel"
+    }
+   ]
+  },
+  "school": {
+   "core": "villageastra:core_school",
+   "effects": [
+    {
+     "id": "lesson",
+     "values": [
+      20,
+      24,
+      28,
+      32,
+      36,
+      72
+     ],
+     "unit": "credit",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#drillAndLessonCreditFollowTheBestLevel"
+    },
+    {
+     "id": "pupils",
+     "values": [
+      1,
+      2,
+      2,
+      4,
+      8,
+      8
+     ],
+     "unit": "pupils",
+     "active": true,
+     "test": "org.villageastra.gametest.SchoolClassGameTests#aSchoolTeachesItsSeatsEldestFirst"
+    },
+    {
+     "id": "cadets",
+     "values": [
+      0,
+      0,
+      1,
+      1,
+      2,
+      2
+     ],
+     "unit": "pupils",
+     "active": true,
+     "test": "org.villageastra.gametest.SchoolClassGameTests#theMilitaryClassGrowsSoldiers"
+    }
+   ]
+  },
+  "laboratory": {
+   "core": "villageastra:core_laboratory",
+   "effects": [
+    {
+     "id": "seats",
+     "values": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6
+     ],
+     "unit": "scientists",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#labSeatsFollowTheBestLevel"
+    }
+   ]
+  },
+  "cartographer": {
+   "core": "villageastra:core_cartographer",
+   "effects": [
+    {
+     "id": "survey",
+     "values": [
+      2,
+      3,
+      4,
+      5,
+      6,
+      8
+     ],
+     "unit": "chunks",
+     "active": true,
+     "test": "org.villageastra.gametest.ResearchKnobGameTests#surveyMarginFollowsCartographer"
+    },
+    {
+     "id": "lighting",
+     "values": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "unit": "flag",
+     "active": true,
+     "test": "org.villageastra.gametest.CartographyLadderGameTests#theLitVillageIsALevelTwoCartographersDoing"
+    },
+    {
+     "id": "auto",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      0,
+      1
+     ],
+     "unit": "flag",
+     "active": true,
+     "test": "org.villageastra.gametest.CartographyLadderGameTests#atSixTheAtlasDrawsItself"
+    },
+    {
+     "id": "scouts",
+     "values": [
+      0,
+      0,
+      1,
+      1,
+      1,
+      1
+     ],
+     "unit": "flag",
+     "active": true,
+     "test": "org.villageastra.gametest.CartographyLadderGameTests#theSecondCartographerFindsTheNeighbours"
+    },
+    {
+     "id": "patrol",
+     "values": [
+      0,
+      0,
+      0,
+      0,
+      1,
+      1
+     ],
+     "unit": "flag",
+     "active": true,
+     "test": "org.villageastra.gametest.CartographyLadderGameTests#theTrainedWolfWalksTheVillageAndLightsIt"
+    }
+   ]
+  },
+  "expedition": {
+   "core": "villageastra:core_expedition",
+   "effects": [
+    {
+     "id": "range",
+     "values": [
+      92,
+      112,
+      132,
+      152,
+      172,
+      192
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theExpeditionRangeFollowsTheBestLevel"
+    },
+    {
+     "id": "far_reach",
+     "values": [
+      1600,
+      2000,
+      2400,
+      3000,
+      3600,
+      4200
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.FarQuestGameTests#theFarReachFollowsTheBestExpeditionHouse"
+    }
+   ]
+  },
+  "warehouse": {
+   "core": "villageastra:core_warehouse",
+   "effects": [
+    {
+     "id": "load",
+     "values": [
+      16,
+      24,
+      32,
+      40,
+      48,
+      64
+     ],
+     "unit": "items",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#thePorterLoadFollowsTheWarehouseLevel"
+    },
+    {
+     "id": "storage",
+     "values": [
+      108,
+      162,
+      324,
+      432,
+      486,
+      648
+     ],
+     "unit": "slots",
+     "active": true,
+     "test": "org.villageastra.gametest.WarehouseStorageGameTests#storageFollowsTheLevel"
+    },
+    {
+     "id": "cart_stacks",
+     "values": [
+      0,
+      5,
+      5,
+      5,
+      5,
+      5
+     ],
+     "unit": "stacks",
+     "active": true,
+     "test": "org.villageastra.gametest.WarehouseCartGameTests#aCourierOfTwoCarriesFiveStacksInItsCart"
+    },
+    {
+     "id": "couriers",
+     "staff": "warehouse/workers",
+     "unit": "couriers",
+     "active": true,
+     "test": "org.villageastra.gametest.WarehouseWolvesGameTests#warehouseCourierPostsFollowTheLevel"
+    }
+   ]
+  },
+  "caravan": {
+   "core": "villageastra:core_caravan",
+   "effects": [
+    {
+     "id": "carry",
+     "values": [
+      64,
+      128,
+      320,
+      384,
+      448,
+      512
+     ],
+     "unit": "items",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#theCaravanCarryFollowsTheBestLevel"
+    },
+    {
+     "id": "remote",
+     "values": [
+      0,
+      1,
+      1,
+      1,
+      1,
+      1
+     ],
+     "unit": "flag",
+     "active": true,
+     "test": "org.villageastra.gametest.TradeLadderGameTests#remoteTradeAsksForAVillageMetWithACentreOfItsOwn"
+    }
+   ]
+  },
+  "engineering": {
+   "core": "villageastra:core_engineering",
+   "effects": [
+    {
+     "id": "cut",
+     "values": [
+      6,
+      7,
+      8,
+      9,
+      10,
+      12
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#terraceCutAndFillFollowTheBestLevel"
+    },
+    {
+     "id": "fill",
+     "values": [
+      4,
+      5,
+      6,
+      7,
+      8,
+      10
+     ],
+     "unit": "blocks",
+     "active": true,
+     "test": "org.villageastra.gametest.CoreEffectGameTests#terraceCutAndFillFollowTheBestLevel"
+    }
+   ]
+  }
+ },
+ "mine": {
+  "floor_y": [
+   32,
+   8,
+   -8,
+   -24,
+   -40,
+   -56
+  ],
+  "min_steps_per_level": 8,
+  "gallery_length": 24,
+  "gallery_height": 4,
+  "beam_every": 4
+ },
+ "rings": {
+  "villageastra:core_ring_3": 3,
+  "villageastra:core_ring_4": 4,
+  "villageastra:core_ring_5": 5,
+  "villageastra:core_ring_6": 6
+ }
+}

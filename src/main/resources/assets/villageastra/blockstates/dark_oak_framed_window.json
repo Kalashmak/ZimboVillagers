@@ -1,0 +1,325 @@
+{
+  "multipart": [
+    {
+      "when": {
+        "axis": "x",
+        "left": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_left"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "left": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_left"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "right": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_right"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "right": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_right"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "down": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_down"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "down": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_down"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "up": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_up"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "up": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_up"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "up_left": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_up_left"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "up_left": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_up_left"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "up_right": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_up_right"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "up_right": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_up_right"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "down_left": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_down_left"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "down_left": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_down_left"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "down_right": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_down_right"
+      }
+    },
+    {
+      "when": {
+        "axis": "x",
+        "down_right": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_down_right"
+      }
+    },
+    {
+      "when": {
+        "axis": "x"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_middle"
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "left": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "left": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "right": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "right": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "down": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_down",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "down": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_down",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "up": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_up",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "up": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_up",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "up_left": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_up_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "up_left": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_up_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "up_right": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_up_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "up_right": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_up_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "down_left": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_down_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "down_left": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_down_left",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "down_right": "false"
+      },
+      "apply": {
+        "model": "villageastra:block/dark_oak_framed_window_down_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z",
+        "down_right": "true"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_down_right",
+        "y": 90
+      }
+    },
+    {
+      "when": {
+        "axis": "z"
+      },
+      "apply": {
+        "model": "villageastra:block/framed_window_glass_middle",
+        "y": 90
+      }
+    }
+  ]
+}

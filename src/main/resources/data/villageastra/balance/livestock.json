@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "note": "AD-138 livestock yard (owner 2026-09-22): pens of 5x5 inside a 7x7 fence, 1/2/4 of them at yard levels I/II/III (core effect pens), each with its own feeder and trough; the keeper breeds and culls a pen above pen_cap. pens: the north-west corner {x,z} of each pen's fence in yard cells, its gate side (east/west) and the yard level that builds it; the feeder, trough and gate stand at fixed cells from that corner. feed: what each kind eats (wheat, never seeds: a chicken yard on seeds would be free meat, spec F13). culls_per_day: a pen's cap on culling per village day. feed_stock: the feed of each kind its pens keep that the yard chest holds (porters bring it; nobody takes it away).",
+  "pen_cap": 16,
+  "keep": 2,
+  "culls_per_day": 4,
+  "feed_stock": 16,
+  "pens": [
+    {"x": 0, "z": 9, "gate": "east", "level": 1, "species": "sheep"},
+    {"x": 10, "z": 9, "gate": "west", "level": 2, "species": "cow"},
+    {"x": 0, "z": 18, "gate": "east", "level": 3, "species": "chicken"},
+    {"x": 10, "z": 18, "gate": "west", "level": 3, "species": "pig"}
+  ],
+  "feed": {"sheep": "minecraft:wheat", "cow": "minecraft:wheat", "chicken": "minecraft:wheat", "pig": "minecraft:carrot"}
+}

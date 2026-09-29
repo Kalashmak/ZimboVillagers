@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SCS",
+    "BFB",
+    "SCS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone_bricks"
+    },
+    "C": {
+      "tag": "minecraft:coals"
+    },
+    "B": {
+      "item": "minecraft:bread"
+    },
+    "F": {
+      "item": "minecraft:furnace"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_bakery",
+    "count": 1
+  }
+}

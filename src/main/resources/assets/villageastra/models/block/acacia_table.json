@@ -1,0 +1,7 @@
+{
+  "parent": "villageastra:block/table",
+  "textures": {
+    "planks": "minecraft:block/acacia_planks",
+    "log": "minecraft:block/stripped_acacia_log"
+  }
+}

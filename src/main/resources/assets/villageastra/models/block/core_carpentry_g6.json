@@ -1,0 +1,8 @@
+{
+  "parent": "villageastra:block/core_base",
+  "textures": {
+    "side": "minecraft:block/crafting_table_front",
+    "top": "minecraft:block/crafting_table_front",
+    "band": "minecraft:block/netherite_block"
+  }
+}

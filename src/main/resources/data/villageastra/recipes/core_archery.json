@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "LAL",
+    "AFA",
+    "LAL"
+  ],
+  "key": {
+    "L": {
+      "tag": "minecraft:logs"
+    },
+    "A": {
+      "item": "minecraft:arrow"
+    },
+    "F": {
+      "item": "minecraft:fletching_table"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_archery",
+    "count": 1
+  }
+}

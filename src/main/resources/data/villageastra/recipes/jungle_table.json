@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "table",
+  "pattern": [
+    "PPP",
+    "S S"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stick"
+    },
+    "P": {
+      "item": "minecraft:jungle_planks"
+    }
+  },
+  "result": {
+    "item": "villageastra:jungle_table",
+    "count": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "framed_window",
+  "pattern": [
+    "WWW",
+    "WPW",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "tag": "villageastra:framed_windows"
+    },
+    "P": [
+      {
+        "item": "minecraft:spruce_planks"
+      },
+      {
+        "tag": "minecraft:spruce_logs"
+      }
+    ]
+  },
+  "result": {
+    "item": "villageastra:spruce_framed_window",
+    "count": 8
+  }
+}

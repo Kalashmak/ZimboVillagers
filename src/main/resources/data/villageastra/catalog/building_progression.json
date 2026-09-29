@@ -1,0 +1,1611 @@
+{
+  "schema_version": 2,
+  "catalog": [
+    {
+      "building_id": "town_hall",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "civic.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "town_hall.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "town_hall.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "town_hall.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "town_hall.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "town_hall.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "town_hall.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "town_hall.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "town_hall.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "town_hall.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "town_hall.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "guard_house",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "defense.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "defense.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "defense.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "defense.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "defense.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "defense.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "defense.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "defense.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "defense.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "defense.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "defense.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "defense.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "archer_post",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "defense.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "defense.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "defense.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "defense.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "defense.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "defense.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "defense.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "defense.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "defense.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "defense.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "defense.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "defense.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "forest_lodge",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "forestry.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "forestry.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "forestry.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "forestry.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "forestry.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "forestry.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "forestry.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "forestry.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "forestry.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "forestry.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "forestry.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "mine",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "mining.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "mining.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "mining.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "mining.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "mining.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "mining.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "mining.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "mining.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "mining.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "mining.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "mining.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "farm",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "agriculture.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "agriculture.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "agriculture.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "agriculture.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "agriculture.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "agriculture.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "agriculture.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "agriculture.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "agriculture.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "agriculture.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "agriculture.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "school",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "education.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "education.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "education.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "education.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "education.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "education.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "education.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "education.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "education.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "education.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "education.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "education.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "cartographer_house",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "cartography.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "cartography.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "cartography.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "cartography.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "cartography.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "cartography.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "cartography.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "cartography.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "cartography.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "cartography.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "cartography.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "cartography.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "smithy",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "metallurgy.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "metallurgy.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "metallurgy.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "metallurgy.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "metallurgy.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "metallurgy.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "metallurgy.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "metallurgy.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "metallurgy.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "metallurgy.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "metallurgy.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "metallurgy.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "research_house",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "research.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "research.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "research.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "research.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "research.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "research.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "research.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "research.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "research.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "research.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "research.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "research.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "expedition_office",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "cartography.3"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "cartography.3",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "cartographer",
+            "level": 2
+          }
+        },
+        {
+          "level": 3,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "cartographer",
+            "level": 3
+          }
+        },
+        {
+          "level": 4,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "cartographer",
+            "level": 4
+          }
+        },
+        {
+          "level": 5,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "cartographer",
+            "level": 5
+          }
+        },
+        {
+          "level": 6,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "cartographer",
+            "level": 6
+          }
+        }
+      ]
+    },
+    {
+      "building_id": "warehouse",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "logistics.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "logistics.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "logistics.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "logistics.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "logistics.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "logistics.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "logistics.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "logistics.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "logistics.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "logistics.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "logistics.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "logistics.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "barracks",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "military.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "military.1",
+          "capacity_override": 8
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "military.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "military.2",
+          "capacity_override": 8
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "military.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "military.3",
+          "capacity_override": 8
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "military.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "military.4",
+          "capacity_override": 8
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "military.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "military.5",
+          "capacity_override": 8
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "military.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "military.6",
+          "capacity_override": 8
+        }
+      ]
+    },
+    {
+      "building_id": "livestock_yard",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "livestock.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "livestock.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "livestock.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "livestock.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "livestock.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "livestock.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "livestock.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "livestock.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "livestock.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "livestock.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "livestock.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "livestock.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "mill",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "milling.2"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "milling.2",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "restaurant",
+            "level": 2
+          }
+        },
+        {
+          "level": 3,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "restaurant",
+            "level": 3
+          }
+        },
+        {
+          "level": 4,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "restaurant",
+            "level": 4
+          }
+        },
+        {
+          "level": 5,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "restaurant",
+            "level": 5
+          }
+        },
+        {
+          "level": 6,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "restaurant",
+            "level": 6
+          }
+        }
+      ]
+    },
+    {
+      "building_id": "restaurant",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "baking.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "baking.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "baking.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "baking.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "baking.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "baking.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "baking.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "baking.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "baking.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "baking.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "baking.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "baking.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "stoneworks",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "masonry.3"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "masonry.3",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "mine",
+            "level": 2
+          }
+        },
+        {
+          "level": 3,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "mine",
+            "level": 3
+          }
+        },
+        {
+          "level": 4,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "mine",
+            "level": 4
+          }
+        },
+        {
+          "level": 5,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "mine",
+            "level": 5
+          }
+        },
+        {
+          "level": 6,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "mine",
+            "level": 6
+          }
+        }
+      ]
+    },
+    {
+      "building_id": "carpentry_shop",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "carpentry.3"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "carpentry.3",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "forester",
+            "level": 2
+          }
+        },
+        {
+          "level": 3,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "forester",
+            "level": 3
+          }
+        },
+        {
+          "level": 4,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "forester",
+            "level": 4
+          }
+        },
+        {
+          "level": 5,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "forester",
+            "level": 5
+          }
+        },
+        {
+          "level": 6,
+          "requires_research_all": [],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": null,
+          "capacity_override": null,
+          "requires_building": {
+            "type": "forester",
+            "level": 6
+          }
+        }
+      ]
+    },
+    {
+      "building_id": "caravan_yard",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "caravans.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "caravans.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "caravans.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "caravans.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "caravans.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "caravans.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "caravans.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "caravans.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "caravans.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "caravans.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "caravans.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "caravans.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "infirmary",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "medicine.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "medicine.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "medicine.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "medicine.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "medicine.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "medicine.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "medicine.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "medicine.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "medicine.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "medicine.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "medicine.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "medicine.6",
+          "capacity_override": null
+        }
+      ]
+    },
+    {
+      "building_id": "engineering_office",
+      "base_blueprint_existing": false,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [
+            "engineering.1"
+          ],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "engineering.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "engineering.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "engineering.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "engineering.3"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "engineering.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "engineering.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "engineering.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "engineering.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "engineering.5",
+          "capacity_override": null
+        }
+      ],
+      "max_level": 5
+    },
+    {
+      "building_id": "residential_house",
+      "base_blueprint_existing": true,
+      "levels": [
+        {
+          "level": 1,
+          "requires_research_all": [],
+          "physical_rebuild_required": false,
+          "operator_mode": "manual",
+          "kit_tier": null,
+          "effect_reference": "housing.1",
+          "capacity_override": null
+        },
+        {
+          "level": 2,
+          "requires_research_all": [
+            "housing.1"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 2,
+          "effect_reference": "housing.2",
+          "capacity_override": null
+        },
+        {
+          "level": 3,
+          "requires_research_all": [
+            "housing.2"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "manual",
+          "kit_tier": 3,
+          "effect_reference": "housing.3",
+          "capacity_override": null
+        },
+        {
+          "level": 4,
+          "requires_research_all": [
+            "housing.4"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "mechanized",
+          "kit_tier": 4,
+          "effect_reference": "housing.4",
+          "capacity_override": null
+        },
+        {
+          "level": 5,
+          "requires_research_all": [
+            "housing.5"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 5,
+          "effect_reference": "housing.5",
+          "capacity_override": null
+        },
+        {
+          "level": 6,
+          "requires_research_all": [
+            "housing.6"
+          ],
+          "physical_rebuild_required": true,
+          "operator_mode": "automatic",
+          "kit_tier": 6,
+          "effect_reference": "housing.6",
+          "capacity_override": null
+        }
+      ]
+    }
+  ],
+  "note": "AD-136 (research tree v2, owner 2026-09-23): the town hall's levels II-VI need the «Ратуша» branch (town_hall.N); the laboratory, school and warehouse need their level-I node; the engineering office has five levels (max_level). The mill, stoneworks, carpentry shop and expedition office open on a side node (milling.2, masonry.3, carpentry.3) or cartography.3, and their levels II-VI need their parent building at that level (requires_building, the parent's working level). No building may be raised above the town hall's level (BuildingTiers). Supersedes docs/addenda/v0.7/data/building_progression.json.",
+  "decision": "AD-136"
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "framed_window",
+  "pattern": [
+    "WWW",
+    "WPW",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "tag": "villageastra:framed_windows"
+    },
+    "P": [
+      {
+        "item": "minecraft:cherry_planks"
+      },
+      {
+        "tag": "minecraft:cherry_logs"
+      }
+    ]
+  },
+  "result": {
+    "item": "villageastra:cherry_framed_window",
+    "count": 8
+  }
+}

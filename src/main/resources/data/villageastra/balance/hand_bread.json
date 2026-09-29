@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "note": "AD-104 P2, owner decision 1 of 2026-09-19: any idle adult may bake bread by hand at the town hall, dearer in wheat and slower than the mill and bakery. A unit turns wheat_per_unit wheat into bread_per_unit bread (5 into 2, where the mill and bakery take 4 wheat for 2 bread) with labor_seconds_per_bread of work for each bread (the bakery needs 8 s, the mill 4 s per flour) and no fuel; a job is at most units_per_job units. A new job starts only while the mill and the bakery are not both staffed and the pantries hold less than reserve_days days of meals for everybody alive, or at once whenever a living resident has missed a meal; a job already paid for always finishes. One baker per village at a time: a claim nobody refreshed for lock_ticks ticks is free again. One level-I module (31.25 wheat a day) so makes 12.5 bread by hand, 62.5 rations, which feeds 6 with no spare.",
+  "wheat_per_unit": 5,
+  "bread_per_unit": 2,
+  "labor_seconds_per_bread": 30,
+  "units_per_job": 2,
+  "reserve_days": 1,
+  "lock_ticks": 200
+}

@@ -1,0 +1,481 @@
+{
+  "schema": 1,
+  "note": "AD-029. Workshop professions run real vanilla crafting/smelting/stonecutting recipes whose result is allow-listed for the building, plus custom recipes without a vanilla equivalent. labor_seconds is per crafting execution; smelting uses the recipe cooking time per item and real fuel. Workshops only work for a current settlement demand. AD-104 P2: a custom recipe may set 'batch' (1..64, no tool, its output within one stack): one job makes up to that many units for the want and shrinks to the whole units the inputs and fuel at hand pay for, while the published needs still ask for the whole job the want calls for; smelting batches up to smelting_batch items. Burn time a job pays for and does not use stays in the station's fuel bank for its next job.",
+  "smelting_batch": 8,
+  "workshops": {
+    "carpentry": {
+      "profession": "carpenter",
+      "modes": [
+        "crafting"
+      ],
+      "labor_seconds": 5,
+      "output_tags": [
+        "minecraft:planks",
+        "minecraft:wooden_stairs",
+        "minecraft:wooden_slabs",
+        "minecraft:wooden_doors",
+        "minecraft:wooden_trapdoors",
+        "minecraft:wooden_fences",
+        "minecraft:fence_gates",
+        "minecraft:beds",
+        "minecraft:signs",
+        "minecraft:wooden_pressure_plates",
+        "minecraft:wooden_buttons",
+        "villageastra:framed_windows",
+        "villageastra:chairs",
+        "villageastra:tables"
+      ],
+      "output_items": [
+        "minecraft:stick",
+        "minecraft:ladder",
+        "minecraft:chest",
+        "minecraft:crafting_table",
+        "minecraft:barrel",
+        "minecraft:bowl",
+        "minecraft:composter",
+        "minecraft:lectern",
+        "minecraft:bookshelf",
+        "minecraft:scaffolding",
+        "minecraft:item_frame",
+        "minecraft:loom",
+        "minecraft:cartography_table",
+        "minecraft:fletching_table",
+        "minecraft:smithing_table",
+        "villageastra:timber_scaffold", "villageastra:cart", "villageastra:feeder",
+        "minecraft:grindstone", "minecraft:book", "minecraft:chiseled_bookshelf"
+      ],
+      "custom": [
+        {"id":"strip_jungle_log","inputs":[{"item":"minecraft:jungle_log","count":1}],"tool":{"tag":"minecraft:axes","damage":1},"outputs":[{"item":"minecraft:stripped_jungle_log","count":1}],"labor_seconds":3},
+        {"id":"strip_acacia_log","inputs":[{"item":"minecraft:acacia_log","count":1}],"tool":{"tag":"minecraft:axes","damage":1},"outputs":[{"item":"minecraft:stripped_acacia_log","count":1}],"labor_seconds":3},
+        {"id":"strip_cherry_log","inputs":[{"item":"minecraft:cherry_log","count":1}],"tool":{"tag":"minecraft:axes","damage":1},"outputs":[{"item":"minecraft:stripped_cherry_log","count":1}],"labor_seconds":3},
+        {
+          "id": "strip_oak_log",
+          "inputs": [
+            {
+              "item": "minecraft:oak_log",
+              "count": 1
+            }
+          ],
+          "tool": {
+            "tag": "minecraft:axes",
+            "damage": 1
+          },
+          "outputs": [
+            {
+              "item": "minecraft:stripped_oak_log",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 3
+        },
+        {
+          "id": "strip_spruce_log",
+          "inputs": [
+            {
+              "item": "minecraft:spruce_log",
+              "count": 1
+            }
+          ],
+          "tool": {
+            "tag": "minecraft:axes",
+            "damage": 1
+          },
+          "outputs": [
+            {
+              "item": "minecraft:stripped_spruce_log",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 3
+        },
+        {
+          "id": "strip_birch_log",
+          "inputs": [
+            {
+              "item": "minecraft:birch_log",
+              "count": 1
+            }
+          ],
+          "tool": {
+            "tag": "minecraft:axes",
+            "damage": 1
+          },
+          "outputs": [
+            {
+              "item": "minecraft:stripped_birch_log",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 3
+        },
+        {
+          "id": "strip_dark_oak_log",
+          "inputs": [
+            {
+              "item": "minecraft:dark_oak_log",
+              "count": 1
+            }
+          ],
+          "tool": {
+            "tag": "minecraft:axes",
+            "damage": 1
+          },
+          "outputs": [
+            {
+              "item": "minecraft:stripped_dark_oak_log",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 3
+        }
+      ]
+    },
+    "masonry": {
+      "profession": "mason",
+      "modes": [
+        "crafting",
+        "smelting",
+        "stonecutting"
+      ],
+      "labor_seconds": 5,
+      "output_tags": [
+        "minecraft:terracotta"
+      ],
+      "output_items": [
+        "minecraft:stone",
+        "minecraft:smooth_stone",
+        "minecraft:stone_bricks",
+        "minecraft:stone_slab",
+        "minecraft:stone_stairs",
+        "minecraft:stone_brick_stairs",
+        "minecraft:stone_brick_slab",
+        "minecraft:stone_brick_wall",
+        "minecraft:cobblestone_stairs",
+        "minecraft:cobblestone_slab",
+        "minecraft:cobblestone_wall",
+        "minecraft:bricks",
+        "minecraft:brick",
+        "minecraft:brick_stairs",
+        "minecraft:brick_slab",
+        "minecraft:glass",
+        "minecraft:glass_pane",
+        "minecraft:terracotta",
+        "minecraft:clay",
+        "minecraft:flower_pot",
+        "minecraft:furnace",
+        "minecraft:deepslate_bricks",
+        "minecraft:polished_andesite",
+        "minecraft:polished_diorite",
+        "minecraft:polished_granite",
+        "minecraft:mud_bricks",
+        "minecraft:packed_mud",
+        "minecraft:sandstone",
+        "minecraft:smooth_sandstone",
+        "minecraft:white_dye",
+        "minecraft:stonecutter",
+        "minecraft:smoker",
+        "minecraft:polished_granite_stairs",
+        "minecraft:chiseled_stone_bricks",
+        "minecraft:chiseled_deepslate",
+        "minecraft:deepslate_tiles",
+        "minecraft:deepslate_tile_stairs",
+        "minecraft:deepslate_tile_slab",
+        "minecraft:polished_deepslate",
+        "minecraft:deepslate_brick_stairs",
+        "minecraft:deepslate_brick_slab"
+      ]
+    },
+    "mill": {
+      "profession": "miller",
+      "modes": [],
+      "custom": [
+        {
+          "id": "flour",
+          "inputs": [
+            {
+              "item": "minecraft:wheat",
+              "count": 1
+            }
+          ],
+          "outputs": [
+            {
+              "item": "villageastra:flour",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 4,
+          "batch": 16
+        },
+        {
+          "id": "sugar",
+          "inputs": [
+            {
+              "item": "minecraft:sugar_cane",
+              "count": 1
+            }
+          ],
+          "outputs": [
+            {
+              "item": "minecraft:sugar",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 3
+        },
+        {
+          "id": "paper",
+          "inputs": [
+            {
+              "item": "minecraft:sugar_cane",
+              "count": 3
+            }
+          ],
+          "outputs": [
+            {
+              "item": "minecraft:paper",
+              "count": 3
+            }
+          ],
+          "labor_seconds": 3
+        },
+        {
+          "id": "bone_meal",
+          "inputs": [
+            {
+              "item": "minecraft:bone",
+              "count": 1
+            }
+          ],
+          "outputs": [
+            {
+              "item": "minecraft:bone_meal",
+              "count": 3
+            }
+          ],
+          "labor_seconds": 3
+        }
+      ]
+    },
+    "restaurant": {
+      "profession": "baker",
+      "modes": [
+        "smelting"
+      ],
+      "note": "AD-139: the restaurant's kitchen (was the bakery). Level I bakes bread and pies; from level II the cook also cooks the seven meats and fish (output_items_by_level); from level III a bread job is up to 16 loaves on half the fuel (the recipe's levels). AD-104 P2, owner decision 2 of 2026-09-19 (the same food per plot for every crop): the village kitchen bakes no potatoes. A raw potato already feeds at parity with wheat, and any baking ratio better than five potatoes to one would break it; a baked potato a player brings still feeds 5.",
+      "output_items_by_level": {"2": [
+        "minecraft:cooked_beef",
+        "minecraft:cooked_porkchop",
+        "minecraft:cooked_chicken",
+        "minecraft:cooked_mutton",
+        "minecraft:cooked_cod",
+        "minecraft:cooked_salmon",
+        "minecraft:cooked_rabbit"
+      ]},
+      "custom": [
+        {
+          "id": "bread",
+          "levels": {"3": {"batch": 16, "fuel_ticks": 100}},
+          "inputs": [
+            {
+              "item": "villageastra:flour",
+              "count": 2
+            }
+          ],
+          "fuel_ticks": 200,
+          "outputs": [
+            {
+              "item": "minecraft:bread",
+              "count": 1
+            }
+          ],
+          "labor_seconds": 8,
+          "batch": 8
+        },
+        {
+          "id": "pumpkin_pie",
+          "inputs": [
+            {
+              "item": "villageastra:flour",
+              "count": 1
+            },
+            {
+              "item": "minecraft:pumpkin",
+              "count": 1
+            },
+            {
+              "item": "minecraft:sugar",
+              "count": 1
+            },
+            {
+              "item": "minecraft:egg",
+              "count": 1
+            }
+          ],
+          "fuel_ticks": 200,
+          "outputs": [
+            {
+              "item": "minecraft:pumpkin_pie",
+              "count": 2
+            }
+          ],
+          "labor_seconds": 10
+        }
+      ]
+    },
+    "smithy": {
+      "profession": "blacksmith",
+      "modes": [
+        "crafting",
+        "smelting"
+      ],
+      "labor_seconds": 8,
+      "output_items": [
+        "minecraft:iron_ingot",
+        "minecraft:gold_ingot",
+        "minecraft:copper_ingot",
+        "minecraft:iron_nugget",
+        "minecraft:charcoal",
+        "minecraft:iron_pickaxe",
+        "minecraft:iron_axe",
+        "minecraft:iron_shovel",
+        "minecraft:iron_hoe",
+        "minecraft:iron_sword",
+        "minecraft:iron_helmet",
+        "minecraft:iron_chestplate",
+        "minecraft:iron_leggings",
+        "minecraft:iron_boots",
+        "minecraft:shears",
+        "minecraft:bucket",
+        "minecraft:torch",
+        "minecraft:chain",
+        "minecraft:iron_bars",
+        "minecraft:shield",
+        "minecraft:stone_pickaxe",
+        "minecraft:stone_axe",
+        "minecraft:stone_hoe",
+        "minecraft:stone_shovel",
+        "minecraft:stone_sword",
+        "minecraft:anvil",
+        "minecraft:rail",
+        "minecraft:minecart",
+        "minecraft:bow",
+        "minecraft:arrow",
+        "minecraft:flint_and_steel",
+        "minecraft:crossbow",
+        "villageastra:core_ring_3",
+        "villageastra:core_ring_4",
+        "villageastra:core_ring_5",
+        "villageastra:core_ring_6"
+      ],
+      "note": "AD-155 (owner's Metallurgy ladder): I iron picks, axes, swords and armour and the village's iron goods; II lanterns for the village and diamond tools and armour, IV wolf armour (output_items_by_level); the smith works faster by level (core labour); VI no smith, the bench turns by itself (automation.json).",
+      "output_items_by_level": {"2": [
+        "minecraft:lantern",
+        "minecraft:diamond_pickaxe",
+        "minecraft:diamond_axe",
+        "minecraft:diamond_shovel",
+        "minecraft:diamond_hoe",
+        "minecraft:diamond_sword",
+        "minecraft:diamond_helmet",
+        "minecraft:diamond_chestplate",
+        "minecraft:diamond_leggings",
+        "minecraft:diamond_boots"
+      ], "4": ["villageastra:wolf_armor"]}
+    },
+    "town_hall": {
+      "profession": "builder",
+      "modes": [
+        "crafting"
+      ],
+      "labor_seconds": 8,
+      "note": "AD-003 simple recipes before specialists: the builder may make basic wooden items for an approved project while it waits for materials.",
+      "research_outputs_note": "AD-136 (spec 4.2, CF2): what the hall learns to make at the builder's pace (labor_seconds) with Engineering I and II; anything else it still makes at the slow pace of bootstrap_workshop.json (AD-114), so early building never stops. Entries starting with # are item tags.",
+      "research_outputs": {
+        "engineering.1": [
+          "#minecraft:planks", "#minecraft:wooden_stairs", "#minecraft:wooden_slabs", "#minecraft:wooden_doors", "#minecraft:wooden_trapdoors",
+          "#minecraft:wooden_fences", "#minecraft:fence_gates", "minecraft:stick", "minecraft:ladder", "minecraft:chest", "minecraft:crafting_table",
+          "minecraft:barrel", "minecraft:stripped_oak_log", "minecraft:stripped_spruce_log", "minecraft:stripped_birch_log", "minecraft:stripped_dark_oak_log",
+          "minecraft:cobblestone_stairs", "minecraft:cobblestone_slab", "minecraft:cobblestone_wall", "minecraft:torch", "minecraft:scaffolding",
+          "villageastra:timber_scaffold", "minecraft:paper", "minecraft:sugar", "#villageastra:chairs", "#villageastra:tables"
+        ],
+        "engineering.2": [
+          "minecraft:stone", "minecraft:smooth_stone", "minecraft:glass", "minecraft:sandstone", "minecraft:smooth_sandstone", "minecraft:brick",
+          "minecraft:bricks", "minecraft:glass_pane", "minecraft:stone_bricks", "minecraft:stone_brick_stairs", "minecraft:stone_brick_slab",
+          "minecraft:stone_brick_wall", "#minecraft:beds", "minecraft:bookshelf", "minecraft:lectern", "villageastra:cart",
+          "#villageastra:framed_windows"
+        ],
+        "engineering.3": [
+          "minecraft:redstone_torch", "minecraft:lever", "minecraft:repeater", "minecraft:piston", "minecraft:sticky_piston", "minecraft:dispenser",
+          "minecraft:dropper", "minecraft:hopper", "minecraft:redstone_lamp", "minecraft:note_block", "minecraft:tripwire_hook"
+        ]
+      },
+      "output_tags": [
+        "minecraft:planks"
+      ],
+      "output_items": [
+        "minecraft:stick",
+        "minecraft:crafting_table",
+        "minecraft:chest",
+        "minecraft:ladder",
+        "minecraft:torch",
+        "minecraft:wooden_pickaxe",
+        "minecraft:stone_pickaxe",
+        "minecraft:stone_axe",
+        "minecraft:stone_hoe",
+        "minecraft:oak_door",
+        "minecraft:oak_slab",
+        "minecraft:oak_stairs",
+        "minecraft:spruce_slab",
+        "minecraft:spruce_stairs",
+        "villageastra:timber_scaffold",
+        "minecraft:hay_block",
+        "villageastra:core_farm",
+        "villageastra:core_livestock",
+        "villageastra:core_forester",
+        "villageastra:core_mine",
+        "villageastra:core_smithy",
+        "villageastra:core_carpentry",
+        "villageastra:core_masonry",
+        "villageastra:core_mill",
+        "villageastra:core_bakery",
+        "villageastra:core_clinic",
+        "villageastra:core_town_hall",
+        "villageastra:core_guard_house",
+        "villageastra:core_archery",
+        "villageastra:core_barracks",
+        "villageastra:core_school",
+        "villageastra:core_laboratory",
+        "villageastra:core_cartographer",
+        "villageastra:core_expedition",
+        "villageastra:core_warehouse",
+        "villageastra:core_caravan",
+        "villageastra:core_engineering"
+      ]
+    },
+    "clinic": {
+      "profession": "doctor",
+      "modes": [],
+      "custom": [
+        {
+          "id": "bandage",
+          "inputs": [
+            {
+              "item": "minecraft:paper",
+              "count": 2
+            },
+            {
+              "item": "minecraft:sugar",
+              "count": 1
+            }
+          ],
+          "outputs": [
+            {
+              "item": "villageastra:bandage",
+              "count": 2
+            }
+          ],
+          "labor_seconds": 6
+        }
+      ]
+    }
+  }
+}

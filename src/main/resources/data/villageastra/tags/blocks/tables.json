@@ -1,0 +1,16 @@
+{
+  "replace": false,
+  "values": [
+    "villageastra:oak_table",
+    "villageastra:spruce_table",
+    "villageastra:birch_table",
+    "villageastra:jungle_table",
+    "villageastra:acacia_table",
+    "villageastra:dark_oak_table",
+    "villageastra:mangrove_table",
+    "villageastra:cherry_table",
+    "villageastra:bamboo_table",
+    "villageastra:crimson_table",
+    "villageastra:warped_table"
+  ]
+}

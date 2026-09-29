@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SBS",
+    "LHL",
+    "SBS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone_bricks"
+    },
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "H": {
+      "item": "minecraft:shield"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_barracks",
+    "count": 1
+  }
+}

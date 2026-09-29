@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "note": "AD-122. The miner carries a batch like the farmer (AD-104 P2): he digs the consecutive cells of his drive and takes what he carries to the mine chest in one visit when it holds batch_items, when the next cell asks for a support beam he must fetch, when his pick is worn out, when the next cell cannot be dug (the floor of his level, unsafe ground, a pick of a higher tier), in the evening_ticks before dusk and at night, and after his work was interrupted. 48 is four stair rows of a 3x4 drive, the stretch between two beams.",
+  "batch_items": 48,
+  "evening_ticks": 1200,
+  "light_note": "AD-122 (owner): a light every light_every_steps stair steps (about 8 blocks down the diagonal) and every light_every_columns gallery columns, hung in the top cell above the walking headroom; he carries up to lights_carried from the hall (lanterns first, then torches).",
+  "light_every_steps": 6,
+  "light_every_columns": 8,
+  "lights_carried": 2
+}

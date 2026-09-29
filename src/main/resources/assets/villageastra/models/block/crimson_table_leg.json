@@ -1,0 +1,7 @@
+{
+  "parent": "villageastra:block/table_leg",
+  "textures": {
+    "planks": "minecraft:block/crimson_planks",
+    "log": "minecraft:block/stripped_crimson_stem"
+  }
+}

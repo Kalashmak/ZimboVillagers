@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "note": "AD-043. A campaign uses real soldiers of a barracks, real fences and campfires carried from home, and real explosions against working farms. The ring is a square perimeter at ring_radius around the target centre; closure is verified by a surface search for a way out. A siege holds only while the ring is intact and supplied soldiers cover their sectors. AD-104: the charges a farm takes and the soil it works from belong to its field (farm_fields.json: tnt_per_module, module_soil).",
+  "ring_radius": 24,
+  "camp_spacing": 24,
+  "carry_fences": 64,
+  "rations": 8,
+  "sector_soldiers": 1,
+  "breach_tolerance": 1200,
+  "starvation_nutrition": 2,
+  "surrender_ticks": 6000
+}

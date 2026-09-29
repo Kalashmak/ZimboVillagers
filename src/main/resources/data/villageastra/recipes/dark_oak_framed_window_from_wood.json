@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "framed_window",
+  "pattern": [
+    "WWW",
+    "WPW",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "tag": "villageastra:framed_windows"
+    },
+    "P": [
+      {
+        "item": "minecraft:dark_oak_planks"
+      },
+      {
+        "tag": "minecraft:dark_oak_logs"
+      }
+    ]
+  },
+  "result": {
+    "item": "villageastra:dark_oak_framed_window",
+    "count": 8
+  }
+}

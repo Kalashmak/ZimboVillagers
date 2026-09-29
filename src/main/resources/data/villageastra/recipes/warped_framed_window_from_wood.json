@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "framed_window",
+  "pattern": [
+    "WWW",
+    "WPW",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "tag": "villageastra:framed_windows"
+    },
+    "P": [
+      {
+        "item": "minecraft:warped_planks"
+      },
+      {
+        "tag": "minecraft:warped_stems"
+      }
+    ]
+  },
+  "result": {
+    "item": "villageastra:warped_framed_window",
+    "count": 8
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "HLH",
+    "WBW",
+    "TLT"
+  ],
+  "key": {
+    "H": {
+      "item": "minecraft:hay_block"
+    },
+    "L": {
+      "item": "minecraft:leather"
+    },
+    "W": {
+      "tag": "minecraft:wool"
+    },
+    "B": {
+      "item": "minecraft:barrel"
+    },
+    "T": {
+      "item": "minecraft:wheat"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_livestock",
+    "count": 1
+  }
+}

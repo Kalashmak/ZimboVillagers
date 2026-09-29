@@ -1,0 +1,8 @@
+{
+  "parent": "villageastra:block/core_base",
+  "textures": {
+    "side": "minecraft:block/composter_side",
+    "top": "minecraft:block/composter_side",
+    "band": "minecraft:block/gold_block"
+  }
+}

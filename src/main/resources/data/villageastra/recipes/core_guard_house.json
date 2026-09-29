@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "WTW",
+    "BSB",
+    "WTW"
+  ],
+  "key": {
+    "W": {
+      "item": "minecraft:stone_brick_wall"
+    },
+    "T": {
+      "item": "minecraft:torch"
+    },
+    "B": {
+      "item": "minecraft:stone_bricks"
+    },
+    "S": {
+      "item": "minecraft:shield"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_guard_house",
+    "count": 1
+  }
+}

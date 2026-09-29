@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "note": "AD-135 annexes (owner 2026-09-23): an annex is extra equipment beside a building that gives it an effect. No room is kept for it: it is built only when its site beside the building is free. Each building type names its site in advance (site: the annex lot's north-west corner in the parent's own lot cells, the parent unturned; the annex turns with its parent). An annex keeps no level and must suit every level of its building. parent_level: the kept level the parent needs; research: the node that opens it (read only when the research catalogue has it).",
+  "annexes": {
+    "carpentry_annex": { "parent": "forester", "parent_level": 3, "research": "carpentry.3", "site": [-5, 0, 0] },
+    "masonry_annex": { "parent": "mine", "parent_level": 3, "research": "masonry.3", "site": [8, 0, 1] },
+    "mill_annex": { "parent": "restaurant", "parent_level": 2, "research": "milling.2", "site": [11, 0, 0] },
+    "kennel_annex": { "parent": "livestock", "parent_level": 4, "research": "livestock.4", "site": [-5, 0, 0] },
+    "dog_academy_annex": { "parent": "barracks", "parent_level": 5, "research": "military.5", "site": [-5, 0, 0] }
+  }
+}

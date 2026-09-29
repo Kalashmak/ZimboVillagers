@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "PLP",
+    "LCL",
+    "PLP"
+  ],
+  "key": {
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "L": {
+      "tag": "minecraft:planks"
+    },
+    "C": {
+      "item": "minecraft:cartography_table"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_cartographer",
+    "count": 1
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "building",
+  "group": "framed_window",
+  "pattern": [
+    "WWW",
+    "WPW",
+    "WWW"
+  ],
+  "key": {
+    "W": {
+      "tag": "villageastra:framed_windows"
+    },
+    "P": [
+      {
+        "item": "minecraft:bamboo_planks"
+      },
+      {
+        "tag": "minecraft:bamboo_blocks"
+      }
+    ]
+  },
+  "result": {
+    "item": "villageastra:bamboo_framed_window",
+    "count": 8
+  }
+}

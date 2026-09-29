@@ -1,0 +1,174 @@
+{
+  "profession": "mayor",
+  "modes": [
+    "crafting",
+    "smelting",
+    "stonecutting"
+  ],
+  "labor_seconds": 180,
+  "output_tags": [
+    "minecraft:beds",
+    "minecraft:fence_gates",
+    "minecraft:planks",
+    "minecraft:signs",
+    "minecraft:terracotta",
+    "minecraft:wooden_buttons",
+    "minecraft:wooden_doors",
+    "minecraft:wooden_fences",
+    "minecraft:wooden_pressure_plates",
+    "minecraft:wooden_slabs",
+    "minecraft:wooden_stairs",
+    "minecraft:wooden_trapdoors",
+    "villageastra:framed_windows",
+    "villageastra:chairs",
+    "villageastra:tables"
+  ],
+  "output_items": [
+    "minecraft:anvil",
+    "minecraft:arrow",
+    "minecraft:barrel",
+    "minecraft:book",
+    "minecraft:bookshelf",
+    "minecraft:bow",
+    "minecraft:bowl",
+    "minecraft:brick",
+    "minecraft:brick_slab",
+    "minecraft:brick_stairs",
+    "minecraft:bricks",
+    "minecraft:bucket",
+    "minecraft:cartography_table",
+    "minecraft:chain",
+    "minecraft:charcoal",
+    "minecraft:chest",
+    "minecraft:chiseled_bookshelf",
+    "minecraft:chiseled_deepslate",
+    "minecraft:chiseled_stone_bricks",
+    "minecraft:clay",
+    "minecraft:clay_ball",
+    "minecraft:cobblestone_slab",
+    "minecraft:cobblestone_stairs",
+    "minecraft:cobblestone_wall",
+    "minecraft:composter",
+    "minecraft:copper_ingot",
+    "minecraft:crafting_table",
+    "minecraft:crossbow",
+    "minecraft:deepslate_brick_slab",
+    "minecraft:deepslate_brick_stairs",
+    "minecraft:deepslate_bricks",
+    "minecraft:deepslate_tile_slab",
+    "minecraft:deepslate_tile_stairs",
+    "minecraft:deepslate_tiles",
+    "minecraft:diamond_pickaxe",
+    "minecraft:diamond_sword",
+    "minecraft:fletching_table",
+    "minecraft:flint_and_steel",
+    "minecraft:flower_pot",
+    "minecraft:furnace",
+    "minecraft:glass",
+    "minecraft:glass_pane",
+    "minecraft:gold_ingot",
+    "minecraft:gravel",
+    "minecraft:grindstone",
+    "minecraft:iron_axe",
+    "minecraft:iron_bars",
+    "minecraft:iron_boots",
+    "minecraft:iron_chestplate",
+    "minecraft:iron_helmet",
+    "minecraft:iron_hoe",
+    "minecraft:iron_ingot",
+    "minecraft:iron_leggings",
+    "minecraft:iron_nugget",
+    "minecraft:iron_pickaxe",
+    "minecraft:iron_shovel",
+    "minecraft:iron_sword",
+    "minecraft:item_frame",
+    "minecraft:ladder",
+    "minecraft:lantern",
+    "minecraft:lectern",
+    "minecraft:loom",
+    "minecraft:minecart",
+    "minecraft:mud_bricks",
+    "minecraft:packed_mud",
+    "minecraft:polished_andesite",
+    "minecraft:polished_deepslate",
+    "minecraft:polished_diorite",
+    "minecraft:polished_granite",
+    "minecraft:polished_granite_stairs",
+    "minecraft:rail",
+    "minecraft:sand",
+    "minecraft:sandstone",
+    "minecraft:scaffolding",
+    "minecraft:shears",
+    "minecraft:shield",
+    "minecraft:smithing_table",
+    "minecraft:smoker",
+    "minecraft:smooth_sandstone",
+    "minecraft:smooth_stone",
+    "minecraft:stick",
+    "minecraft:stone",
+    "minecraft:stone_axe",
+    "minecraft:stone_brick_slab",
+    "minecraft:stone_brick_stairs",
+    "minecraft:stone_brick_wall",
+    "minecraft:stone_bricks",
+    "minecraft:stone_hoe",
+    "minecraft:stone_pickaxe",
+    "minecraft:stone_shovel",
+    "minecraft:stone_slab",
+    "minecraft:stone_stairs",
+    "minecraft:stone_sword",
+    "minecraft:stonecutter",
+    "minecraft:terracotta",
+    "minecraft:torch",
+    "minecraft:white_bed",
+    "minecraft:white_dye",
+    "villageastra:cart",
+    "villageastra:core_ring_3",
+    "villageastra:core_ring_4",
+    "villageastra:core_ring_5",
+    "villageastra:core_ring_6",
+    "villageastra:timber_scaffold"
+  ],
+  "custom": [
+    {
+      "id": "straw_bedding",
+      "inputs": [
+        {
+          "item": "minecraft:wheat",
+          "count": 12
+        },
+        {
+          "tag": "minecraft:planks",
+          "count": 6
+        }
+      ],
+      "outputs": [
+        {
+          "item": "minecraft:white_bed",
+          "count": 1
+        }
+      ],
+      "labor_seconds": 600
+    },
+    {
+      "id": "paper_binding",
+      "inputs": [
+        {
+          "item": "minecraft:paper",
+          "count": 6
+        },
+        {
+          "item": "minecraft:wheat",
+          "count": 2
+        }
+      ],
+      "outputs": [
+        {
+          "item": "minecraft:book",
+          "count": 1
+        }
+      ],
+      "labor_seconds": 600
+    }
+  ]
+}

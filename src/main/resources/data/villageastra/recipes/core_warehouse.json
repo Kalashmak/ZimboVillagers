@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "BPB",
+    "PIP",
+    "BPB"
+  ],
+  "key": {
+    "B": {
+      "item": "minecraft:barrel"
+    },
+    "P": {
+      "tag": "minecraft:planks"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_warehouse",
+    "count": 1
+  }
+}

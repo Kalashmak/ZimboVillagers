@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "note": "AD-136, owner 2026-09-23: level I of a branch is paid in resources (research_tree.json cost.resources); levels II..VI cost works_per_tier*(tier-1) scientific works. A seated scientist writes one work every work_ticks of the village clock (36000 = 30 minutes at 20 TPS; the clock stands while the game is paused or no player is on). seats: scientist places by the laboratory's working level I..VI. carry_to_lab_max: porters bring works from the stock to the laboratory while it holds fewer. tier1_sources: what a village makes without research or quests (CF2) — every level-I cost must come from this list (ResearchCatalogTest).",
+  "works_per_tier": 7,
+  "work_ticks": 36000,
+  "seats": [1, 2, 3, 4, 5, 6],
+  "carry_to_lab_max": 7,
+  "resource_orders_max": 3,
+  "tier1_sources": [
+    "minecraft:wheat", "minecraft:wheat_seeds", "#minecraft:logs", "#minecraft:planks", "minecraft:cobblestone", "#minecraft:coals",
+    "minecraft:raw_iron", "minecraft:dirt", "minecraft:stick", "minecraft:chest", "minecraft:crafting_table", "minecraft:torch",
+    "minecraft:stone_axe", "minecraft:stone_pickaxe"
+  ],
+  "mayor_priority": ["engineering.1", "research.1", "education.1", "construction.1"],
+  "replaces": "balance.json slots_per_science_building_level and book_cost_formula (AD-136)"
+}

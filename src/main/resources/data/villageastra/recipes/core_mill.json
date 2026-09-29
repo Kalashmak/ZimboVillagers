@@ -1,0 +1,24 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SWS",
+    "WGW",
+    "SWS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:smooth_stone"
+    },
+    "W": {
+      "item": "minecraft:wheat"
+    },
+    "G": {
+      "item": "minecraft:grindstone"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_mill",
+    "count": 1
+  }
+}

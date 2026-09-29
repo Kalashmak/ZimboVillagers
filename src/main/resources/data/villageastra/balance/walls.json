@@ -1,0 +1,15 @@
+{
+  "note": "AD-127 fitted walls: a profile of sectors round the hall, margin and headroom beyond the village's extent, trigger hysteresis for growth, an outward push of a sector past water, cliffs and foreign buildings.",
+  "sectors": 72,
+  "margin": 4,
+  "headroom": 8,
+  "trigger": 2,
+  "max_radius": 96,
+  "obstacle_push": 16,
+  "push_step": 2,
+  "cliff_step": 4,
+  "min_radius": 16,
+  "shallow_water": 1,
+  "extend_every": 6000,
+  "min_turn_deg": 3.5
+}

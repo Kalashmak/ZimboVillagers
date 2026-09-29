@@ -1,0 +1,27 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    "SPS",
+    "BGB",
+    "SPS"
+  ],
+  "key": {
+    "S": {
+      "item": "minecraft:stone_bricks"
+    },
+    "P": {
+      "item": "minecraft:paper"
+    },
+    "B": {
+      "item": "minecraft:iron_bars"
+    },
+    "G": {
+      "item": "minecraft:grindstone"
+    }
+  },
+  "result": {
+    "item": "villageastra:core_engineering",
+    "count": 1
+  }
+}

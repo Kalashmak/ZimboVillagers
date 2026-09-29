@@ -1,0 +1,38 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "#frame"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        2,
+        0
+      ],
+      "to": [
+        2,
+        14,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#frame",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#frame",
+          "cullface": "south"
+        },
+        "west": {
+          "texture": "#frame",
+          "cullface": "west"
+        },
+        "east": {
+          "texture": "#frame"
+        }
+      }
+    }
+  ]
+}

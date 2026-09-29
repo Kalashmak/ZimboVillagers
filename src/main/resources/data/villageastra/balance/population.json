@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "note": "AD-031. Active-time units (ticks). A resident needs meal_nutrition from real stock food every meal_interval_ticks; missed meals stop ordinary work, then hurt, then kill. Births need a free usable home place and a food reserve; children grow up after child_grow_ticks and are educated only after school_required_ticks of physical attendance with a teacher present. AD-095: an adult becomes a guard, archer or soldier only after drill_required_ticks of daytime drill within drill_radius of a barracks. AD-104 P2, owner decision 2 of 2026-09-19: village meals count food in rations so every crop feeds about the same per plot; the rations table says what one item gives a meal (carrot 1, potato 1, beetroot 2, bread 5, baked potato 5), safe food it does not list keeps its vanilla nutrition, food with effects feeds nobody, and the player's own hunger is unchanged. A meal takes whole items until it has meal_nutrition, so 3 beetroots make one meal. AD-111: a far pantry chunk is touch-loaded at border level (nothing ticks) for touch_ticket_ticks, at most touch_loads_per_tick chunk loads per server tick (one village over that still passes alone).",
+  "meal_interval_ticks": 12000,
+  "meal_nutrition": 5,
+  "rations": {"minecraft:carrot": 1, "minecraft:potato": 1, "minecraft:beetroot": 2, "minecraft:bread": 5, "minecraft:baked_potato": 5},
+  "hungry_missed_meals": 2,
+  "starving_missed_meals": 4,
+  "death_missed_meals": 8,
+  "starvation_damage": 4,
+  "birth_interval_ticks": 72000,
+  "birth_food_nutrition_per_resident": 10,
+  "child_grow_ticks": 216000,
+  "school_required_ticks": 72000,
+  "school_radius": 12,
+  "assign_interval_ticks": 1200,
+  "drill_required_ticks": 36000,
+  "drill_radius": 6,
+  "touch_loads_per_tick": 4,
+  "touch_ticket_ticks": 100
+}

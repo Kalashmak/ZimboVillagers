@@ -1,0 +1,59 @@
+{
+  "parent": "minecraft:block/block",
+  "render_type": "minecraft:cutout",
+  "textures": {
+    "particle": "#frame"
+  },
+  "elements": [
+    {
+      "from": [
+        2,
+        14,
+        0
+      ],
+      "to": [
+        14,
+        16,
+        16
+      ],
+      "faces": {
+        "north": {
+          "texture": "#frame",
+          "uv": [
+            11,
+            2,
+            13,
+            14
+          ],
+          "rotation": 90,
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#frame",
+          "uv": [
+            11,
+            2,
+            13,
+            14
+          ],
+          "rotation": 90,
+          "cullface": "south"
+        },
+        "up": {
+          "texture": "#frame",
+          "cullface": "up"
+        },
+        "down": {
+          "texture": "#frame",
+          "uv": [
+            0,
+            2,
+            16,
+            14
+          ],
+          "rotation": 90
+        }
+      }
+    }
+  ]
+}
