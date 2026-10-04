@@ -47,6 +47,16 @@ public final class StarterFoodGameTests {
   for(var r:s.residents())if(l.getEntity(r.id()) instanceof ResidentEntity npc)npc.setNoAi(true);
   return new Village(l,s,SettlementData.get(l.getServer()).entry(s.id()),origin);
  }
+ /** Claim tests need every resident registered, including homes outside the tiny
+  * GameTest template. Wait for the whole village's chunks before spawning it. */
+ private static void loadedVillage(GameTestHelper h,java.util.function.Consumer<Village> body){
+  var l=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var chunks=new java.util.HashSet<net.minecraft.world.level.ChunkPos>();
+  for(var p:StarterVillage.layout(origin).keySet())for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++)chunks.add(new net.minecraft.world.level.ChunkPos((p.getX()>>4)+dx,(p.getZ()>>4)+dz));
+  var held=new java.util.ArrayList<net.minecraft.world.level.ChunkPos>();for(var cp:chunks){if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(cp.x,cp.z,true);held.add(cp);}l.getChunk(cp.x,cp.z);}
+  h.startSequence().thenWaitUntil(()->{for(var cp:chunks)h.assertTrue(l.isPositionEntityTicking(new BlockPos(cp.getMinBlockX()+8,origin.getY(),cp.getMinBlockZ()+8)),"Village chunks ready for all bakers");}).thenExecute(()->{
+   var v=village(h);try{for(var r:v.s.residents())h.assertTrue(l.getEntity(r.id()) instanceof ResidentEntity,"Fixture resident is loaded before claim checks");body.accept(v);}finally{done(v);for(var cp:held)l.setChunkForced(cp.x,cp.z,false);}h.succeed();
+  });
+ }
  private static void done(Village v){
   for(var r:v.s.residents()){HandBread.release(v.l,v.s.id(),r.id());var npc=v.l.getEntity(r.id());if(npc!=null)npc.discard();}
   delete(HandBread.path(v.l,v.s.id()));delete(root(v.l).resolve("data/astra-unlocks/"+v.s.id()+".bin"));
@@ -407,9 +417,8 @@ public final class StarterFoodGameTests {
   }finally{done(v);}
   h.succeed();
  }
- @GameTest(template="empty",timeoutTicks=100) public static void oneBakerAtATime(GameTestHelper h){
-  var v=village(h);
-  try{
+ @GameTest(template="empty",batch="starter_food_claim",timeoutTicks=400) public static void oneBakerAtATime(GameTestHelper h){
+  loadedVillage(h,v->{
    var id=v.s.id();var mayor=v.resident(Profession.MAYOR).id();var builder=v.resident(Profession.BUILDER).id();long t=1000;
    h.assertTrue(HandBread.claim(v.l,id,mayor,t)&&HandBread.holds(v.l,id,mayor,t),"The first adult takes the village's hand bread");
    h.assertTrue(!HandBread.mayClaim(v.l,id,builder,t)&&!HandBread.claim(v.l,id,builder,t),"A second may not while it is held");
@@ -420,8 +429,7 @@ public final class StarterFoodGameTests {
    h.assertTrue(HandBread.claim(v.l,id,builder,t+100)&&HandBread.holds(v.l,id,builder,t+100)&&!HandBread.holds(v.l,id,mayor,t+100),"Let go, the next adult takes it");
    v.npc(Profession.BUILDER).discard();
    h.assertTrue(!HandBread.holds(v.l,id,builder,t+100)&&HandBread.claim(v.l,id,mayor,t+100),"A holder gone from the world holds nothing");
-  }finally{done(v);}
-  h.succeed();
+  });
  }
  @GameTest(template="empty",timeoutTicks=100) public static void handBreadGoalTakesAnIdleAdultByDayOnly(GameTestHelper h){
   var v=village(h);
@@ -442,9 +450,8 @@ public final class StarterFoodGameTests {
  }
  /** probe-fix-01: the hall's simple crafting (the mayor's, the builder's) gives way to the village's hand bread by day while it wants an adult —
   *  in the starter village both kept crafting for the style's projects and a paid job waited in the hall until a meal was missed. */
- @GameTest(template="empty",timeoutTicks=100) public static void hallCraftingGivesWayToHandBread(GameTestHelper h){
-  var v=village(h);
-  try{
+ @GameTest(template="empty",batch="starter_food_crafting_priority",timeoutTicks=400) public static void hallCraftingGivesWayToHandBread(GameTestHelper h){
+  loadedVillage(h,v->{
    var mayor=v.npc(Profession.MAYOR);var builder=v.npc(Profession.BUILDER);
    h.assertTrue(!HandBreadGoal.calls(mayor,true,1000L),"A fed village with no wheat to bake calls nobody from the hall's work");
    hungryHall(v,10);
@@ -454,8 +461,7 @@ public final class StarterFoodGameTests {
    HandBread.claim(v.l,v.s.id(),mayor.getUUID(),v.l.getGameTime());
    h.assertTrue(HandBreadGoal.calls(mayor,true,1000L)&&!HandBreadGoal.calls(builder,true,1000L),"Once the mayor bakes, the builder keeps to his crafting");
    HandBread.release(v.l,v.s.id(),mayor.getUUID());
-  }finally{done(v);}
-  h.succeed();
+  });
  }
  /** Override 18: nobody walking out with a player, no companion let go and still rowing ashore, and no guest — no village, a village that is
   *  gone, or a stranger who is nobody of this village — bakes or holds the claim. */

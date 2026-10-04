@@ -55,7 +55,7 @@ public final class SiegeGameTests {
    npc.bind(w.attacker.settlement().id(),w.attacker.settlement().resident(w.soldiers.get(i)));npc.setNoAi(true);
    npc.moveTo(w.centre.getX()+posts[i][0]+.5,w.centre.getY()+1,w.centre.getZ()+posts[i][1]+.5,0,0);w.l.addFreshEntity(npc);}
  }
- @GameTest(template="empty",timeoutTicks=200) public static void campaignSpendsRealSoldiersMaterialsAndCharges(GameTestHelper h){
+ @GameTest(template="empty",batch="campaign_stock",timeoutTicks=200) public static void campaignSpendsRealSoldiersMaterialsAndCharges(GameTestHelper h){
   var w=war(h);field(w,true);
   h.assertTrue(Sieges.soldiers(w.attacker).size()==4,"Only really assigned soldiers march: "+Sieges.soldiers(w.attacker).size());
   h.assertTrue(Sieges.workingFarms(w.l,w.target).size()==1,"The target farm really works");
@@ -78,7 +78,9 @@ public final class SiegeGameTests {
   int carried=Sieges.supply(army,"fences");
   h.assertTrue(!Sieges.placeSection(w.l,army,null,at)&&Sieges.supply(army,"fences")==carried,"An occupied cell spends nothing");
   h.assertTrue(Sieges.placeCamp(w.l,army,null,w.centre.offset(22,1,0))&&w.l.getBlockState(w.centre.offset(22,1,0)).is(Blocks.CAMPFIRE),"The camp fire is a real block");
-  // The test plateau is itself a closed line, so the working farm is what still blocks the siege.
+  // A plateau can connect to another test's terrain. Establish the actual prerequisite explicitly.
+  ring(w,true);h.assertTrue(Sieges.closed(w.l,w.target),"The physical siege ring is closed: "+Sieges.lastEscape);
+  h.assertTrue(Sieges.workingFarms(w.l,w.target).size()==1,"The ring leaves the working farm intact");
   h.assertTrue(Sieges.ready(w.l,army).equals("farms_working")||Sieges.ready(w.l,army).equals("peaceful"),"A working farm blocks the siege: "+Sieges.ready(w.l,army));
   h.succeed();
  }

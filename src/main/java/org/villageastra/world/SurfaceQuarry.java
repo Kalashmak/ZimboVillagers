@@ -4,6 +4,7 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.*;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import org.villageastra.domain.*;
 import org.villageastra.server.*;
@@ -12,7 +13,7 @@ import org.villageastra.server.*;
 public final class SurfaceQuarry {
  private SurfaceQuarry() {}
  public static boolean blocked(CompoundTag work){return work.getString("status").equals("missing_stair_stone")||work.getString("status").equals("fluid_boundary")||work.getString("status").equals("unsafe_ground")||work.getString("status").equals("mine_floor");}
- public static boolean rock(BlockState s){return s.is(BlockTags.BASE_STONE_OVERWORLD)||s.is(BlockTags.COAL_ORES)||s.is(BlockTags.IRON_ORES)||s.is(BlockTags.COPPER_ORES)||s.is(BlockTags.GOLD_ORES);}
+ public static boolean rock(BlockState s){return s.is(BlockTags.BASE_STONE_OVERWORLD)||s.is(Blocks.SANDSTONE)||s.is(Blocks.RED_SANDSTONE)||s.is(BlockTags.COAL_ORES)||s.is(BlockTags.IRON_ORES)||s.is(BlockTags.COPPER_ORES)||s.is(BlockTags.GOLD_ORES);}
  public static boolean safe(ServerLevel l,BlockPos p){
   var s=l.getBlockState(p);if(!rock(s)||l.getBlockEntity(p)!=null||OwnershipEvents.protectedBlock(l,p))return false;
   if(!l.getBlockState(p.above()).getCollisionShape(l,p.above()).isEmpty()||!l.getBlockState(p.above(2)).getCollisionShape(l,p.above(2)).isEmpty())return false;

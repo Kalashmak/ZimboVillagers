@@ -55,7 +55,9 @@ public final class SurfaceQuarryGameTests {
    h.assertTrue(WorkerSupplies.wants(l,e,mine.id()).stream().anyMatch(w->w.matches(new ItemStack(Items.STONE_PICKAXE))),"A borrowed quarry tool is requested separately from the pick still held by the mine");chest.setItem(0,new ItemStack(Items.STONE_PICKAXE));
    var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:polished_andesite",3);project.put("cost",cost);HallUpgradeGoal.store(l,s.id(),project);
    var goal=new NaturalSupplyGoal(npc,true);h.startSequence().thenWaitUntil(()->{npc.tickCount+=100;h.assertTrue(goal.canUse(),"Surveying needed surface rock within the load budget");}).thenExecute(()->{
-   var trip=NaturalSupplyGoal.inspect(l,npc.getUUID());h.assertTrue(trip.getBoolean("quarry")&&BlockPos.of(trip.getLong("target")).equals(target),"Ordinary demand-driven search selects the real needed andesite: trip="+trip+" safe="+SurfaceQuarry.safe(l,target)+" stand="+HarvestAccess.find(npc,target)+" top="+l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,target.getX(),target.getZ())+" target="+target+" wants="+Workshops.wants(l,e)+" needs="+Workshops.needs(l,e,Workshops.spec("town_hall"),chest,Workshops.wants(l,e)));
+   var trip=NaturalSupplyGoal.inspect(l,npc.getUUID());var chosen=BlockPos.of(trip.getLong("target"));
+   h.assertTrue(trip.getBoolean("quarry")&&l.getBlockState(chosen).is(Blocks.ANDESITE)&&SurfaceQuarry.safe(l,chosen)&&HarvestAccess.find(npc,chosen)!=null,"Demand-driven survey chooses reachable, safe real andesite, including natural terrain closer than the fixture");
+   h.assertTrue(net.minecraft.nbt.NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),trip.getCompound("before")).equals(l.getBlockState(chosen)),"Persisted quarry receipt records the selected real block before extraction");
    npc.moveTo(target.getX()+1.5,BuildingPlacement.origin(e,mine).getY()-3,target.getZ()+.5);h.assertTrue(!SurfaceQuarry.mayStart(l,e,npc),"An underground miner first returns to the surface");
    npc.discard();ResearchV2Town.done(t);}).thenSucceed();
  }

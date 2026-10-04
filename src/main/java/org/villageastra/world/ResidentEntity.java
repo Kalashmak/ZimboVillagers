@@ -127,8 +127,33 @@ public final class ResidentEntity extends PathfinderMob {
      *  stepped out again and the same cut is planned once more. Around a column the route takes straight steps. */
     @Override protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level level) {
         return new net.minecraft.world.entity.ai.navigation.GroundPathNavigation(this, level) {
+            @Override public boolean moveTo(net.minecraft.world.level.pathfinder.Path incoming,double speed){
+                // Vanilla compares only nodes; an identical ordinary path must not erase the return policy (or keep it for another goal).
+                if((incoming instanceof ResourceReturnRoute.ReturnPath)!=(path instanceof ResourceReturnRoute.ReturnPath)){path=null;hasDelayedRecomputation=false;}
+                return super.moveTo(incoming,speed);
+            }
+            @Override public net.minecraft.core.BlockPos getTargetPos(){return path instanceof ResourceReturnRoute.ReturnPath?path.getTarget():super.getTargetPos();}
+            @Override public void recomputePath(){
+                if(!(path instanceof ResourceReturnRoute.ReturnPath)){super.recomputePath();return;}
+                if(!canUpdatePath()||level.getGameTime()-timeLastRecompute<=20L){hasDelayedRecomputation=true;return;}
+                path=ResourceReturnRoute.plan(ResidentEntity.this,path.getTarget());
+                timeLastRecompute=level.getGameTime();hasDelayedRecomputation=false;
+            }
+            @Override public void stop(){if(path instanceof ResourceReturnRoute.ReturnPath)hasDelayedRecomputation=false;super.stop();}
             @Override protected net.minecraft.world.level.pathfinder.PathFinder createPathFinder(int maxVisitedNodes) {
                 nodeEvaluator = new net.minecraft.world.level.pathfinder.WalkNodeEvaluator() {
+                    @Override public int getNeighbors(net.minecraft.world.level.pathfinder.Node[] neighbors,net.minecraft.world.level.pathfinder.Node from){
+                        int count=super.getNeighbors(neighbors,from);if(!reversibleRoute)return count;int kept=0;
+                        // The vanilla step-up recursion can still emit a two-block descent under an overhang.
+                        for(int i=0;i<count;i++)if(Math.abs(neighbors[i].y-from.y)<=1)neighbors[kept++]=neighbors[i];return kept;
+                    }
+                    @Override public net.minecraft.world.level.pathfinder.BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter blocks,int x,int y,int z,net.minecraft.world.entity.Mob mob){
+                        var state=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y,z));
+                        if(state.is(net.minecraft.world.level.block.Blocks.BUBBLE_COLUMN)&&state.getValue(net.minecraft.world.level.block.BubbleColumnBlock.DRAG_DOWN))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
+                        var below=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y-1,z));
+                        if(state.isAir()&&below.is(net.minecraft.world.level.block.Blocks.BUBBLE_COLUMN)&&below.getValue(net.minecraft.world.level.block.BubbleColumnBlock.DRAG_DOWN))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
+                        return super.getBlockPathType(blocks,x,y,z,mob);
+                    }
                     @Override protected boolean isDiagonalValid(net.minecraft.world.level.pathfinder.Node from, net.minecraft.world.level.pathfinder.Node sideA,
                             net.minecraft.world.level.pathfinder.Node sideB, net.minecraft.world.level.pathfinder.Node diagonal) {
                         if (sideA != null && sideA.type == net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_OTHER
@@ -159,6 +184,8 @@ public final class ResidentEntity extends PathfinderMob {
         goalSelector.addGoal(1, new SafeDescentGoal(this));
         // Verified shallow-pit recovery may interrupt floating; submerged water still uses FloatGoal.
         goalSelector.addGoal(0, new PitEscapeGoal(this));
+        goalSelector.addGoal(0, new FoliageEscapeGoal(this));
+        goalSelector.addGoal(0, new ShoreEscapeGoal(this));
         goalSelector.addGoal(3, new ResidentDoorGoal(this));
         goalSelector.addGoal(3, new GuardGoal(this));
         goalSelector.addGoal(5, new DoctorGoal(this));

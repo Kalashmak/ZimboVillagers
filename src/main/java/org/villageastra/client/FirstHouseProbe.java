@@ -35,10 +35,10 @@ final class FirstHouseProbe {
   var e=data.entry(village);long elapsed=data.clock().ticks()-since;
   FirstHouseBuilderSurvey.sample(l,e);
   if(e.settlement().residents().stream().noneMatch(r->r.alive()))throw new IllegalStateException("Settlement lost all residents; preserve failed world and restart from an untouched baseline");
-  if(e.settlement().residents().stream().anyMatch(r->!r.alive()&&r.missedMeals()>=Population.DEATH))throw new IllegalStateException("A resident starved; preserve failed world and restart from an untouched living checkpoint");
+  if(e.settlement().residents().stream().anyMatch(r->!r.alive()))throw new IllegalStateException("A resident died; preserve failed world and restart from an untouched living checkpoint");
   if(elapsed-trace>=(elapsed<2400?40:1200)){trace=elapsed;for(var r:e.settlement().residents())if((r.profession()!=null)&&l.getEntity(r.id()) instanceof ResidentEntity npc){
    var path=npc.getNavigation().getPath();var nodes=new ArrayList<Object>();if(path!=null)for(int i=path.getNextNodeIndex();i<Math.min(path.getNodeCount(),path.getNextNodeIndex()+4);i++)nodes.add(path.getNodePos(i));
-   LogUtils.getLogger().info("ASTRA_FIRST_HOUSE trace worker={} tick={} npcTick={} entityTicking={} pos={} motion={} ground={} goals={} reached={} target={} next={}",r.profession(),elapsed,npc.tickCount,l.isPositionEntityTicking(npc.blockPosition()),npc.position(),npc.getDeltaMovement(),npc.onGround(),npc.runningGoals(),path!=null&&path.canReach(),path==null?null:path.getTarget(),nodes);
+   LogUtils.getLogger().info("ASTRA_FIRST_HOUSE trace worker={} tick={} npcTick={} entityTicking={} pos={} motion={} ground={} goals={} reached={} target={} next={} pathKind={}",r.profession(),elapsed,npc.tickCount,l.isPositionEntityTicking(npc.blockPosition()),npc.position(),npc.getDeltaMovement(),npc.onGround(),npc.runningGoals(),path!=null&&path.canReach(),path==null?null:path.getTarget(),nodes,path==null?"none":path.getClass().getSimpleName());
   }}
   if(elapsed-last<1200)return;last=elapsed;
   if(e.settlement().governance().playerMayor()!=null)throw new IllegalStateException("Player became mayor");
@@ -50,6 +50,7 @@ final class FirstHouseProbe {
   FirstHousePlantSurvey.sample(l,e);
   if(elapsed-detail>=12000){detail=elapsed;
    FirstHouseQuarrySurvey.sample(l,e);
+   for(var r:e.settlement().residents())if(l.getEntity(r.id()) instanceof ResidentEntity npc){var b=e.settlement().workplace(r.id());if(b!=null&&Set.of("forester","mine").contains(b.type()))LogUtils.getLogger().info("ASTRA_FIRST_HOUSE localSupply={} available={} route={} pendingCargo={} resourceStage={} workshopStage={} players={}",r.profession(),WorkerSupplies.available(npc),LogisticsRoutes.workerRoute(l,e,b),CargoCustody.pending(npc.getServer(),npc.getUUID()),MineWork.read(l,b).getString("stage"),Workshops.inspect(l,b.id()).getString("stage"),npc.getServer().getPlayerCount());}
    if(job.hasUUID("worker")&&l.getEntity(job.getUUID("worker")) instanceof ResidentEntity npc){var nav=npc.getNavigation();var path=nav.getPath();LogUtils.getLogger().info("ASTRA_FIRST_HOUSE stationWorker={} pos={} target={} reachable={} navigationDone={} pitExit={}",npc.getUUID(),npc.position(),nav.getTargetPos(),path==null?"none":path.canReach(),nav.isDone(),PitEscapeGoal.escape(npc));}
    LogUtils.getLogger().info("ASTRA_FIRST_HOUSE health={}",e.settlement().residents().stream().map(r->r.id()+":"+r.profession()+":"+r.life()+":sick="+r.sick()+":missed="+r.missedMeals()).toList());
    LogUtils.getLogger().info("ASTRA_FIRST_HOUSE workshopLabor={}/{} needs={}",job.getLong("labor"),job.getLong("needLabor"),job.getList("needs",Tag.TAG_COMPOUND));

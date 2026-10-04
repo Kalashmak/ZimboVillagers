@@ -38,7 +38,8 @@ public final class LogisticsRoutes {
   if(b.type().equals("livestock")){if(LivestockPens.FEEDS.contains(item.getItem()))return LivestockPens.FEED_STOCK;if(item.getItem() instanceof net.minecraft.world.item.ShearsItem)return 1;return 0;}
   // AD-138 IV: a kennel keeps its wolves' meat.
   if(b.type().equals(VillageWolves.TYPE))return VillageWolves.MEAT.contains(item.getItem())?VillageWolves.MEAT_STOCK:0;
-  if(b.type().equals("farm")){if(item.is(Items.SUGAR_CANE))return 1;if(item.is(Items.CARROT)||item.is(Items.POTATO))return 4;if(item.is(Items.WHEAT_SEEDS)||item.is(Items.BEETROOT_SEEDS))return 8;}if(item.is(net.minecraft.tags.ItemTags.LOGS)&&Set.of("forester","mine").contains(b.type()))return 8;return 0;}
+  if(b.type().equals("farm")){if(item.is(Items.SUGAR_CANE))return 1;if(item.is(Items.CARROT)||item.is(Items.POTATO))return 4;if(item.is(Items.WHEAT_SEEDS)||item.is(Items.BEETROOT_SEEDS))return 8;}
+  if(item.is(net.minecraft.tags.ItemTags.LOGS)){if(b.type().equals("mine"))return 8;if(b.type().equals("forester")&&b.level()>=ForestBalance.SAW_FROM)return ForestBalance.LOG_KEEP;}return 0;}
  private static boolean output(ItemStack s){return s.is(net.minecraft.tags.ItemTags.LOGS)||Set.of(Items.COBBLESTONE,Items.COBBLED_DEEPSLATE,Items.RAW_IRON,Items.RAW_COPPER,Items.RAW_GOLD,Items.COAL,Items.DIAMOND,Items.REDSTONE,Items.LAPIS_LAZULI,Items.EMERALD,Items.WHEAT,Items.CARROT,Items.POTATO,Items.BEETROOT,Items.SUGAR_CANE,
   // AD-130: the earth the miner digs out is the hall's stock too — the barn's upper fields are laid of it (with the quarry's and the roads' spoil).
   Items.DIRT).contains(s.getItem());}
@@ -77,19 +78,30 @@ public final class LogisticsRoutes {
  /** A chest this full is emptied before food and research (a full chest stops its producer, CF-D). */
  public static final double FULL=0.5;
  /** A producer's own product that goes to the stock. */
- public static boolean product(Settlement.Building b,ItemStack item){return !item.isEmpty()&&(b.type().equals("livestock")?LivestockPens.product(item):output(item)||b.type().equals(ForesterHut.TYPE)&&item.is(net.minecraft.tags.ItemTags.PLANKS));}
+ public static boolean product(Settlement.Building b,ItemStack item){return !item.isEmpty()&&(b.type().equals("livestock")?LivestockPens.product(item):output(item)||b.type().equals(ForesterHut.TYPE)&&(item.is(net.minecraft.tags.ItemTags.PLANKS)||item.is(Items.APPLE))||b.type().equals("mine")&&mineral(item));}
+ /** Excavated intermediates are usable stock too; sandstone need not be crafted again from sand. */
+ private static boolean mineral(ItemStack item){return Workshops.mined(item.getItem())||Set.of(Items.SANDSTONE,Items.RED_SANDSTONE,Items.SAND,Items.RED_SAND).contains(item.getItem());}
  /** AD-147: the next route of a warehouse's courier by need (see NEED_*): {@code from} the courier's place (null: sources by id), {@code load} the
   *  most one leg takes, {@code accept} what a cart leg must fit (null: anything). */
  public static Route byNeed(ServerLevel l,SettlementData.Entry e,Settlement.Building stock,BlockPos from,int load,Predicate<Route> accept){
   var wants=Workshops.wants(l,e);Route r;
   if((r=wants(l,e,wants,NEED_BUILD,from,load,accept))!=null)return r;
   if((r=wants(l,e,wants,NEED_SUPPLY,from,load,accept))!=null)return r;
+  if((r=constructionInputs(l,e,wants,from,load,accept))!=null)return r;
   if((r=products(l,e,stock,from,load,accept,true))!=null)return r;
   if((r=wants(l,e,wants,NEED_FOOD,from,load,accept))!=null)return r;
   if((r=wants(l,e,wants,NEED_RESEARCH,from,load,accept))!=null)return r;
   {var b=ScienceWorks.lab(e);var c=b==null?null:chest(l,e,b);if(c!=null&&count(c,org.villageastra.server.BookResearch::work)<org.villageastra.domain.ScienceBalance.CARRY_TO_LAB)for(var demand:science()){if((r=find(l,e,b,demand,load,null,from,accept))!=null)return r;}}
   if((r=wants(l,e,wants,NEED_WAYS,from,load,accept))!=null)return r;
   return products(l,e,stock,from,load,accept,false);
+ }
+ /** A busy workshop publishes only its current job. The unpaid house still needs
+  * ingredients for its other products before recurring generic stock replenishment. */
+ private static Route constructionInputs(ServerLevel l,SettlementData.Entry e,List<Workshops.Want> wants,BlockPos from,int load,Predicate<Route> accept){
+  for(var want:wants)if(want.need()==NEED_BUILD){var dest=e.settlement().buildings().stream().filter(b->b.id().equals(want.destination())).findFirst().orElse(null);if(dest==null)continue;
+   var c=chest(l,e,dest);var spec=Workshops.spec(l,e,dest);if(c==null||spec==null)continue;
+   for(var input:Workshops.needs(l,e,spec,HallReserve.view(l,e,c),List.of(want))){var route=find(l,e,dest,new Demand("construction_input",input::matches,input.count()+count(c,input::matches)),load,null,from,accept);if(route!=null)return route;}
+  }return null;
  }
  /** The need class a route of this building's courier answers (for the card): the class of the first want it serves, or output. */
  private static Route wants(ServerLevel l,SettlementData.Entry e,List<Workshops.Want> wants,int need,BlockPos from,int load,Predicate<Route> accept){
@@ -122,6 +134,7 @@ public final class LogisticsRoutes {
    var route=find(l,e,dest,new Demand("want",want::matches,want.count()+count(c,want::matches)),load);if(route!=null)return route;}
   {var b=ScienceWorks.lab(e);var c=b==null?null:chest(l,e,b);if(c!=null&&count(c,org.villageastra.server.BookResearch::work)<org.villageastra.domain.ScienceBalance.CARRY_TO_LAB)for(var demand:science()){var route=find(l,e,b,demand,load);if(route!=null)return route;}}
   var stock=e.settlement().buildings().stream().filter(b->b.type().equals("warehouse")).findFirst().orElseGet(()->e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null));if(stock==null)return null;var c=chest(l,e,stock);if(c==null)return null;
+  var inputs=constructionInputs(l,e,Workshops.wants(l,e),from,load,null);if(inputs!=null)return inputs;
   // AD-138 (spec F6): a yard's products go to the stock too - and only those: its feed is not the farm's harvest.
   for(var b:e.settlement().buildings())if(PRODUCERS.contains(b.type())){var source=chest(l,e,b);if(source==null)continue;for(int i=0;i<source.getContainerSize();i++){var item=source.getItem(i);if(product(b,item)){var route=find(l,e,stock,new Demand("stock",s->ItemStack.isSameItemSameTags(s,item),64),load);if(route!=null)return route;}}}return null;
  }

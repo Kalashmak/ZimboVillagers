@@ -16,6 +16,7 @@ public final class QuarryReturnGameTests {
   // Solid surface heights from the actual stalled quarry, x=-2374..-2365, z=-2384..-2375.
   int[][] heights={{66,66,66,66,66,66,66,66,66,66},{66,66,66,65,64,61,62,62,61,61},{66,66,65,64,63,61,62,61,61,61},{66,65,65,64,63,60,62,62,61,61},{66,65,65,64,60,61,62,62,62,66},{66,65,65,64,64,62,63,66,66,66},{66,65,65,65,66,66,66,66,66,66},{66,65,65,66,66,66,66,66,66,66},{66,66,65,66,66,66,66,66,66,66},{66,66,65,66,66,66,66,66,66,66}};
   for(int x=-4;x<=5;x++)for(int z=-4;z<=5;z++)for(int y=-1;y<=9;y++)l.setBlock(foot.offset(x,y,z),y<=heights[z+4][x+4]-61?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
+  MovementTestEnclosure.seal(l,foot,6,11);
   var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(foot.getX()+.447,foot.getY(),foot.getZ()+.617);l.addFreshEntity(npc);
   npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);npc.goalSelector.addGoal(1,new PitEscapeGoal(npc));
   var destination=foot.offset(-4,6,0);

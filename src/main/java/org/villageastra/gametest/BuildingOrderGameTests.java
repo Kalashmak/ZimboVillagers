@@ -105,6 +105,7 @@ public final class BuildingOrderGameTests {
    var id=BuildingOrders.buildingId(state);if(f.s.buildings().stream().noneMatch(b->b.id().equals(id)&&b.type().equals(design)))problems.add(design+":registration");
    if(BuildingOrders.HOUSING.contains(design)!=f.s.homes().stream().anyMatch(x->x.id().equals(id)))problems.add(design+":housing");
    // Next design uses a fresh fixture on the same pad: remove the finished project and this settlement's buildings from protection.
+   com.mojang.logging.LogUtils.getLogger().info("ASTRA_ORDER_DESIGN checked={} problems={}",design,problems.size());
    SettlementData.get(f.l.getServer()).remove(f.s.id());
    try{java.nio.file.Files.deleteIfExists(f.l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-upgrades/"+f.s.id()+".bin"));}catch(java.io.IOException ex){throw new IllegalStateException(ex);}
   }

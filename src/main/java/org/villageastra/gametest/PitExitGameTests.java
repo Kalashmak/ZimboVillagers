@@ -23,6 +23,7 @@ public final class PitExitGameTests {
   for(int x=-4;x<=4;x++)for(int z=-4;z<=4;z++)for(int y=-1;y<=6;y++)
    l.setBlock(foot.offset(x,y,z),y<0||y<3&&(x!=0||z!=0)?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
   for(int y=1;y<3;y++)l.setBlock(foot.east().above(y),Blocks.AIR.defaultBlockState(),2);
+  MovementTestEnclosure.seal(l,foot,4,7);
   var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(foot.getX()+.5,foot.getY(),foot.getZ()+.5);l.addFreshEntity(npc);
   var rim=PitEscapeGoal.escape(npc);h.assertTrue(rim!=null&&rim.getY()==foot.getY()+3,"Choose the upper rim instead of the intermediate shelf");
   npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);
@@ -34,7 +35,7 @@ public final class PitExitGameTests {
    public void tick(){npc.getJumpControl().jump();}
   });
   h.onEachTick(()->{if(npc.position().distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(rim))<.04&&npc.onGround()){npc.discard();h.succeed();}});
-  h.runAtTickTime(1800,()->h.assertTrue(false,"Repeated futile jumps must not reset stuck detection forever: "+npc.position()+" rim="+rim+" ground="+npc.onGround()+" removed="+npc.getRemovalReason()+" health="+npc.getHealth()+" goals="+npc.runningGoals()));
+  h.runAtTickTime(1800,()->h.assertTrue(false,"Repeated futile jumps must not reset stuck detection forever: "+npc.position()+" rim="+rim+" ground="+npc.onGround()+" removed="+npc.getRemovalReason()+" health="+npc.getHealth()+" damage="+npc.getLastDamageSource()+" goals="+npc.runningGoals()));
  }
  @GameTest(template="empty",batch="pit_exit",timeoutTicks=500)
  public static void localReachableLedgeDoesNotPreventStuckRecovery(GameTestHelper h){

@@ -20,13 +20,18 @@ public final class HarvestAccess {
   for(int i=1;i<path.getNodeCount();i++)if(Math.abs(path.getNode(i).y-path.getNode(i-1).y)>1)return false;
   return true;
  }
+ public static boolean survivesExtraction(Path path,BlockPos target){
+  if(!reversible(path))return false;
+  for(int i=0;i<path.getNodeCount();i++)if(path.getNode(i).asBlockPos().below().equals(target))return false;
+  return true;
+ }
  public static BlockPos find(ResidentEntity worker,BlockPos target){
   return find(worker,target,0);
  }
  public static BlockPos find(ResidentEntity worker,BlockPos target,int range){
   for(var d:Direction.Plane.HORIZONTAL)for(int y=tallPlant(worker.level(),target)?-2:0;y<=2;y++){
    var feet=target.relative(d).above(y);
-   if(standing(worker.level(),feet,target)&&reversible(range>0?worker.routeTo(feet,0,range):worker.routeTo(feet,0)))return feet;
+   if(standing(worker.level(),feet,target)&&survivesExtraction(range>0?worker.routeTo(feet,0,range):worker.routeTo(feet,0),target))return feet;
   }return null;
  }
 }

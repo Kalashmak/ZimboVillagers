@@ -56,6 +56,8 @@ public final class JobCargo {
  }
  private static CompoundTag resource(ServerLevel level,CompoundTag original,boolean miner,boolean farmer,ListTag held){
   var s=original.copy();var id=s.getUUID("operation");String stage=s.getString("stage");
+  if(miner){MineClearance.reconcile(level,s);s.remove("mineClearance");}
+  if(!miner&&!farmer&&NurserySoil.active(s)){s.put("cargo",NurserySoil.cargo(level,s));s.remove("soilHeld");s.remove("soilBefore");s.remove("soilLabor");stage="deliver";s.putInt("delivered",0);}
   if(!s.contains("width"))s.putInt("width",1);if(!s.contains("height"))s.putInt("height",3);
   var tool=ItemStack.of(s.getCompound("tool"));if(stage.equals("upgrade_tool")&&WorldJournal.recoverExisting(level,Settlement.childId(id,"return_unfit"))!=null)tool=ItemStack.EMPTY;
   if(stage.equals("tool")){var r=WorldJournal.recoverExisting(level,id);if(r!=null)tool=taken(r);}

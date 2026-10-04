@@ -188,9 +188,11 @@ public final class BookResearch {
    if(payResources(l,e,id))paid++;}
   return paid;}
  /** What the porters bring to the hall for the ordered level-I nodes: each line's shortfall against the stock. */
- public static List<Workshops.Want> wants(ServerLevel l,SettlementData.Entry e){
+ public static List<Workshops.Want> wants(ServerLevel l,SettlementData.Entry e){return wants(l,e,id->true);}
+ /** Selected existing orders only; planning never creates or pays research. */
+ public static List<Workshops.Want> wants(ServerLevel l,SettlementData.Entry e,java.util.function.Predicate<String> include){
   var hall=Workshops.hall(e);if(hall==null||!Files.exists(path(l,e.settlement().id())))return List.of();var out=new ArrayList<Workshops.Want>();
-  for(var id:strings(inspect(l,e),"resourceOrders")){var n=ResearchCatalog.NODES.get(id);if(n==null)continue;
+  for(var id:strings(inspect(l,e),"resourceOrders")){if(!include.test(id))continue;var n=ResearchCatalog.NODES.get(id);if(n==null)continue;
    for(var cost:n.resources()){int missing=cost.count()-have(l,e,cost);if(missing<=0)continue;
     var ingredient=cost.tag()!=null?net.minecraft.world.item.crafting.Ingredient.of(TagKey.create(net.minecraft.core.registries.Registries.ITEM,new ResourceLocation(cost.tag()))):net.minecraft.world.item.crafting.Ingredient.of(BuiltInRegistries.ITEM.get(new ResourceLocation(cost.item())));
     out.add(new Workshops.Want(ingredient,missing,hall.id()));}}

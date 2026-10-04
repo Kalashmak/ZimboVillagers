@@ -35,13 +35,14 @@ public final class ShallowPitGameTests {
    boolean inner=x>=0&&x<=1&&z>=0&&z<=1;
    l.setBlock(foot.offset(x,y,z),y<0||!inner&&y<4?Blocks.STONE.defaultBlockState():inner&&y<3?Blocks.WATER.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
   }
+  MovementTestEnclosure.seal(l,foot,4,7);
   var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(foot.getX()+.5,foot.getY(),foot.getZ()+.5);npc.setOnGround(true);
   h.assertTrue(PitEscapeGoal.escape(npc)==null,"Deep water remains ordinary swimming, not dry-wall recovery");
   for(int x=0;x<=1;x++)for(int z=0;z<=1;z++)for(int y=1;y<=2;y++)l.setBlock(foot.offset(x,y,z),Blocks.AIR.defaultBlockState(),2);
   npc.goalSelector.removeAllGoals(g->!(g instanceof PitEscapeGoal)&&!(g instanceof FloatGoal));npc.targetSelector.removeAllGoals(g->true);
   h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(foot),"Entity chunk ready")).thenExecute(()->l.addFreshEntity(npc));
   h.onEachTick(()->{if(npc.getY()>=foot.getY()+4&&npc.onGround()){
-   h.assertTrue(l.getBlockState(foot).is(Blocks.WATER)&&l.getBlockState(foot.below()).is(Blocks.STONE)&&l.getBlockState(foot.west().above(3)).is(Blocks.STONE),"Escape did not drain water or alter terrain");
+   h.assertTrue(l.getBlockState(foot).is(Blocks.WATER)&&l.getBlockState(foot.below()).is(Blocks.STONE)&&l.getBlockState(foot.west().above(3)).is(Blocks.STONE),"Escape did not drain water or alter terrain: water="+l.getBlockState(foot)+" floor="+l.getBlockState(foot.below())+" rim="+l.getBlockState(foot.west().above(3)));
    npc.discard();for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();
   }});
   h.runAtTickTime(1800,()->h.assertTrue(false,"Shallow pit recovery stalled at "+npc.position()+" goals="+npc.runningGoals()));

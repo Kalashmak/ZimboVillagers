@@ -76,6 +76,13 @@ public final class StyleBuilderGameTests {
   l.setBlock(center.offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
   // A reserve in the hall for top-ups: work taken out of turn (handy work, a deferred cell) can run the cargo short of scaffolds for a while.
   if(l.getBlockEntity(center.offset(1,1,4)) instanceof net.minecraft.world.Container chest){chest.setItem(0,new ItemStack(VillageAstra.TIMBER_SCAFFOLD.get(),64));chest.setItem(1,new ItemStack(VillageAstra.TIMBER_SCAFFOLD.get(),64));chest.setItem(2,new ItemStack(net.minecraft.world.item.Items.COBBLESTONE,64));}
+  // AD-125 permits inaccessible old cells to remain. This movement fixture has no
+  // production workers: supply finite replacement stock before work begins, so the
+  // builder can perform the real top-up instead of waiting forever for a nonexistent workshop.
+  if(type.equals("warehouse")&&level==6&&l.getBlockEntity(center.offset(1,1,4)) instanceof net.minecraft.world.Container chest){
+   chest.setItem(3,new ItemStack(net.minecraft.world.item.Items.DEEPSLATE_TILE_STAIRS,64));
+   chest.setItem(4,new ItemStack(net.minecraft.world.item.Items.SPRUCE_STAIRS,64));
+  }
   var e=new SettlementData.Entry(s,l.dimension().location().toString(),center);SettlementData.get(l.getServer()).add(e);
   // The lots lie in the ground, as a survey on flat ground lays them (a lot standing a block proud of its surroundings is a village
   // matter: an outside scaffold column would then have no ground under its foot, and the survey refuses the site).

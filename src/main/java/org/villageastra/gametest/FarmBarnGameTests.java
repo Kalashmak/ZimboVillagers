@@ -127,6 +127,7 @@ public final class FarmBarnGameTests {
    h.assertTrue(OwnershipEvents.protectedBlock(t.l,lamp)&&OwnershipEvents.protectedBlock(t.l,FarmBarn.at(t.e,farm(t),new BlockPos(5,9,20))),"A lantern and a deck of the barn are the settlement's");
    upgrade(h,t);
    h.assertTrue(BuildingTiers.level(t.l,t.e,farm(t))==6,"VI works with its machinery");
+   h.assertTrue(TerminalProgress.missing(t.l,t.e,farm(t))==0,"VI restores every deck, soil, roof and column cap: "+TerminalProgress.missing(t.l,t.e,farm(t)));
    var bin=FarmBarn.at(t.e,farm(t),FarmBarn.bin(2));t.l.setBlock(bin,Blocks.AIR.defaultBlockState(),2);
    h.assertTrue(BuildingTiers.level(t.l,t.e,farm(t))==5,"A seed bin missing caps the farm at V");
    h.assertTrue(FarmField.charges(t.l,t.e,farm(t))==54,"A siege brings 3 charges for each of 18 fields");

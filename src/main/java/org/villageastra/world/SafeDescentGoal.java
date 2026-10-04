@@ -26,10 +26,18 @@ public final class SafeDescentGoal extends Goal {
  }
  /** Read-only safety query, also used by movement tests. */
  public static BlockPos landing(ResidentEntity r,BlockPos destination){var found=find(r,destination);return found==null?null:found.landing();}
+ /** A builder with no reachable work stand stops navigation entirely. Its paid
+  * site's floor remains the recovery destination even without a navigation path. */
+ static BlockPos destination(ResidentEntity r){
+  var path=r.getNavigation().getPath();if(path!=null)return path.getTarget();
+  if(!r.builder()||!r.workStatus().equals("needs_access")||r.settlementId()==null||!(r.level() instanceof net.minecraft.server.level.ServerLevel l)||!HallUpgradeGoal.exists(l,r.settlementId()))return null;
+  var project=HallUpgradeGoal.inspect(l,r.settlementId());
+  return BuildingOrders.isBuilding(project)&&project.getBoolean("funded")&&!project.getBoolean("complete")?BlockPos.of(project.getLong("origin")).above():null;
+ }
  @Override public boolean canUse(){
-  if(++checks%20!=0)return false;var path=resident.getNavigation().getPath();var now=resident.position();
+  if(++checks%20!=0)return false;var now=resident.position();
   if(last!=null&&now.multiply(1,0,1).distanceToSqr(last.multiply(1,0,1))<.5625)still+=20;else{still=0;last=now;}
-  if(still<200||path==null)return false;route=find(resident,path.getTarget());return route!=null;
+  if(still<200)return false;var target=destination(resident);if(target==null)return false;route=find(resident,target);return route!=null;
  }
  @Override public void start(){ticks=0;phase=0;resident.getNavigation().stop();resident.workStatus("escaping_pit");}
  @Override public boolean requiresUpdateEveryTick(){return true;}

@@ -4,7 +4,7 @@ plugins {
 }
 
 group = 'org.villageastra'
-version = '0.9.1-preview'
+version = '0.9.2-preview'
 base { archivesName = 'ZimboVillagers' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(17)
 
@@ -166,6 +166,8 @@ minecraft {
             workingDirectory project.file('run-gametest/session-' + new Date().format('yyyyMMdd-HHmmss'))
             // Dev-only: -PgtOnly=word1,word2 runs only the GameTests whose name or batch contains a word (gametest/GameTestFilter).
             if(project.hasProperty('gtOnly')) property 'villageastra.gtOnly', project.property('gtOnly')
+            if(project.hasProperty('gtSkip')) property 'villageastra.gtSkip', project.property('gtSkip')
+            if(project.hasProperty('gtShard')) property 'villageastra.gtShard', project.property('gtShard')
             // Dev-only: -PgtWarp=N runs the GameTest server N times faster, 0 = no wait between ticks (server/ProbeWarp; tick counts unchanged).
             if(project.hasProperty('gtWarp')) property 'villageastra.gtWarp', project.property('gtWarp')
             // Dev-only: -PstyleAll adds the builder move of every movable village-style design at levels I and VI (StyleBuilderGameTests).

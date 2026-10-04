@@ -50,6 +50,10 @@ public final class OwnerBugsGameTests {
  }
  @GameTest(template="empty") public static void dryPitHasAnEscapeButOrdinaryCorridorDoesNot(GameTestHelper h){
   var l=h.getLevel();var foot=h.absolutePos(new BlockPos(4,3,4));for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)for(int y=-1;y<=3;y++)l.setBlock(foot.offset(x,y,z),y<=1&&(x!=0||z!=0||y==-1)?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
-  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(foot.getX()+.5,foot.getY(),foot.getZ()+.5);npc.setOnGround(true);h.assertTrue(PitEscapeGoal.escape(npc)!=null,"Two-block pit has a clear ledge");l.setBlock(foot.north(),Blocks.AIR.defaultBlockState(),2);h.assertTrue(PitEscapeGoal.escape(npc)==null,"An open passage stays under normal navigation");h.succeed();
+  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(foot.getX()+.5,foot.getY(),foot.getZ()+.5);npc.setOnGround(true);h.assertTrue(PitEscapeGoal.escape(npc)!=null,"Two-block pit has a clear ledge");
+  // A one-block notch is not a walkable passage. Lay the complete two-high,
+  // supported corridor beyond the bounded pit survey instead of relying on neighboring terrain.
+  for(int n=1;n<=6;n++){var p=foot.north(n);l.setBlock(p.below(),Blocks.STONE.defaultBlockState(),2);l.setBlock(p,Blocks.AIR.defaultBlockState(),2);l.setBlock(p.above(),Blocks.AIR.defaultBlockState(),2);}
+  h.assertTrue(PitEscapeGoal.escape(npc)==null,"An open passage stays under normal navigation");npc.discard();h.succeed();
  }
 }

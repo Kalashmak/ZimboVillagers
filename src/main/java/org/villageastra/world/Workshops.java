@@ -122,10 +122,20 @@ public final class Workshops {
  private static Settlement.Building stockBuilding(SettlementData.Entry e){return e.settlement().buildings().stream().filter(b->b.type().equals("warehouse")).findFirst().orElseGet(()->e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null));}
  public static Settlement.Building hall(SettlementData.Entry e){return e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null);}
  /** What the settlement actually lacks, in priority order: approved construction materials, then bread stock. */
+ /** An NPC mayor can prepare ordered training that directly improves an unpaid active project. */
+ private static boolean craftTrainingHelps(ServerLevel l,SettlementData.Entry e){
+  if(e.settlement().governance().playerMayor()!=null||!HallUpgradeGoal.pending(l,e.settlement().id()))return false;
+  var project=HallUpgradeGoal.inspect(l,e.settlement().id());
+  if(project.getBoolean("funded")||e.settlement().governance().paused(HallConstructionPlan.projectId(project)))return false;
+  return ConstructionFunding.missing(project).keySet().stream().anyMatch(id->listed(hallCrafts("engineering.1"),new ItemStack(item(id))));
+ }
  /** AD-130: bone meal an automatic farm keeps in its chest. */
  public static final int FARM_BONE_MEAL=16;
  public static List<Want> wants(ServerLevel l,SettlementData.Entry e){
   var result=new ArrayList<Want>();var hall=hall(e);add(result,LogisticsRoutes.NEED_SUPPLY,WorkerSupplies.wants(l,e));
+  // Finish already ordered craft training before repeatedly doing the pending house's woodwork at the bootstrap pace.
+  boolean prepareCrafts=craftTrainingHelps(l,e);
+  if(prepareCrafts)add(result,LogisticsRoutes.NEED_RESEARCH,org.villageastra.server.BookResearch.wants(l,e,id->id.equals("engineering.1")));
   if(hall!=null&&HallUpgradeGoal.pending(l,e.settlement().id())){
    var state=HallUpgradeGoal.inspect(l,e.settlement().id());var chest=LogisticsRoutes.chest(l,e,hall);
    if(!state.getBoolean("funded")&&chest!=null){var cost=state.getCompound("cost");
@@ -133,7 +143,7 @@ public final class Workshops {
      int missing=cost.getInt(key)-held-LogisticsRoutes.count(chest,s->s.is(item));if(missing>0)result.add(new Want(Ingredient.of(item),missing,hall.id(),LogisticsRoutes.NEED_BUILD));}}
   }
   // AD-136 (CF3): the level-I research the mayor ordered paid — what its price still lacks, to the hall.
-  add(result,LogisticsRoutes.NEED_RESEARCH,org.villageastra.server.BookResearch.wants(l,e));
+  add(result,LogisticsRoutes.NEED_RESEARCH,org.villageastra.server.BookResearch.wants(l,e,id->!prepareCrafts||!id.equals("engineering.1")));
   var stock=stockBuilding(e);if(stock!=null){var chest=LogisticsRoutes.chest(l,e,stock);if(chest!=null){int target=16+2*(int)e.settlement().residents().stream().filter(Resident::alive).count();int missing=target-HallReserve.count(l,e,stock,chest,s->s.is(Items.BREAD));if(missing>0)result.add(new Want(Ingredient.of(Items.BREAD),missing,stock.id(),LogisticsRoutes.NEED_FOOD));}}
   // AD-139: a restaurant with a hall keeps dishes for its tables.
   add(result,LogisticsRoutes.NEED_FOOD,Dining.wants(l,e));
@@ -175,32 +185,46 @@ public final class Workshops {
   return false;
  }
  /** AD-112: whether the village can come by this item on its own: it lies in the hall chest already, a resource building brings it in raw, or
-  *  a workshop of the village has a recipe whose every input it can come by in turn (at most twelve steps down). A netherite block comes only
-  *  from a player or a trade: it counts only when it already lies in the hall or a smithy chest, so ring VI is makeable only then.
+  *  a workshop of the village has a recipe whose every input it can come by in turn (at most twelve steps down). A level-V smithy can process actual debris, scraps and ingots into netherite.
+  *  Ancient debris is not an advertised raw source until an autonomous expedition can really acquire it.
   *  An NPC mayor orders a level only when the core or ring it lacks is makeable — a project waiting for ever would hold the one slot. */
  public static boolean makeable(ServerLevel l,SettlementData.Entry e,String id){var hall=hall(e);return makeable(l,e,item(id),hall==null?null:LogisticsRoutes.chest(l,e,hall),12,new HashMap<>());}
  /** AD-137 (addendum): whether the village can come by more of this item than already lies in the hall — the rule of makeable without
   *  the hall's own stock of this very item (its inputs may still lie there). An NPC mayor orders a level only when every item short of its
-  *  estimate is producible: a raw resource nobody brings in (netherite) or a workshop the village lacks refuses it. */
+  *  estimate is producible: a raw resource nobody brings in (ancient debris) or a workshop the village lacks refuses it. */
  public static boolean producible(ServerLevel l,SettlementData.Entry e,String id){var hall=hall(e);return produced(l,e,item(id),hall==null?null:LogisticsRoutes.chest(l,e,hall),12,new HashMap<>());}
  private static boolean makeable(ServerLevel l,SettlementData.Entry e,Item item,OwnedChestEntity hall,int depth,Map<Item,Boolean> memo){
   var known=memo.get(item);if(known!=null)return known;
   if(hall!=null&&LogisticsRoutes.count(hall,s->s.is(item))>0){memo.put(item,true);return true;}
+  if(Set.of(Items.ANCIENT_DEBRIS,Items.NETHERITE_SCRAP,Items.NETHERITE_INGOT,Items.NETHERITE_BLOCK).contains(item))for(var b:e.settlement().buildings())if(b.type().equals("smithy")){
+   var chest=LogisticsRoutes.chest(l,e,b);if(chest!=null&&LogisticsRoutes.count(chest,stack->stack.is(item))>0){memo.put(item,true);return true;}
+  }
   return produced(l,e,item,hall,depth,memo);
  }
  private static boolean produced(ServerLevel l,SettlementData.Entry e,Item item,OwnedChestEntity hall,int depth,Map<Item,Boolean> memo){
-  if(item==Items.NETHERITE_BLOCK){boolean held=false;for(var b:e.settlement().buildings())if(b.type().equals("smithy")){var c=LogisticsRoutes.chest(l,e,b);if(c!=null&&LogisticsRoutes.count(c,s->s.is(item))>0)held=true;}memo.put(item,held);return held;}
+  if(item==Items.NETHERITE_BLOCK)for(var b:e.settlement().buildings())if(b.type().equals("smithy")){var c=LogisticsRoutes.chest(l,e,b);if(c!=null&&LogisticsRoutes.count(c,s->s.is(item))>0){memo.put(item,true);return true;}}
+  if(item==Items.NETHERITE_BLOCK||item==Items.NETHERITE_INGOT){
+   // Finite rare stock is not a renewable ore source. Do not promise nine ingots
+   // merely because one exists or a reversible decompression recipe was found.
+   int scraps=0,ingots=0,blocks=0;var counted=new HashSet<BlockPos>();
+   for(var b:e.settlement().buildings())if(b.type().equals("town_hall")||b.type().equals("smithy")){
+    var pos=LogisticsRoutes.position(e,b);if(!counted.add(pos))continue;var c=LogisticsRoutes.chest(l,e,b);if(c==null)continue;
+    scraps+=LogisticsRoutes.count(c,stack->stack.is(Items.ANCIENT_DEBRIS)||stack.is(Items.NETHERITE_SCRAP));
+    ingots+=LogisticsRoutes.count(c,stack->stack.is(Items.NETHERITE_INGOT));blocks+=LogisticsRoutes.count(c,stack->stack.is(Items.NETHERITE_BLOCK));
+   }
+   if(item==Items.NETHERITE_BLOCK&&blocks*9+ingots+scraps/4<9||item==Items.NETHERITE_INGOT&&blocks==0&&scraps<4){memo.put(item,false);return false;}
+  }
   if(raw(e,item)){memo.put(item,true);return true;}
   memo.put(item,false);if(depth<=0)return false;
   for(var b:e.settlement().buildings()){var spec=spec(l,e,b);if(spec==null)continue;
-   for(var job:candidates(l,spec,item,1)){boolean all=true;
-    for(var in:job.inputs()){boolean any=false;for(var option:in.ingredient().getItems())if(makeable(l,e,option.getItem(),hall,depth-1,memo)){any=true;break;}if(!any){all=false;break;}}
+   for(var job:candidates(l,spec,item,1)){boolean all=true;var local=LogisticsRoutes.chest(l,e,b);
+    for(var in:job.inputs()){boolean any=false;for(var option:in.ingredient().getItems())if(local!=null&&LogisticsRoutes.count(local,stack->stack.is(option.getItem()))>0||makeable(l,e,option.getItem(),hall,depth-1,memo)){any=true;break;}if(!any){all=false;break;}}
     if(all){memo.put(item,true);return true;}}}
   return false;
  }
  // ---- planning ----------------------------------------------------------------------------
  private static int available(Container c,Input in){int n=0;for(int i=0;i<c.getContainerSize();i++)if(in.matches(c.getItem(i)))n+=c.getItem(i).getCount();return n;}
- private static int fuel(Container c){int n=0;for(int i=0;i<c.getContainerSize();i++){var s=c.getItem(i);int burn=net.minecraftforge.common.ForgeHooks.getBurnTime(s,RecipeType.SMELTING);if(burn>0&&!s.hasCraftingRemainingItem())n+=burn*s.getCount();}return n;}
+ private static int fuel(Container c){int n=0;for(int i=0;i<c.getContainerSize();i++){var s=c.getItem(i);n+=WorkshopFuel.ticks(s)*s.getCount();}return n;}
  private static List<Input> group(List<Ingredient> ingredients){
   var groups=new LinkedHashMap<String,Input>();
   for(var ing:ingredients){if(ing.isEmpty())continue;var key=ing.toJson().toString();var old=groups.get(key);groups.put(key,new Input(ing,old==null?1:old.count()+1));}
@@ -247,7 +271,16 @@ public final class Workshops {
  private static int fit(Container c,Job unit,int bank){int n=Integer.MAX_VALUE;for(var in:unit.inputs())n=Math.min(n,available(c,in)/in.count());if(unit.fuelTicks()>0)n=Math.min(n,(fuel(c)+bank)/unit.fuelTicks());return unit.tool()!=null&&available(c,unit.tool())<1?0:n;}
  /** Next job for this workshop: directly for a want, or an intermediate it can make itself. This one counts the station's fuel bank. */
  public static Job plan(ServerLevel l,SettlementData.Entry e,Settlement.Building b,Container chest,List<Want> wants){var spec=b==null?null:spec(l,e,b);return spec==null?null:withFurnace(l,e,spec,chest,wants,inspect(l,b.id()).getInt("fuelBank"));}
- private static Job withFurnace(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){var ordinary=plan(l,spec,chest,wants,bank);if(ordinary!=null)return ordinary;int burn=NaturalFurnace.availableBurn(l,e);if(burn>0)for(var want:wants){var job=plan(l,spec,chest,List.of(want),bank+burn);if(job!=null&&NaturalFurnace.recipe(l,job))return job;}return null;}
+ private static Job withFurnace(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){var ordinary=villagePlan(l,e,spec,chest,wants,bank);if(ordinary!=null)return ordinary;int burn=NaturalFurnace.availableBurn(l,e);if(burn>0)for(var want:wants){var job=villagePlan(l,e,spec,chest,List.of(want),bank+burn);if(job!=null&&NaturalFurnace.recipe(l,job))return job;}return null;}
+ /** A non-construction recipe must not bypass the same grain protection used by
+  * hand baking. Construction itself sees the real stock and can fund its bed. */
+ private static Job villagePlan(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){
+  var hall=e==null?null:hall(e);int held=hall!=null&&spec.building().equals("town_hall")?HandBread.constructionWheat(l,e,hall):0;
+  if(held<=0)return plan(l,spec,chest,wants,bank);
+  var other=new net.minecraft.world.SimpleContainer(chest.getContainerSize());
+  for(int slot=0;slot<chest.getContainerSize();slot++){var stack=chest.getItem(slot).copy();if(stack.is(Items.WHEAT)){int keep=Math.min(held,stack.getCount());stack.shrink(keep);held-=keep;}other.setItem(slot,stack);}
+  for(var want:wants){var job=plan(l,spec,want.need()==LogisticsRoutes.NEED_BUILD?chest:other,List.of(want),bank);if(job!=null)return job;}return null;
+ }
  /** Next job for this workshop without a fuel bank. */
  public static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants){return plan(l,spec,chest,wants,0);}
  private static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants,int bank){
@@ -300,7 +333,7 @@ public final class Workshops {
     for(var in:dependencies(job)){int missing=in.count()-available(chest,in);if(missing<=0)continue;List<Input> selected=null;long score=Long.MAX_VALUE,unavailable=Long.MAX_VALUE;
      for(var option:in.ingredient().getItems()){var sub=leaves(l,e,spec,chest,option.getItem(),missing,depth+1,bank,visiting,memo,budget);if(sub==null)continue;long cost=sub.stream().mapToLong(Input::count).sum(),absent=unsupported(e,sub);if(absent<unavailable||absent==unavailable&&cost<score){score=cost;unavailable=absent;selected=sub;}}
      if(selected==null){possible=false;break;}path.addAll(selected);}
-    if(!possible)continue;int fuel=fuel(chest)+bank;if(job.fuelTicks()>fuel)path.add(new Input(Ingredient.of(Items.CHARCOAL,Items.COAL),Math.max(1,(job.fuelTicks()-fuel+1599)/1600)));
+    if(!possible)continue;int fuel=fuel(chest)+bank;if(job.fuelTicks()>fuel)path.add(new Input(WorkshopFuel.demand(),Math.max(1,(job.fuelTicks()-fuel+1599)/1600)));
     long cost=path.stream().mapToLong(Input::count).sum(),absent=unsupported(e,path);
     if(absent<bestUnsupported||absent==bestUnsupported&&cost<bestCost){bestCost=cost;bestUnsupported=absent;best=path;}
    }if(best!=null)memo.put(key,best);return best;
@@ -353,7 +386,7 @@ public final class Workshops {
    if(need==null&&!fuelNeed){t.putString("stage","work");if(fuelTicks>0){if(burnt>fuelTicks)t.putInt("fuelBank",burnt-fuelTicks);else t.remove("fuelBank");}NbtRecord.write(file,t);return "workshop_working";}
    var withdrawal=Settlement.childId(id,"input/"+t.getInt("withdrawals"));var taken=WorldJournal.recoverAmount(l,withdrawal);
    if(taken.isEmpty()&&!WorldJournal.exists(l,withdrawal))for(int slot=0;slot<chest.getContainerSize();slot++){var s=chest.getItem(slot);
-    boolean fits=fuelNeed?burn(s.copyWithCount(1))>0&&!s.hasCraftingRemainingItem()&&ins.stream().noneMatch(in->in.matches(s))&&(tool==null||!tool.matches(s)):need.matches(s);
+    boolean fits=fuelNeed?WorkshopFuel.ticks(s)>0&&ins.stream().noneMatch(in->in.matches(s))&&(tool==null||!tool.matches(s)):need.matches(s);
     if(!fits)continue;int amount=fuelNeed||toolNeed?1:Math.min(missing,s.getCount());taken=WorldJournal.takeAmount(l,withdrawal,pos,slot,real.getItem(slot).copy(),amount);break;}
    if(taken.isEmpty()){NbtRecord.write(file,t);return "workshop_missing_inputs";}
    t.getList("paid",Tag.TAG_COMPOUND).add(taken.save(new CompoundTag()));t.putInt("withdrawals",t.getInt("withdrawals")+1);NbtRecord.write(file,t);return "workshop_funding";

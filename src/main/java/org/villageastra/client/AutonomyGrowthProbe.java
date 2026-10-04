@@ -14,6 +14,9 @@ final class AutonomyGrowthProbe {
  private static boolean started;private static volatile boolean busy,done;private static volatile String failure;
  private static UUID village;private static long since,last=-1200;private static int ticks;
  private static final Set<Profession> witnessed=EnumSet.noneOf(Profession.class);
+ private static Set<UUID> initialBuildings;
+ private static final Set<String> milestones=new HashSet<>();
+ private static void milestone(String name,long elapsed){if(milestones.add(name))LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH milestone={} active={}",name,elapsed);}
  static boolean enabled(){return Boolean.getBoolean("villageastra.autonomyGrowthSmoke");}
  static void tick(Minecraft mc){
   if(failure!=null){LogUtils.getLogger().error("ASTRA_AUTONOMY_GROWTH INCOMPLETE {}",failure);mc.stop();return;}
@@ -26,10 +29,12 @@ final class AutonomyGrowthProbe {
   if(!started){if(data.entries().isEmpty())return;var player=server.getPlayerList().getPlayers().get(0);
    var e=data.entries().stream().min(Comparator.comparingDouble(x->player.distanceToSqr(x.center().getCenter()))).orElseThrow();village=e.settlement().id();since=data.clock().ticks();started=true;player.setGameMode(GameType.CREATIVE);player.getAbilities().flying=true;
    if(e.settlement().civilization().level()!=1||e.settlement().residents().size()!=6||e.settlement().buildings().size()!=7||!BookResearch.completed(e,BookResearch.inspect(l,e)).isEmpty())throw new IllegalStateException("Not a fresh starter village");
+   initialBuildings=new HashSet<>();e.settlement().buildings().forEach(b->initialBuildings.add(b.id()));
    LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH START village={} center={} seed={} initialResidents={} initialBuildings={} mode=peaceful observerOnly=true",village,e.center(),l.getSeed(),e.settlement().residents().size(),e.settlement().buildings().size());
   }
   var e=data.entry(village);var s=e.settlement();long elapsed=data.clock().ticks()-since;if(elapsed-last<1200)return;last=elapsed;
   if(s.governance().playerMayor()!=null)throw new IllegalStateException("Player became mayor");
+  if(s.residents().stream().noneMatch(Resident::alive)||s.residents().stream().anyMatch(r->!r.alive()&&r.missedMeals()>=Population.DEATH))throw new IllegalStateException("Settlement lost residents to starvation; preserve this world as failed evidence");
   var roles=new TreeMap<String,Integer>();var statuses=new TreeMap<String,String>();for(var r:s.residents())if(r.alive()){
    if(r.profession()!=null)witnessed.add(r.profession());
    String role=r.profession()==null?r.life().name():r.profession().name();roles.merge(role,1,Integer::sum);
@@ -40,6 +45,13 @@ final class AutonomyGrowthProbe {
   var stock=new TreeMap<String,Integer>();var hall=Workshops.hall(e);var chest=hall==null?null:LogisticsRoutes.chest(l,e,hall);
   if(chest!=null)for(int i=0;i<chest.getContainerSize();i++){var item=chest.getItem(i);if(!item.isEmpty())stock.merge(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(item.getItem()).toString(),item.getCount(),Integer::sum);}
   var research=BookResearch.inspect(l,e);var completed=BookResearch.completed(e,research);
+  if(!completed.isEmpty())milestone("first_research",elapsed);
+  if(s.residents().stream().filter(Resident::alive).count()>6)milestone("population_growth",elapsed);
+  if(s.civilization().level()>1)milestone("civilization_"+s.civilization().level(),elapsed);
+  if(!milestones.contains("first_house"))for(var b:s.buildings())if(!initialBuildings.contains(b.id())&&s.homes().stream().anyMatch(home->home.id().equals(b.id())&&home.usable())){
+   var layout=BuildingPlacement.layout(e,b,b.level()==1?b.type():b.type()+"@"+b.level());
+   if(!layout.isEmpty()&&layout.entrySet().stream().filter(cell->!cell.getValue().isAir()).allMatch(cell->l.hasChunkAt(cell.getKey())&&BuildingRepairs.present(l.getBlockState(cell.getKey()),cell.getValue())))milestone("first_house",elapsed);
+  }
   LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH progress active={} civ={} roles={} buildings={} research={}/{} selected={} project={} funded={} complete={} ops={}/{} stock={} status={}",elapsed,s.civilization().level(),roles,buildings,completed.size(),ResearchCatalog.NODES.size(),research.getString("selected"),project.getString("design"),project.getBoolean("funded"),project.getBoolean("complete"),ops,project.getList("ops",Tag.TAG_COMPOUND).size(),stock,statuses);
   var types=new HashSet<String>();s.buildings().forEach(b->types.add(CoreCatalog.canonical(AnnexTypes.workplace(b.type()))));
   var absent=CoreCatalog.TYPES.stream().map(CoreCatalog::canonical).filter(type->!types.contains(type)).toList();
@@ -51,7 +63,9 @@ final class AutonomyGrowthProbe {
    LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH miner local={} turn={} ground={} collision={} neighbors={}",local,b.rotation(),npc.onGround(),npc.horizontalCollision,blocks);
   }
   // Existing buildings alone are insufficient: a hall at VI with missing services is not completion.
-  done=elapsed>0&&s.residents().size()>6&&absent.isEmpty()&&witnessed.containsAll(EnumSet.allOf(Profession.class))&&s.civilization().level()==6&&completed.containsAll(ResearchCatalog.NODES.keySet())&&!HallUpgradeGoal.pending(l,village)&&s.buildings().stream().filter(b->BuildingTiers.upgradable(b.type())).allMatch(b->b.level()==BuildingTiers.max(b.type()));
+  var terminal=TerminalProgress.blockers(l,e);
+  LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH terminal blockers={}",terminal);
+  done=elapsed>0&&milestones.contains("first_house")&&s.residents().stream().filter(Resident::alive).count()>6&&absent.isEmpty()&&witnessed.containsAll(EnumSet.allOf(Profession.class))&&s.civilization().level()==6&&completed.containsAll(ResearchCatalog.NODES.keySet())&&!HallUpgradeGoal.pending(l,village)&&terminal.isEmpty();
   if(!done&&elapsed>=Long.getLong("villageastra.autonomyGrowthTicks",72000L))failure="Observation limit reached before full progression; active="+elapsed+" civ="+s.civilization().level()+" research="+completed.size()+" roles="+roles;
  }
 }

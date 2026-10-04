@@ -44,9 +44,23 @@ public final class MineProspectingGameTests {
  public static void exhaustedSurveyFloorsNeverRepeatAcrossCheckpoints(GameTestHelper h){
   var f=town(h);var t=f.town;try{var state=f.state;
    for(int expected:new int[]{18,12,6,0}){h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,state),"A remaining shallower survey is available");h.assertTrue(state.getInt("floorStep")==expected,"Survey floors advance once in order");state.putInt("side",MineDrive.DONE);MineWork.write(t.l,t.shop,state);state=MineWork.read(t.l,t.shop);}
+   var seen=new HashSet<Integer>(Set.of(0,6,12,18,25));
+   while(MineProspecting.begin(t.l,t.e,t.shop,state)){int floor=state.getInt("floorStep");h.assertTrue(floor>=0&&floor<=25&&seen.add(floor),"Refined surveys do not repeat or exceed the unlocked depth");state.putInt("side",MineDrive.DONE);MineWork.write(t.l,t.shop,state);state=MineWork.read(t.l,t.shop);}
+   h.assertTrue(seen.size()==26,"All skipped existing landings were surveyed before exhaustion");
    h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"Exhausted existing stairs do not repeat old branches or go deeper");
    var area=new MineArea(90,3,5,7);for(int floor=0;floor<=84;floor+=6)for(int side=0;side<2;side++)area=area.with(new MineArea.Gallery(floor,side,4));
    h.assertTrue(area.galleries().size()==30&&area.contains(5,-84-7,7+84,0)&&area.contains(5,-7,7,0),"Many survey branches retain both early and deep protection");
+  }finally{f.npc.discard();ResearchV2Town.done(t);}h.succeed();
+ }
+ @GameTest(template="empty",batch="fine_prospect",timeoutTicks=200)
+ public static void unmetOreDemandSurveysEverySkippedUnlockedFloorOnce(GameTestHelper h){
+  var f=town(h);var t=f.town;try{var state=f.state;state.putIntArray("surveyedFloors",new int[]{0,6,12,18,25});var seen=new HashSet<Integer>(Set.of(0,6,12,18,25));
+   for(int floor=24;floor>=0;floor--){if(seen.contains(floor))continue;
+    h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,state),"Missing ore still requires the skipped floor "+floor);
+    h.assertTrue(state.getInt("floorStep")==floor&&seen.add(floor),"Fine survey stays within unlocked stairs and never repeats a row");
+    MineWork.write(t.l,t.shop,state);state=MineWork.read(t.l,t.shop);h.assertTrue(MineWork.next(t.l,t.e,t.shop,state).stage()==MineDrive.Stage.EAST,"The saved row resumes as a normal mining drive");state.putInt("side",MineDrive.DONE);
+   }
+   h.assertTrue(seen.size()==26&&!MineProspecting.begin(t.l,t.e,t.shop,state),"Only a genuinely exhausted set of all unlocked floors ends the bounded search");
   }finally{f.npc.discard();ResearchV2Town.done(t);}h.succeed();
  }
  @GameTest(template="empty",batch="mine_prospect",timeoutTicks=100)

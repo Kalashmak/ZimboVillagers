@@ -19,6 +19,14 @@ import java.io.*;
 /** Material-funded, durable hall renovation. Development command queues work; it never places the building itself. */
 public final class HallUpgradeGoal extends Goal {
  private final ResidentEntity worker;private CompoundTag state;private Path file;private BlockPos base,hallStock;private int labor,modeIndex=-1,stuckIndex=-1,stuckTicks;private boolean modeHigh;private BlockPos exitTo;private double lastX,lastZ;private int idleTicks,idleChecks;
+ private BlockPos escapeStep,escapeRegion;private int escapeUntil;private final Set<BlockPos> escapeRefused=new HashSet<>();
+ private boolean escapeFurniture(BlockPos goal){
+  if(escapeRegion==null||escapeRegion.distSqr(worker.blockPosition())>16){escapeRegion=worker.blockPosition();escapeRefused.clear();}
+  if(escapeStep!=null&&(worker.tickCount>=escapeUntil||worker.position().distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(escapeStep))<.36)){escapeRefused.add(escapeStep);escapeStep=null;idleChecks=0;idleTicks=0;}
+  if(escapeStep==null&&idleChecks>=6&&worker.onGround()&&!worker.onClimbable()){escapeStep=ConstructionEscape.raised(worker,goal,escapeRefused);escapeUntil=worker.tickCount+80;}
+  if(escapeStep==null)return false;
+  ConstructionEscape.walk(worker,escapeStep);walkDiag="physical furniture escape to "+escapeStep.toShortString();lastWalk=walkDiag;return true;
+ }
  public HallUpgradeGoal(ResidentEntity worker){this(worker,false);}
  /** GameTests: a headless goal works without a player on the server (the GameTest server has none); everything else is the real builder. */
  private final boolean headless;
@@ -304,9 +312,10 @@ public final class HallUpgradeGoal extends Goal {
  public volatile String opDiag="",standDiag="";
  private BlockPos stand(ServerLevel l,BlockPos target,int[] levels){var found=stand(l,worker,target,levels,reachSq);standDiag=lastStand;return found;}
  /** Work position for one operation: a standable cell in reach of the block, actually reachable by the worker's own pathfinding. */
- public static BlockPos stand(ServerLevel l,ResidentEntity worker,BlockPos target,int[] levels){return stand(l,worker,target,levels,BuildingOrders.REACH_SQ);}
+ public static BlockPos stand(ServerLevel l,ResidentEntity worker,BlockPos target,int[] levels){return searchStand(l,worker,target,levels,BuildingOrders.REACH_SQ,false);}
  /** AD-153: the same at a longer reach (Construction IV/VI). */
- public static BlockPos stand(ServerLevel l,ResidentEntity worker,BlockPos target,int[] levels,double reachSq){
+ public static BlockPos stand(ServerLevel l,ResidentEntity worker,BlockPos target,int[] levels,double reachSq){return searchStand(l,worker,target,levels,reachSq,true);}
+ private static BlockPos searchStand(ServerLevel l,ResidentEntity worker,BlockPos target,int[] levels,double reachSq,boolean nearbyWork){
   var candidates=new ArrayList<BlockPos>();int r=(int)Math.floor(Math.sqrt(reachSq))-1;
   for(int y:levels)for(int dx=-r;dx<=r;dx++)for(int dz=-r;dz<=r;dz++){
    var stand=new BlockPos(target.getX()+dx,y,target.getZ()+dz);
@@ -314,7 +323,10 @@ public final class HallUpgradeGoal extends Goal {
    if(new net.minecraft.world.phys.Vec3(stand.getX()+.5,y+worker.getEyeHeight(),stand.getZ()+.5).distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(target))>reachSq||!standable(l,stand))continue;
    candidates.add(stand);
   }
-  candidates.sort(Comparator.comparingDouble(stand->stand.distSqr(target)+.01*stand.distSqr(worker.blockPosition())));
+  // Every candidate already satisfies the physical reach limit. Prefer the
+  // worker's nearest legal position, not the cell directly under a high roof:
+  // that cell can require a long detour while one short step already suffices.
+  candidates.sort(Comparator.comparingDouble(stand->nearbyWork?stand.distToCenterSqr(worker.getX(),worker.getY()+.5,worker.getZ())+.01*stand.distSqr(target):stand.distSqr(target)+.01*stand.distSqr(worker.blockPosition())));
   // Navigation only searches for a mob it considers grounded, and that flag is stale while goals run before movement.
   // Scaffold tops carry the worker too, so a cell inside a column is a standing position and not "airborne".
   var floor=worker.blockPosition().below();
@@ -330,9 +342,26 @@ public final class HallUpgradeGoal extends Goal {
  private static boolean free(ServerLevel l,BlockPos p){var s=l.getBlockState(p);return s.is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())||s.getCollisionShape(l,p).isEmpty();}
  /** A straight step from the worker to the centre of a cell that crosses no solid block. */
  private static boolean clearLine(ServerLevel l,ResidentEntity worker,BlockPos cell){
-  for(double t=.2;t<=1;t+=.2){var mid=BlockPos.containing(worker.getX()+(cell.getX()+.5-worker.getX())*t,worker.getY()+(cell.getY()-worker.getY())*t,worker.getZ()+(cell.getZ()+.5-worker.getZ())*t);
-   if(!free(l,mid)||!free(l,mid.above()))return false;}
+  // Farmland and paths support the feet at 15/16 of a block. Sampling the
+  // containing cell mistakes that supporting soil for a wall across the step.
+  for(double t=.2;t<=1;t+=.2){var body=worker.getBoundingBox().move((cell.getX()+.5-worker.getX())*t,(cell.getY()-worker.getY())*t,(cell.getZ()+.5-worker.getZ())*t);
+   if(!l.noCollision(worker,body))return false;}
   return true;
+ }
+ /** Ordinary short approach to a work stand, including when construction invalidated a cached route. */
+ public static boolean stepToWorkStand(ServerLevel l,ResidentEntity worker,BlockPos best){
+  double dx=best.getX()+.5-worker.getX(),dz=best.getZ()+.5-worker.getZ();
+  if(dx*dx+dz*dz>2.25*2.25||Math.abs(best.getY()-worker.getY())>=.6||!standable(l,best)||crossesColumn(l,worker,best))return false;
+  var next=best;
+  if(!clearLine(l,worker,best)){
+   // Path node acceptance can skip the last fraction of the current cell and
+   // aim diagonally through a wall corner. Centre within this free cell first;
+   // every part of the step still has to fit the resident's whole body.
+   next=new BlockPos(worker.blockPosition().getX(),best.getY(),worker.blockPosition().getZ());
+   double cx=next.getX()+.5-worker.getX(),cz=next.getZ()+.5-worker.getZ();
+   if(cx*cx+cz*cz<.0025||!standable(l,next)||!clearLine(l,worker,next)||crossesColumn(l,worker,next))return false;
+  }
+  worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(next.getX()+.5,next.getY(),next.getZ()+.5,.8);return true;
  }
  /** relocate-fix: whether the straight step to a column's foot runs through another column on the way. A scaffold is free space for a line
   *  check, but walking into one lifts the worker up it (a climbable cell) — the builder pushed along the front lane of the AD-129 home into
@@ -388,11 +417,14 @@ public final class HallUpgradeGoal extends Goal {
   // A scaffold cell carries no collision but pathfinding never enters it, so it is not a work position either.
   if(l.getBlockState(stand).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get()))return false;
   // A column overhead does not stop anybody from working below it.
-  return l.getBlockState(stand).getCollisionShape(l,stand).isEmpty()&&free(l,stand.above())&&l.getBlockState(stand.below()).isFaceSturdy(l,stand.below(),Direction.UP);
+  var support=stand.below();var soil=l.getBlockState(support);
+  return l.getBlockState(stand).getCollisionShape(l,stand).isEmpty()&&free(l,stand.above())
+   &&(soil.isFaceSturdy(l,support,Direction.UP)||soil.is(Blocks.FARMLAND)||soil.is(Blocks.DIRT_PATH));
  }
  /** New building: ground and floor stands for the lower storey, the temporary hatch ladder for the attic, tools returned before registration. */
  /** Walks to a cell; a worker that stopped making progress (a bed, a slab, a corner where path following gives up) is pushed on by hand. */
  private void walkTo(BlockPos cell,double speed){
+  if(escapeFurniture(cell))return;
   var nav=worker.getNavigation();
   // AD-147 review: navigation hands back the route it has for the same goal, however far the worker has been carried off it since (a step
   // out of a column, a push by hand): the builder moving a level-VI warehouse, set down three blocks from the route's next node behind a
@@ -592,6 +624,10 @@ public final class HallUpgradeGoal extends Goal {
    // find its column already gone (home_2 stood under a column whose lower part had been dismantled out of turn).
    var removal=HallConstructionPlan.step(candidate);boolean dismantling=removal.before().is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())&&removal.after().isAir();
    var column=BlockPos.of(candidate.getLong("pos"));
+   // An elevated barn column is grown continuously. Skipping a deferred
+   // segment would leave floating upper segments that nobody can climb to.
+   if(candidate.getBoolean("barn")&&candidate.contains("stand")&&removal.after().is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())
+     &&!l.getBlockState(column.below()).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get()))continue;
    for(int j=index;j<i&&!blocked;j++){var earlier=operations.getCompound(j);if(earlier.getBoolean("done"))continue;
     if(earlier.getLong("pos")==candidate.getLong("pos"))blocked=true;
     else if(dismantling&&earlier.contains("stand")){var stand=BlockPos.of(earlier.getLong("stand"));if(stand.getX()==column.getX()&&stand.getZ()==column.getZ())blocked=true;}}
@@ -616,7 +652,7 @@ public final class HallUpgradeGoal extends Goal {
    // Everything left is on a retry pause: the earliest unfinished operation is taken up again at once instead of the site standing idle.
    for(int i=index;i<operations.size()&&chosen<0&&eligible(operations,index,i);i++)if(!operations.getCompound(i).getBoolean("done")&&!claimedByOther(id,i,gameTime)){chosen=i;operations.getCompound(i).putLong("retry",0);save();}
   }
-  if(chosen<0){worker.workStatus(helper?"helping_waits":"waiting_for_access");return;}
+  if(chosen<0){if(helper&&yieldIdlePlacement(l,operations))return;worker.workStatus(helper?"helping_waits":"waiting_for_access");return;}
   int current=handy>=0?handy:chosen;var op=operations.getCompound(current);claim(id,current,gameTime);working=current;
   // AD-125: an operation on the old lot is worked from that lot's own height; a committed change is only booked, a vanished old block skipped.
   var site=op.contains("site")?BlockPos.of(op.getLong("site")):origin;int siteAttic=site.getY()+BuildingOrders.ATTIC;
@@ -662,6 +698,7 @@ public final class HallUpgradeGoal extends Goal {
   if(worker.isShiftKeyDown()&&!sinking&&!(scaffoldHatch&&atHatch&&worker.getY()>=attic-1))worker.setShiftKeyDown(false);
   // AD-030: an operation planned from a scaffold column is worked from inside that column.
   boolean columnWork=op.contains("stand");
+  boolean barnWork=op.getBoolean("barn")&&!columnWork;
   // AD-046: a column that is not the one this operation wants holds the worker like a ladder — it is left by hand before anything else, whatever the operation.
   var scaffold=org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get();var at=worker.blockPosition();
   boolean ownColumn=columnWork&&BlockPos.of(op.getLong("stand")).getX()==at.getX()&&BlockPos.of(op.getLong("stand")).getZ()==at.getZ();
@@ -682,11 +719,15 @@ public final class HallUpgradeGoal extends Goal {
   if(columnWork&&!column(op,siteAttic,hx,hz,atHatch,up))return;
   if(!columnWork&&!atHatch&&aloft(site)){descend();return;}
   // Work level is chosen once per operation: from the ground/floor when a lower stand reaches the cell, otherwise from the attic.
-  if(modeIndex!=current){modeIndex=current;modeHigh=!state.getBoolean("noHatch")&&target.getY()>=attic&&!BuildingOrders.lowReach(l,target,origin);}
+  if(modeIndex!=current){modeIndex=current;modeHigh=!barnWork&&!state.getBoolean("noHatch")&&target.getY()>=attic&&!BuildingOrders.lowReach(l,target,origin);}
   boolean high=modeHigh;
   // Lower storey: ground or floor level only (up to 2 foundation fills lower); never work from a half-built wall top.
-  int[] levels=high?new int[]{attic}:new int[]{site.getY()-2,site.getY()-1,site.getY(),site.getY()+1};
-  boolean elevated=!high&&worker.onGround()&&!worker.onClimbable()&&worker.getY()>site.getY()+1.7;
+  // The barn has real stair landings and field floors at 1, 6 and 11. Roof
+  // dismantling precedes temporary columns and must be reachable from these
+  // existing floors, rather than the farmhouse's unrelated attic or ground.
+  int[] levels=barnWork?new int[]{site.getY()-2,site.getY()-1,site.getY(),site.getY()+1,site.getY()+1+FarmField.FLOOR_PITCH,site.getY()+1+2*FarmField.FLOOR_PITCH}
+    :high?new int[]{attic}:new int[]{site.getY()-2,site.getY()-1,site.getY(),site.getY()+1};
+  boolean elevated=!barnWork&&!high&&worker.onGround()&&!worker.onClimbable()&&worker.getY()>site.getY()+1.7;
   var shape=planned.after().getCollisionShape(l,target);
   boolean inTheWay=!shape.isEmpty()&&shape.bounds().move(target).intersects(worker.getBoundingBox());
   if(columnWork&&worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(target))>reachSq){worker.workStatus("needs_access");return;}
@@ -708,8 +749,10 @@ public final class HallUpgradeGoal extends Goal {
      else{double dx=best.getX()+.5-worker.getX(),dz=best.getZ()+.5-worker.getZ();
       // Navigation accepts a path ending one block short of the stand; the final step to an adjacent stand is direct movement.
       // relocate-fix: and only when nothing stands between the two — a stand on the other side of a wall is walked to by a route.
-      if(dx*dx+dz*dz<=2.25*2.25&&Math.abs(best.getY()-worker.getY())<.6&&worker.getNavigation().isDone()&&clearLine(l,worker,best))worker.getMoveControl().setWantedPosition(best.getX()+.5,best.getY(),best.getZ()+.5,.8);
-      else walkTo(best,.8);}
+      // Construction can obstruct a cached path's next node while the nearby
+      // work stand still has a clear approach. Do not wait for that route to
+      // finish; cancel it before ordinary movement takes the collision-checked step.
+      if(!stepToWorkStand(l,worker,best))walkTo(best,.8);}
     }else if(up&&(worker.onClimbable()||!worker.onGround())){
      // Top of the ladder: step off towards the attic floor away from the supporting wall.
      var exit=hatch.relative(Direction.from2DDataValue(state.getInt("hatchFacing")));worker.setDeltaMovement(Math.max(-.15,Math.min(.15,(exit.getX()+.5-worker.getX())*.3)),Math.abs(hx)<.6&&Math.abs(hz)<.6&&worker.getY()<attic+.3?.1:worker.getDeltaMovement().y,Math.max(-.15,Math.min(.15,(exit.getZ()+.5-worker.getZ())*.3)));
@@ -739,6 +782,29 @@ public final class HallUpgradeGoal extends Goal {
   if(op.contains("item"))consume(op.getString("item"));
   if(op.contains("return"))state.getList("cargo",Tag.TAG_COMPOUND).add(new ItemStack(BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation(op.getString("return")))).save(new CompoundTag()));
   op.putBoolean("done",true);op.putUUID("by",worker.getUUID());state.putInt("progress",state.getInt("progress")+1);save();worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+ }
+ /** An idle helper must not occupy a block another crew member still needs to place. */
+ private boolean yieldIdlePlacement(ServerLevel l,ListTag operations){
+  if(!pendingPlacement(l,operations,worker.getBoundingBox()))return false;
+  var from=worker.blockPosition();BlockPos best=null;double score=Double.MAX_VALUE;
+  for(int dy:new int[]{0,-1})for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++){
+   var cell=from.offset(dx,dy,dz);if(cell.equals(from)||!l.hasChunkAt(cell)||!standable(l,cell))continue;
+   var body=worker.getBoundingBox().move(cell.getX()+.5-worker.getX(),cell.getY()-worker.getY(),cell.getZ()+.5-worker.getZ());
+   if(!l.noCollision(worker,body)||pendingPlacement(l,operations,body))continue;
+   double value=cell.distToCenterSqr(worker.position())+.2*Math.abs(dy);if(value>=score)continue;
+   if(!clearLine(l,worker,cell)){var path=ConstructionRoutes.plan(worker,cell);if(path==null||!path.canReach())continue;}
+   best=cell;score=value;
+  }
+  if(best==null)return false;
+  worker.workStatus("clearing_work_position");if(!stepToWorkStand(l,worker,best))walkTo(best,.8);return true;
+ }
+ private static boolean pendingPlacement(ServerLevel l,ListTag operations,net.minecraft.world.phys.AABB body){
+  for(var raw:operations){var op=(CompoundTag)raw;if(op.getBoolean("done"))continue;var pos=BlockPos.of(op.getLong("pos"));
+   // Decode only operations near this resident; large field plans contain thousands of remote cells.
+   if(pos.getX()+2<body.minX||pos.getX()-1>body.maxX||pos.getY()+3<body.minY||pos.getY()-1>body.maxY||pos.getZ()+2<body.minZ||pos.getZ()-1>body.maxZ)continue;
+   var step=HallConstructionPlan.step(op);var shape=step.after().getCollisionShape(l,step.pos());if(!shape.isEmpty()&&shape.bounds().move(step.pos()).intersects(body))return true;
+  }
+  return false;
  }
  /** AD-153: the operation this builder has in hand now (-1: none yet), for the tests and probes of a crew. */
  public volatile int working=-1;
@@ -802,12 +868,13 @@ public final class HallUpgradeGoal extends Goal {
    // Hanging in another column blocks every approach: sink to the floor first.
    if(!near&&!atHatch&&(aloft(BlockPos.of(state.getLong("origin")))||worker.onClimbable()&&!worker.onGround())){descend();return false;}
    var level=(ServerLevel)worker.level();
+   if(escapeFurniture(new BlockPos(feet.getX(),standBase,feet.getZ()))){worker.workStatus("walking_to_scaffold");return false;}
    // A stair jump on the approach still belongs to navigation. Steering directly at a distant
    // column here cancels the detour every time the worker leaves the ground.
    if(!worker.onGround()&&!worker.onClimbable()&&cx*cx+cz*cz>2.25){worker.workStatus("walking_to_scaffold");return false;}
    // Standing right under the column foot: the worker steps up into it instead of walking around looking for an approach.
    var above=new BlockPos(feet.getX(),net.minecraft.util.Mth.floor(worker.getY())+1,feet.getZ());
-   if(near&&worker.onGround()&&worker.getY()<feet.getY()-.1&&level.getBlockState(above).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())){
+   if(near&&worker.onGround()&&worker.getY()<above.getY()&&level.getBlockState(above).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())){
     worker.getNavigation().stop();worker.setDeltaMovement(0,.42,0);worker.workStatus("climbing");return false;}
    // A path that ends short of the column (navigation done within 3.5 blocks of it) is finished by direct movement, but only across free ground.
    if(cx*cx+cz*cz>2.25&&worker.onGround()&&!(worker.getNavigation().isDone()&&cx*cx+cz*cz<12.25&&clearLine(level,worker,new BlockPos(feet.getX(),standBase,feet.getZ()))&&!crossesColumn(level,worker,feet))){
@@ -839,6 +906,14 @@ public final class HallUpgradeGoal extends Goal {
     walkTo(around,.8);}
    else{worker.getNavigation().stop();hop(cx,cz);worker.setDeltaMovement(Math.max(-.12,Math.min(.12,cx*.5)),worker.getDeltaMovement().y,Math.max(-.12,Math.min(.12,cz*.5)));}
    worker.workStatus("walking_to_scaffold");return false;
+  }
+  // A low beam may stop the body just below the planned feet height. Work from the
+  // actual column position when the target is already in reach and cannot hit the builder.
+  // The plan is a route hint, not an extra height requirement for a reachable block.
+  var step=HallConstructionPlan.step(op);var shape=step.after().getCollisionShape(worker.level(),step.pos());
+  if(worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(step.pos()))<=reachSq
+    &&(shape.isEmpty()||!shape.bounds().move(step.pos()).intersects(worker.getBoundingBox()))){
+   worker.getNavigation().stop();worker.setDeltaMovement(cx*.3,0,cz*.3);return true;
   }
   double dy=feet.getY()-worker.getY();worker.getNavigation().stop();
   if(Math.abs(dy)>.25){centre(worker);if(dy<0)worker.setShiftKeyDown(true);worker.setDeltaMovement(cx*.3,dy>0?.2:-.15,cz*.3);worker.workStatus("climbing");return false;}

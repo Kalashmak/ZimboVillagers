@@ -9,6 +9,19 @@ import org.villageastra.VillageAstra;
 import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class ForestRenewalGameTests {
+ @GameTest(template="empty",batch="forest_renewal_grass",timeoutTicks=100)
+ public static void naturalGroundCoverDoesNotPreventPaidPlanting(GameTestHelper h){var f=ForestFixture.create(h,1,192);
+  try{
+   net.minecraft.core.BlockPos foot=null;
+   for(int x=-4;x<=20&&foot==null;x++)for(int z=3;z<=10&&foot==null;z++){var candidate=f.wood(x,z);if(ForestRenewal.safe(f.l,candidate))foot=candidate;}
+   h.assertTrue(foot!=null,"Fixture contains an unprotected empty planting site before adding grass");var neighbor=foot.east();
+   f.l.setBlock(neighbor,Blocks.GRASS.defaultBlockState(),2);
+   h.assertTrue(ForestRenewal.safe(f.l,foot),"An empty planting cell beside natural grass still has room for a tree");
+   h.assertTrue(f.l.getBlockState(neighbor).is(Blocks.GRASS),"Survey leaves the existing grass alone");
+   f.l.setBlock(neighbor,Blocks.OAK_PLANKS.defaultBlockState(),2);
+   h.assertTrue(!ForestRenewal.safe(f.l,foot),"An adjacent structure still blocks renewal");
+  }finally{f.done();}h.succeed();
+ }
  @GameTest(template="empty",batch="forest_renewal",timeoutTicks=300)
  public static void exhaustedLevelOnePlantsPaidSaplingAndRecoversPlacement(GameTestHelper h){var f=ForestFixture.create(h,1,192);
   try{

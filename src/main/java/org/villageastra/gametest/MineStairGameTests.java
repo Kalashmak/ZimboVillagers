@@ -13,6 +13,27 @@ import org.villageastra.world.*;
 
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class MineStairGameTests {
+ @GameTest(template="empty",batch="mine_stairs",timeoutTicks=200)
+ public static void unpaidOldRowUsesExcavatedSandstoneAfterReload(GameTestHelper h){
+  var t=town(h);var npc=VillageAstra.RESIDENT.get().create(t.l);
+  try{
+   var s=MineWork.read(t.l,t.shop);s.putString("stage","stair");s.putInt("step",2);s.putInt("stairStep",1);s.putString("stairItem","minecraft:cobblestone");
+   s.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
+   var cells=MineDrive.stairs(1,MineWork.shape(s));for(var cell:cells)t.l.setBlock(MineWork.at(t.e,t.shop,cell),Blocks.AIR.defaultBlockState(),2);
+   var cargo=new ListTag();cargo.add(new ItemStack(Items.SANDSTONE,cells.size()).save(new CompoundTag()));cargo.add(new ItemStack(Items.DIRT,2).save(new CompoundTag()));s.put("cargo",cargo);MineWork.write(t.l,t.shop,s);
+   var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));npc.setNoAi(true);t.l.addFreshEntity(npc);
+   LogisticsRoutes.chest(t.l,t.e,t.shop).clearContent();
+   var stand=MineDrive.next(new MineDrive.Drive(1,0,MineDrive.EAST,0),Integer.MAX_VALUE/2,MineWork.shape(s)).stand();var at=MineWork.at(t.e,t.shop,stand);npc.moveTo(at.getX()+.5,at.getY()+1,at.getZ()+.5);npc.setOnGround(true);
+   for(int i=0;i<cells.size();i++){
+    var goal=new ResourceWorkGoal(npc,true,()->6000L);h.assertTrue(goal.canUse(),"Reload keeps the paid excavation cargo");goal.tick();
+    h.assertTrue(t.l.getBlockState(MineWork.at(t.e,t.shop,cells.get(i))).is(Blocks.SANDSTONE_STAIRS),"Each real sandstone block becomes one matching stair");
+    var after=MineWork.read(t.l,t.shop);h.assertTrue(count(after.getList("cargo",Tag.TAG_COMPOUND),Items.SANDSTONE)==cells.size()-i-1,"One stone consumed per placement, including reload");
+   }
+   h.assertTrue(count(MineWork.read(t.l,t.shop).getList("cargo",Tag.TAG_COMPOUND),Items.DIRT)==2,"Unrelated cargo preserved");
+   s.putInt("stairPlaced",1);s.putString("stairItem","minecraft:cobblestone");MineStairWork.selectUnpaid(t.l,s);h.assertTrue(MineStairWork.stone(s)==Items.COBBLESTONE,"Partially paid orders cannot change material");
+  }finally{npc.discard();ResearchV2Town.done(t);}h.succeed();
+ }
+ private static int count(ListTag cargo,Item item){int n=0;for(var tag:cargo){var stack=ItemStack.of((CompoundTag)tag);if(stack.is(item))n+=stack.getCount();}return n;}
  private static ResearchV2Town.Town town(GameTestHelper h){
   var t=ResearchV2Town.town(h,"mine");var data=org.villageastra.server.SettlementData.get(t.l.getServer());data.remove(t.s.id());
   var e=new org.villageastra.server.SettlementData.Entry(t.s,t.e.dimension(),t.e.center().above(16));data.add(e);ResearchV2Town.lay(t.l,e,t.shop,"mine");

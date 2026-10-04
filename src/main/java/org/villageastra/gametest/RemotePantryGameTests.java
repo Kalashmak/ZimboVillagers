@@ -20,8 +20,8 @@ import org.villageastra.world.*;
  *  its chunks go; the shared budget is reset right before each asserted call and exhausted only inside one synchronous block. */
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class RemotePantryGameTests {
- /** Far from every test structure (they stand near the origin); each test takes its own dz, 512 blocks from the next. */
- private static final int FAR_X=6144,UNLOAD_WAIT=200;
+ /** Outside the complete regression grid and its expedition fixtures; each test takes its own dz, 512 blocks from the next. */
+ private static final int FAR_X=1_048_576,UNLOAD_WAIT=200;
  private record Far(ServerLevel l,SettlementData.Entry e,Settlement.Building hall,Settlement.Building house,BlockPos chest){
   UUID id(){return e.settlement().id();}
   OwnedChestEntity pantry(){return LogisticsRoutes.chest(l,e,hall);}
@@ -65,7 +65,7 @@ public final class RemotePantryGameTests {
  private static void guard(List<Far> fs,Runnable body){try{body.run();}catch(RuntimeException|Error failure){close(fs);throw failure;}}
  private static void close(List<Far> fs){for(var f:fs)f.close();}
  private static boolean committed(ServerLevel l,UUID id){var p=l.getServer().getWorldPath(LevelResource.ROOT).resolve("data/astra-journal").resolve(id+".bin");return java.nio.file.Files.exists(p)&&NbtRecord.read(p).getBoolean("committed");}
- @GameTest(template="empty",timeoutTicks=400) public static void farVillageEatsItsRealBreadOnceAtTheDueTick(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void farVillageEatsItsRealBreadOnceAtTheDueTick(GameTestHelper h){
   var one=far(h,0,0,1,true);var six=far(h,0,512,6,true);var fs=List.of(one,six);
   one.pantry().setItem(0,new ItemStack(Items.BREAD,10));six.pantry().setItem(0,new ItemStack(Items.BREAD,10));
   whenUnloaded(h,fs,()->{
@@ -86,7 +86,7 @@ public final class RemotePantryGameTests {
    close(fs);h.succeed();
   });
  }
- @GameTest(template="empty",timeoutTicks=400) public static void spentBudgetDefersTheMealToItsDueTick(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void spentBudgetDefersTheMealToItsDueTick(GameTestHelper h){
   var f=far(h,0,1024,1,true);var fs=List.of(f);f.pantry().setItem(0,new ItemStack(Items.BREAD,10));
   whenUnloaded(h,fs,()->{
    var l=f.l;var r=f.first();long due=Population.MEAL_INTERVAL;
@@ -101,7 +101,7 @@ public final class RemotePantryGameTests {
    }));
   });
  }
- @GameTest(template="empty",timeoutTicks=400) public static void emptyRemotePantryStillStarves(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void emptyRemotePantryStillStarves(GameTestHelper h){
   var f=far(h,0,1536,1,true);var fs=List.of(f);
   whenUnloaded(h,fs,()->{
    var l=f.l;var r=f.first();
@@ -114,7 +114,7 @@ public final class RemotePantryGameTests {
    close(fs);h.succeed();
   });
  }
- @GameTest(template="empty",timeoutTicks=100) public static void deadResidentsBodyNeverRejoins(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=100) public static void deadResidentsBodyNeverRejoins(GameTestHelper h){
   var l=h.getLevel();var center=h.absolutePos(new BlockPos(2,3,2));var s=new Settlement(UUID.randomUUID());var home=new Settlement.Home(Settlement.childId(s.id(),"home"),1,4,true);s.addHome(home);
   var dead=new Resident(UUID.randomUUID(),Resident.Life.ADULT,false,null,null,-1);var living=new Resident(UUID.randomUUID(),Resident.Life.ADULT,false,null,null,-1);s.admit(dead,home.id());s.admit(living,home.id());
   var e=new SettlementData.Entry(s,l.dimension().location().toString(),center);SettlementData.get(l.getServer()).add(e);
@@ -127,7 +127,7 @@ public final class RemotePantryGameTests {
   }finally{ghost.discard();npc.discard();SettlementData.get(l.getServer()).remove(s.id());}
   h.succeed();
  }
- @GameTest(template="empty",timeoutTicks=400) public static void unrelatedFarVillageNeitherEatsNorStarves(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void unrelatedFarVillageNeitherEatsNorStarves(GameTestHelper h){
   var f=far(h,0,2048,2,false);var fs=List.of(f);f.pantry().setItem(0,new ItemStack(Items.BREAD,10));
   var rs=List.copyOf(f.e.settlement().residents());var hungry=rs.get(0);var fed=rs.get(1);hungry.missedMeal(0);hungry.missedMeal(0);
   whenUnloaded(h,fs,()->{
@@ -142,7 +142,7 @@ public final class RemotePantryGameTests {
    close(fs);h.succeed();
   });
  }
- @GameTest(template="empty",timeoutTicks=700) public static void farBesiegedTargetWithBreadIsNotStarving(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=700) public static void farBesiegedTargetWithBreadIsNotStarving(GameTestHelper h){
   var f=far(h,0,2560,2,true);var fs=List.of(f);f.pantry().setItem(0,new ItemStack(Items.BREAD,64));f.pantry().setItem(1,new ItemStack(Items.BREAD,36));
   whenUnloaded(h,fs,()->{
    var l=f.l;
@@ -158,7 +158,7 @@ public final class RemotePantryGameTests {
    });
   });
  }
- @GameTest(template="empty",timeoutTicks=400) public static void twoFarVillagesTradeFromRealStock(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void twoFarVillagesTradeFromRealStock(GameTestHelper h){
   var source=far(h,0,3072,0,true);var destination=far(h,48,3072,0,true);var fs=List.of(source,destination);
   var s=source.e.settlement();var yard=new Settlement.Building(Settlement.childId(s.id(),"building/caravan"),"caravan",4,0,-8);s.addBuilding(yard);
   // AD-160 II: automatic remote partners have working trade centres and a recorded meeting.
@@ -186,7 +186,7 @@ public final class RemotePantryGameTests {
    close(fs);h.succeed();
   });
  }
- @GameTest(template="empty",timeoutTicks=400) public static void aTouchedVillageKeepsItsActiveRaid(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void aTouchedVillageKeepsItsActiveRaid(GameTestHelper h){
   var f=far(h,0,3584,2,true);var fs=List.of(f);var l=f.l;var server=l.getServer();
   var file=server.getWorldPath(LevelResource.ROOT).resolve("data/astra-raids/"+f.id()+".bin");
   // A wave that was under way when the players left: its raiders are in chunks nobody loads, so they are simply not found.
@@ -202,7 +202,7 @@ public final class RemotePantryGameTests {
    close(fs);h.succeed();
   });
  }
- @GameTest(template="empty",timeoutTicks=400) public static void aTouchedVillageHasNoBirth(GameTestHelper h){
+ @GameTest(template="empty",batch="remote_pantry",timeoutTicks=400) public static void aTouchedVillageHasNoBirth(GameTestHelper h){
   var f=far(h,0,4096,2,true);var fs=List.of(f);f.pantry().setItem(0,new ItemStack(Items.BREAD,32));
   whenUnloaded(h,fs,()->{
    var l=f.l;var spawn=f.spawn();var ps=new ArrayList<BlockPos>(Population.pantryPositions(f.e));ps.add(spawn);

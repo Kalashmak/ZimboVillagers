@@ -64,7 +64,27 @@ public final class HandBread {
  /** Wheat a chest can spare: less the building's own keep, what an approved hall project counts on and what porters are already sent to fetch. */
  private static int spare(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
   var c=LogisticsRoutes.chest(l,e,b);if(c==null)return 0;var one=new ItemStack(Items.WHEAT);
-  return Math.max(0,LogisticsRoutes.count(c,HandBread::wheat)-LogisticsRoutes.reserve(b,one)-LogisticsRoutes.constructionReserve(l,e,b,one)-PorterWork.reserved(l,e,b.id(),s->s.is(Items.WHEAT),false));
+  return Math.max(0,LogisticsRoutes.count(c,HandBread::wheat)-LogisticsRoutes.reserve(b,one)-LogisticsRoutes.constructionReserve(l,e,b,one)-PorterWork.reserved(l,e,b.id(),s->s.is(Items.WHEAT),false)-constructionWheat(l,e,b));
+ }
+ /** Keep the next otherwise-ready construction recipe's grain only while one
+  * complete village meal is already in the pantry. Emergency baking always wins. */
+ static int constructionWheat(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
+  if(!b.type().equals("town_hall")||missedMeal(e)||!HallUpgradeGoal.pending(l,e.settlement().id()))return 0;
+  long meal=e.settlement().residents().stream().filter(Resident::alive).count()*Population.MEAL_NUTRITION;
+  if(meal==0||Population.storedNutrition(l,e)<meal)return 0;
+  var project=HallUpgradeGoal.inspect(l,e.settlement().id());if(project.getBoolean("funded")||e.settlement().governance().paused(HallConstructionPlan.projectId(project)))return 0;
+  var chest=hallChest(l,e);if(chest==null)return 0;var free=HallReserve.view(l,e,chest);
+  // A detached planning view answers whether grain alone would enable the product.
+  // It never enters a job, journal or real inventory.
+  var probe=new net.minecraft.world.SimpleContainer(free.getContainerSize()+1);
+  for(int slot=0;slot<free.getContainerSize();slot++){var item=free.getItem(slot);if(!item.is(Items.WHEAT))probe.setItem(slot,item.copy());}
+  probe.setItem(free.getContainerSize(),new ItemStack(Items.WHEAT,64));
+  var spec=Workshops.spec(l,e,b);if(spec==null)return 0;
+  for(var want:Workshops.wants(l,e))if(want.need()==LogisticsRoutes.NEED_BUILD&&want.destination().equals(b.id())){
+   var job=Workshops.plan(l,spec,probe,List.of(want));if(job==null||job.outputs().stream().noneMatch(want::matches))continue;
+   int needed=job.inputs().stream().filter(in->in.matches(new ItemStack(Items.WHEAT))).mapToInt(Workshops.Input::count).sum();
+   if(needed>0)return needed;
+  }return 0;
  }
  /** Where wheat is fetched from when the hall has none: warehouses (the stock of a larger village), then the farm chests, in settlement order. */
  private static List<Settlement.Building> stores(SettlementData.Entry e){var result=new ArrayList<Settlement.Building>();for(var type:List.of("warehouse","farm"))for(var b:e.settlement().buildings())if(b.type().equals(type))result.add(b);return result;}

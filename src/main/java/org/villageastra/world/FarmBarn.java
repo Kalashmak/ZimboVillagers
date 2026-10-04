@@ -211,15 +211,18 @@ public final class FarmBarn {
   var clears=new ArrayList<Op>();var lower=new ArrayList<Op>();var upper=new ArrayList<Op>();var wet=new ArrayList<Op>();var fixtures=new ArrayList<Op>();var lowFixtures=new ArrayList<Op>();var caps=new HashMap<BlockPos,Op>();
   for(var cell:target.entrySet()){var local=cell.getKey();var design=cell.getValue();var pos=at(e,b,local);
    if(!l.hasChunkAt(pos)||l.isOutsideBuildHeight(pos))return new BarnPlan(new ListTag(),Map.of(),conflicts,"unloaded");
-   var after=turned(e,b,design);var now=l.getBlockState(pos);if(same(now,after))continue;
+   var after=turned(e,b,design);var now=l.getBlockState(pos);
+   boolean column=colCells.contains(((long)local.getX()<<32)|(local.getZ()&0xFFFFFFFFL))&&local.getY()>=1;
+   // An unchanged deck or roof in the column's shaft still has to be restored
+   // after the paid scaffold is removed. Reserve its replacement explicitly.
+   if(same(now,after)&&!(column&&caps(after)))continue;
    boolean mine=own.contains(now)&&layout(from).containsKey(local)||now.is(Blocks.FARMLAND)||now.equals(FarmField.COVER)&&local.getY()%FarmField.FLOOR_PITCH==1;
    boolean fluid=!now.getFluidState().isEmpty()&&!(now.is(Blocks.WATER)&&after.is(Blocks.WATER));
    if(l.getBlockEntity(pos)!=null&&!mine||fluid||!mine&&!FarmField.natural(now)||local.getY()<=1&&(Roads.cell(l,pos)!=null)){conflicts.add(pos);continue;}
-   var it=items(now,after);if(it==null)return new BarnPlan(new ListTag(),Map.of(),conflicts,"material");
+   var it=items(column&&caps(after)?AIR:now,after);if(it==null)return new BarnPlan(new ListTag(),Map.of(),conflicts,"material");
    boolean soil=local.getY()>0&&local.getY()%FarmField.FLOOR_PITCH==0&&(after.is(Blocks.DIRT)||after.is(Blocks.WATER))||after.equals(FarmField.COVER);
    if(design.isAir()){clears.add(new Op(pos,now,AIR,"","",null,false));continue;}
    String item=it.isEmpty()?"":it.get(0);
-   boolean column=colCells.contains(((long)local.getX()<<32)|(local.getZ()&0xFFFFFFFFL))&&local.getY()>=1;
    // Inside the barn the ground is farmland (no stand for a builder): everything above the plots is worked from the columns.
    boolean inside=local.getX()>WX0&&local.getX()<WX1&&local.getZ()>WZ0&&local.getZ()<WZ1&&local.getY()>=2;
    if(local.getY()<6&&!inside){var op=new Op(pos,now,after,item,"",null,soil);
@@ -246,9 +249,9 @@ public final class FarmBarn {
   var scaffold=org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get().defaultBlockState();var up=new ArrayList<Op>();var down=new ArrayList<Op>();
   for(int i=0;i<cols.size();i++){var c=cols.get(i);for(int y=1;y<=tops[i];y++){var local=new BlockPos(c[0],y,c[1]);var pos=at(e,b,local);
     if(!l.hasChunkAt(pos))return new BarnPlan(new ListTag(),Map.of(),conflicts,"unloaded");var now=l.getBlockState(pos);
-    if(caps.containsKey(pos)){up.add(new Op(pos,AIR,scaffold,"villageastra:timber_scaffold","",null,false));continue;}
+    if(caps.containsKey(pos)){up.add(new Op(pos,caps.get(pos).before(),scaffold,"villageastra:timber_scaffold","",y>=3?at(e,b,new BlockPos(c[0],y-2,c[1])):null,false));continue;}
     if(!now.isAir()&&!cleared.contains(pos)){if(l.getBlockEntity(pos)!=null||!now.getFluidState().isEmpty()){conflicts.add(pos);continue;}clears.add(new Op(pos,now,AIR,"","",null,now.getBlock() instanceof CropBlock));}
-    up.add(new Op(pos,AIR,scaffold,"villageastra:timber_scaffold","",null,false));}
+    up.add(new Op(pos,AIR,scaffold,"villageastra:timber_scaffold","",y>=3?at(e,b,new BlockPos(c[0],y-2,c[1])):null,false));}
    // AD-130: a column stands on the farm's own plots; the cell it leaves is field work, so a crop the farmer sows there while the rest of
    // the barn goes up does not keep the project from completing (BuildingOrders.complete).
    for(int y=tops[i];y>=1;y--){var pos=at(e,b,new BlockPos(c[0],y,c[1]));boolean plot=i<cols.size()-1&&y<=2*FarmField.FLOOR_PITCH+1&&y%FarmField.FLOOR_PITCH==1;

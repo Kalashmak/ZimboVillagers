@@ -113,7 +113,7 @@ public final class ResourceWorkGoal extends Goal {
             if(!miner&&!farmer&&t.getInt("schema")==1&&t.hasUUID("operation")){var fresh=new CompoundTag();fresh.putInt("schema",2);fresh.putInt("width",1);fresh.putInt("height",3);fresh.putInt("descent",0);
                 if(t.contains("tool"))fresh.put("tool",t.getCompound("tool"));if(t.hasUUID("worker"))fresh.putUUID("worker",t.getUUID("worker"));
                 fresh.putString("stage",ItemStack.of(fresh.getCompound("tool")).isEmpty()?"tool":"choose");fresh.putUUID("operation",UUID.randomUUID());return fresh;}
-            if(t.getInt("schema")!=(!miner&&!farmer?2:1)||!t.hasUUID("operation")||!Set.of("tool","upgrade_tool","choose","dig","deliver","sapling","plant","replant","support_fetch","support_place","seal_fetch","seal_place","till","stair","light").contains(t.getString("stage")))throw new IOException("Invalid resource work state");
+            if(t.getInt("schema")!=(!miner&&!farmer?2:1)||!t.hasUUID("operation")||!Set.of("tool","upgrade_tool","choose","dig","deliver","sapling","plant","replant","support_fetch","support_place","seal_fetch","seal_place","till","stair","light","nursery_soil").contains(t.getString("stage")))throw new IOException("Invalid resource work state");
             if(MineSealing.active(t)&&(!miner||!t.contains("sealFace",Tag.TAG_LONG)||!t.contains("sealAt",Tag.TAG_LONG)))throw new IOException("Invalid mine seal state");
             if(!t.contains("width"))t.putInt("width",1);
             if(!t.contains("height"))t.putInt("height",3);
@@ -184,6 +184,7 @@ public final class ResourceWorkGoal extends Goal {
     private BlockPos trunkSide(BlockPos foot){
         var level=(ServerLevel)worker.level();BlockPos best=null;double score=Double.MAX_VALUE;
         var feet=state.contains("base")?Arrays.stream(state.getLongArray("base")).mapToObj(BlockPos::of).toList():List.of(foot);
+        var accessible=TreeAccess.find(worker,foot,feet);if(accessible!=null)return accessible;
         for(var f:feet)for(var d:net.minecraft.core.Direction.Plane.HORIZONTAL){var at=f.relative(d);if(feet.contains(at))continue;
             var ground=level.getBlockState(at);
             if(!(ground.isAir()||ground.canBeReplaced())||!level.getBlockState(at.above()).isAir()||!level.getBlockState(at.below()).isFaceSturdy(level,at.below(),net.minecraft.core.Direction.UP))continue;
@@ -217,9 +218,14 @@ public final class ResourceWorkGoal extends Goal {
         double feetY=pos.getY();
         if(precise){var shape=worker.level().getBlockState(pos).getCollisionShape(worker.level(),pos);if(!shape.isEmpty())feetY+=shape.max(net.minecraft.core.Direction.Axis.Y);}
         double distance=worker.distanceToSqr(pos.getX()+.5,feetY+(precise?0:.5),pos.getZ()+.5);
-        if(distance<=(precise?.16:6.25)){worker.getNavigation().stop();return true;}
+        // Near the planned tread is not necessarily within reach of the lower face.
+        // Keep the current path alive between the ordinary twenty-tick navigation updates.
+        boolean faceReach=farmer||!state.getString("stage").equals("dig")||worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(BlockPos.of(state.getLong("target"))))<=16;
+        if(distance<=(precise?.16:6.25)&&faceReach){worker.getNavigation().stop();return true;}
         // AD-131: a forester walks at his hut's pace (0.8, 1.0 from level V).
-        if(precise&&distance<2.25){worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(pos.getX()+.5,feetY,pos.getZ()+.5,.8);}
+        var route=worker.getNavigation().getPath();
+        boolean finalTreeStride=!miner&&!farmer&&!faceReach&&distance<=6.25&&route!=null&&route.canReach()&&worker.getNavigation().isDone();
+        if(precise&&distance<2.25||finalTreeStride){if(!finalTreeStride)worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(pos.getX()+.5,feetY,pos.getZ()+.5,.8);}
         else if(worker.tickCount%20==0)worker.getNavigation().moveTo(pos.getX()+.5,feetY,pos.getZ()+.5,!miner&&!farmer?ForestBalance.walkSpeed(hutLevel()):.8);
         status(!miner&&!farmer&&state.getString("stage").equals("dig")?"walking_to_tree":"walking");return false;
     }
@@ -231,6 +237,7 @@ public final class ResourceWorkGoal extends Goal {
         face|=miner&&base!=null&&worker.getY()-base.getY()<-.5;
         if(!withoutPlayers&&worker.tickCount%20!=0&&!face)return;
         ServerLevel level=(ServerLevel)worker.level();String stage=state.getString("stage");UUID id=state.getUUID("operation");
+        if(miner){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());if(MineClearance.tick(worker,e,e.settlement().workplace(worker.getUUID()),state)){save();return;}}
         if(miner&&!state.contains("stairStep")&&(stage.equals("choose")||MineSealing.active(state))){
             var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());int row=MineStairWork.repair(level,e,e.settlement().workplace(worker.getUUID()),state);
             if(row>=0){if(MineSealing.active(state)){MineSealing.reconcile(level,state);MineSealing.clear(state);}state.putInt("stairStep",row);beginStairs(level);return;}
@@ -317,7 +324,7 @@ public final class ResourceWorkGoal extends Goal {
         if(stage.equals("stair")){
             // AD-122 (owner): the stairs of the step just finished, cut from the stone he carries (one block a stair), each set under its own
             // journal id and paid from the batch in the same record write; a cell not open any more is passed by without paying.
-            var beforeRecovery=state.copy();MineStairWork.reconcile(level,state);if(!state.equals(beforeRecovery))save();
+            var beforeRecovery=state.copy();MineStairWork.reconcile(level,state);MineStairWork.selectUnpaid(level,state);if(!state.equals(beforeRecovery))save();
             int step=state.getInt("stairStep"),placed=state.getInt("stairPlaced");var cells=MineDrive.stairs(step,MineWork.shape(state));
             Item stone=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation(state.getString("stairItem")));
             if(placed>=cells.size()){endStairs(level);return;}
@@ -337,7 +344,7 @@ public final class ResourceWorkGoal extends Goal {
             var stand=MineDrive.next(new MineDrive.Drive(step,0,MineDrive.EAST,0),Integer.MAX_VALUE/2,MineWork.shape(state)).stand();
             if(!near(workPos(stand.x(),stand.y(),stand.z())))return;
             var mine=SettlementData.get(worker.getServer()).entry(worker.settlementId()).settlement().workplace(worker.getUUID());
-            var block=BuildingPlacement.state((stone==Items.COBBLED_DEEPSLATE?Blocks.COBBLED_DEEPSLATE_STAIRS:Blocks.COBBLESTONE_STAIRS).defaultBlockState().setValue(StairBlock.FACING,net.minecraft.core.Direction.NORTH),mine.rotation());
+            var block=BuildingPlacement.state(MineStairWork.stairs(stone).defaultBlockState().setValue(StairBlock.FACING,net.minecraft.core.Direction.NORTH),mine.rotation());
             if(block.getCollisionShape(level,at).bounds().move(at).intersects(worker.getBoundingBox())){status("needs_access");return;}
             UUID place=Settlement.childId(id,"stair/"+placed);
             boolean set=WorldJournal.recoverExisting(level,place)!=null||level.getBlockState(at).isAir()&&WorldJournal.place(level,place,at,Blocks.AIR.defaultBlockState(),block);
@@ -381,14 +388,17 @@ public final class ResourceWorkGoal extends Goal {
             finishPlant();return;
         }
         if(stage.equals("till")){
-            BlockPos target=BlockPos.of(state.getLong("target"));if(!near(target.above()))return;
-            if(!level.getBlockState(target.above()).isAir()){status("changed_target");return;}
-            if(worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(target))>16){status("needs_access");return;}
-            int labor=state.getInt("labor")+20;state.putInt("labor",labor);worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
-            if(labor<60){status("tilling");save();return;}
-            var before=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),state.getCompound("before"));
-            if(!FarmCrops.pending(state).canPrepare(level,target.above())){status("invalid_planting_ground");return;}
-            if(!WorldJournal.place(level,id,target,before,FarmCrops.pending(state).soil())){status("changed_target");return;}
+            BlockPos target=BlockPos.of(state.getLong("target"));
+            // A completed stroke is paid once even if farmland moisture or the crop changed before the checkpoint.
+            if(WorldJournal.recoverExisting(level,id)==null){
+                if(!near(target.above()))return;
+                var before=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),state.getCompound("before"));
+                if(!level.getBlockState(target.above()).isAir()||!FarmCrops.pending(state).canPrepare(level,target.above())||!level.getBlockState(target).equals(before)){retryTilling();return;}
+                if(worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(target))>16){status("needs_access");return;}
+                int labor=state.getInt("labor")+20;state.putInt("labor",labor);worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);
+                if(labor<60){status("tilling");save();return;}
+                if(!WorldJournal.place(level,id,target,before,FarmCrops.pending(state).soil())){retryTilling();return;}
+            }
             ItemStack tool=ItemStack.of(state.getCompound("tool"));tool.setDamageValue(tool.getDamageValue()+1);if(tool.getDamageValue()>=tool.getMaxDamage())tool=ItemStack.EMPTY;
             state.put("tool",tool.save(new CompoundTag()));state.putString("stage",tool.isEmpty()?"tool":"choose");state.putUUID("operation",UUID.randomUUID());save();return;
         }
@@ -472,6 +482,15 @@ public final class ResourceWorkGoal extends Goal {
         }
         if(stage.equals("dig")){
             BlockPos target=BlockPos.of(state.getLong("target"));
+            // Maintenance can wear out the pick while a deeper face is already queued.
+            // Recover a committed harvest first; otherwise never destroy ore with an absent or unsuitable tool.
+            if(miner&&!WorldJournal.exists(level,id)){
+                var queued=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),state.getCompound("before"));
+                if(queued.requiresCorrectToolForDrops()&&!ItemStack.of(state.getCompound("tool")).isCorrectToolForDrops(queued)){
+                    if(carrying()){deliverUndug();return;}
+                    state.put("requiredToolState",NbtUtils.writeBlockState(queued));state.putString("stage","upgrade_tool");status("tool_tier");save();return;
+                }
+            }
             // Water may move while the miner walks to the face. Re-plan before breaking,
             // while a harvest already committed to the journal must still be recovered.
             if(miner&&!WorldJournal.exists(level,id)&&(!level.getFluidState(target).isEmpty()||Arrays.stream(net.minecraft.core.Direction.values()).anyMatch(d->!level.getFluidState(target.relative(d)).isEmpty()))){
@@ -568,6 +587,7 @@ public final class ResourceWorkGoal extends Goal {
     private void forest(ServerLevel level,String stage,UUID id){
         var e=SettlementData.get(level.getServer()).entry(worker.settlementId());var hut=e.settlement().workplace(worker.getUUID());int lv=BuildingLevels.level(level,e,hut);today(level);
         switch(stage){
+            case "nursery_soil"->forestSoil(level,e);
             case "choose"->forestChoose(level,e,hut,lv);
             case "dig"->forestDig(level,e,hut,lv,id);
             case "replant"->forestReplant(level,e,hut,lv,id);
@@ -575,6 +595,18 @@ public final class ResourceWorkGoal extends Goal {
             case "deliver"->forestDeliver(level,lv,id);
             default->{state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());save();}
         }
+    }
+    private void forestSoil(ServerLevel level,SettlementData.Entry e){
+        if(NurserySoil.committed(level,state)){NurserySoil.prepare(level,state);save();return;}
+        if(!state.getBoolean("soilHeld")){
+            if(!near(beside(stock)))return;
+            if(!NurserySoil.fetch(level,e,state,stock)){status("missing_building_materials");return;}save();
+        }
+        var target=BlockPos.of(state.getLong("target"));
+        if(!ForestRenewal.sandy(level,target)){state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());save();return;}
+        if(!near(target))return;status("replanting");state.putInt("soilLabor",state.getInt("soilLabor")+1);
+        if(state.getInt("soilLabor")<20){save();return;}
+        if(NurserySoil.prepare(level,state))worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);save();
     }
     private void forestChoose(ServerLevel level,SettlementData.Entry e,org.villageastra.domain.Settlement.Building hut,int lv){
         boolean carrying=!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty();
@@ -754,10 +786,11 @@ public final class ResourceWorkGoal extends Goal {
         if(!got.isEmpty()){state.putInt("lightsHeld",held+got.getCount());state.putString("lightItem",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(got.getItem()).toString());}
         save();return true;
     }
-    private boolean carryingStone(){var cargo=state.getList("cargo",Tag.TAG_COMPOUND);return count(cargo,Items.COBBLESTONE)+count(cargo,Items.COBBLED_DEEPSLATE)>0;}
-    /** AD-122: the stairs of the step MineWork.step noted, cut from the stone he carries most of (cobblestone when none: then from the chest). */
+    private boolean carryingStone(){var cargo=state.getList("cargo",Tag.TAG_COMPOUND);return count(cargo,MineStairWork.carriedStone(cargo))>0;}
+    private void retryTilling(){state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());state.putInt("labor",0);state.remove("before");state.remove("target");status("changed_target");save();}
+    /** Cut stairs from the most plentiful carried local stone; empty cargo requests cobblestone. */
     private void beginStairs(ServerLevel level){
-        var cargo=state.getList("cargo",Tag.TAG_COMPOUND);Item stone=count(cargo,Items.COBBLED_DEEPSLATE)>count(cargo,Items.COBBLESTONE)?Items.COBBLED_DEEPSLATE:Items.COBBLESTONE;
+        var cargo=state.getList("cargo",Tag.TAG_COMPOUND);Item stone=MineStairWork.carriedStone(cargo);
         state.putString("stairItem",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stone).toString());state.putInt("stairPlaced",0);state.remove("stairTaken");state.remove("stairTakeRound");
         state.putString("stage","stair");state.putUUID("operation",UUID.randomUUID());save();
     }

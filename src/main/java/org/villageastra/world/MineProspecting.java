@@ -28,6 +28,10 @@ public final class MineProspecting {
   visited.add(t.getInt("floorStep"));for(var gallery:area.galleries())visited.add(gallery.step());
   int next=MineOutcrops.floor(l,e,mine,area,Math.min(limit,area.lastStep()),visited,wanted);
   if(next<0)for(int floor=Math.min(limit-6,area.lastStep());floor>=0;floor--)if(floor%6==0&&!visited.contains(floor)){next=floor;break;}
+  // Coarse rows can miss entire veins. If real orders remain unmet, survey each
+  // skipped landing once, within the existing staircase and working depth.
+  // This chooses a direction only: ordinary excavation still validates every block.
+  if(next<0)for(int floor=Math.min(limit,area.lastStep());floor>=0;floor--)if(!visited.contains(floor)){next=floor;break;}
   if(next<0)return false;
   t.putIntArray("surveyedFloors",visited.stream().mapToInt(Integer::intValue).toArray());t.putInt("prospectFloor",next);t.putInt("prospectLimit",limit);t.putInt("floorStep",next);
   t.putInt("extentStep",Math.max(area.lastStep(),t.getInt("extentStep")));t.putInt("step",next+1);t.putInt("cell",0);t.putInt("side",MineDrive.EAST);t.putInt("run",0);t.putInt("galleryOf",next);

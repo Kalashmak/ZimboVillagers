@@ -45,7 +45,7 @@ final class RestaurantFixture {
   *  its row or the spawn area had not ticked yet. The village's own ticket holds every chunk of its floor entity-ticking until done(). */
  private static final TicketType<UUID> HOLD=TicketType.create("villageastra_test_village",UUID::compareTo);
  private static final Map<UUID,List<ChunkPos>> HELD=new java.util.concurrent.ConcurrentHashMap<>();
- private static void hold(ServerLevel l,UUID village,BlockPos from,BlockPos to){
+ static void hold(ServerLevel l,UUID village,BlockPos from,BlockPos to){
   var chunks=new ArrayList<ChunkPos>();
   for(int cx=from.getX()>>4;cx<=to.getX()>>4;cx++)for(int cz=from.getZ()>>4;cz<=to.getZ()>>4;cz++){var cp=new ChunkPos(cx,cz);
    // Distance 2: ticket level 31, entity ticking (as a forced chunk).
@@ -82,9 +82,10 @@ final class RestaurantFixture {
  static void give(ResidentEntity npc,int priority,Goal goal){npc.onlyGoals(g->g instanceof FloatGoal||g instanceof ResidentDoorGoal,priority,goal);}
  static int count(OwnedChestEntity c,net.minecraft.world.item.Item item){int n=0;for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).is(item))n+=c.getItem(i).getCount();return n;}
  static void put(OwnedChestEntity c,ItemStack s){for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).isEmpty()){c.setItem(i,s);return;}throw new IllegalStateException("Chest full");}
+ static void release(ServerLevel l,UUID village){var held=HELD.remove(village);if(held!=null)for(var cp:held)l.getChunkSource().removeRegionTicket(HOLD,cp,2,village);}
  static void done(Village v){
   for(var r:v.s.residents())if(v.l.getEntity(r.id()) instanceof ResidentEntity npc)npc.discard();
   Dining.testDay(v.s.id(),null);SettlementData.get(v.l.getServer()).remove(v.s.id());BuildingLevels.forgetBest(v.s.id());Dining.forget();
-  var held=HELD.remove(v.s.id());if(held!=null)for(var cp:held)v.l.getChunkSource().removeRegionTicket(HOLD,cp,2,v.s.id());
+  release(v.l,v.s.id());
  }
 }

@@ -31,7 +31,7 @@ public final class CourierGameTests {
  }
  /** 14. A miner working 40 blocks from the restaurant (IV) is fed at his work by the courier: the courier loads bread at the restaurant, walks to
   *  him, serves a portion and brings the rest back; the miner never goes to the hall. */
- @GameTest(template="empty",timeoutTicks=2400) public static void aCourierFeedsAMinerAtHisWork(GameTestHelper h){
+ @GameTest(template="empty",batch="courier_meal",timeoutTicks=2400) public static void aCourierFeedsAMinerAtHisWork(GameTestHelper h){
   var v=village(h,4,"restaurant",60);put(v.kitchen(),new ItemStack(Items.BREAD,8));
   var mine=new Settlement.Building(Settlement.childId(v.s().id(),"building/mine"),"mine",50,0,6);v.s().addBuilding(mine);
   var miner=adult(v,"miner",Profession.MINER,mine);miner.ate(NOW-Population.MEAL_INTERVAL+600);var body=body(v,miner,new BlockPos(52,0,8));
@@ -39,7 +39,7 @@ public final class CourierGameTests {
   long due=miner.lastMeal()+Population.MEAL_INTERVAL;
   h.assertTrue(Dining.why(v.l(),v.e(),miner,v.kept()).equals("courier"),"The miner is the courier's, not the hall's: "+Dining.why(v.l(),v.e(),miner,v.kept()));
   h.succeedWhen(()->{
-   h.assertTrue(miner.lastMeal()==due,"Not fed yet: courier "+c.workStatus());
+   h.assertTrue(miner.lastMeal()==due,"Not fed yet: courier "+c.workStatus()+" pos="+c.position()+" miner="+body.position()+" target="+c.getNavigation().getTargetPos());
    h.assertTrue(Dining.invite(v.l(),v.e(),miner.id())==null,"He was never invited to the hall");
    h.assertTrue(body.distanceToSqr(v.center().getX()+52.5,v.center().getY(),v.center().getZ()+8.5)<9,"He ate where he works");
    h.assertTrue(count(v.kitchen(),Items.BREAD)==7,"Once back, the courier returned what it did not open: "+count(v.kitchen(),Items.BREAD)+" "+c.workStatus());

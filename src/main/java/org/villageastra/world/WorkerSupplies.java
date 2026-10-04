@@ -26,6 +26,7 @@ public final class WorkerSupplies {
    // Wooden tools are paid crafting; a miner blocked by an ore still requests its required tier.
    var requested=b.type().equals("forester")?Ingredient.of(desired,Items.WOODEN_AXE):b.type().equals("farm")?Ingredient.of(desired,Items.WOODEN_HOE):!t.contains("requiredToolState")?Ingredient.of(desired,Items.WOODEN_PICKAXE):Ingredient.of(desired);
    if(!accepted.test(held)&&HallReserve.count(l,e,hall,c,accepted::test)==0&&(ownChest==null||LogisticsRoutes.count(ownChest,accepted::test)==0))result.add(new Workshops.Want(requested,1,ownChest!=null?b.id():hall.id()));
+   if(b.type().equals("forester")&&NurserySoil.active(t)&&!t.getBoolean("soilHeld")&&HallReserve.count(l,e,hall,c,x->x.is(Items.DIRT))==0)result.add(new Workshops.Want(Ingredient.of(Items.DIRT),1,hall.id()));
    if(b.type().equals("mine")&&t.getString("stage").equals("stair")){
     var mineChest=LogisticsRoutes.chest(l,e,b);var stone=MineStairWork.stone(t);
     int missing=MineStairWork.missing(l,e,b,t)-(mineChest==null?0:LogisticsRoutes.count(mineChest,s->s.is(stone)));

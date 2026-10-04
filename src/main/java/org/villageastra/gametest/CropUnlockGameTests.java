@@ -32,8 +32,11 @@ public final class CropUnlockGameTests {
   h.assertTrue(refused,"Only crops and saplings of the village can be opened");
   h.succeed();
  }
- @GameTest(template="empty",timeoutTicks=200) public static void aCropAFarmGrewBeforeTheRuleStaysOpenedAfterTheFarmSwitchesAway(GameTestHelper h){
-  var l=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var s=StarterVillage.create(l,origin);var e=SettlementData.get(l.getServer()).entry(s.id());
+ @GameTest(template="empty",batch="crop_memory",timeoutTicks=200) public static void aCropAFarmGrewBeforeTheRuleStaysOpenedAfterTheFarmSwitchesAway(GameTestHelper h){
+  var l=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));
+  // This migration fixture needs a fresh village; previous test terrain is not part of its save.
+  for(var p:StarterVillage.layout(origin).keySet())l.setBlock(p,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2);
+  var s=StarterVillage.create(l,origin);var e=SettlementData.get(l.getServer()).entry(s.id());
   var farm=s.buildings().stream().filter(b->b.type().equals("farm")).findFirst().orElseThrow();
   var mayor=FakePlayerFactory.get(l,new GameProfile(UUID.randomUUID(),"LegacyMayor"));mayor.setPos(origin.getX(),origin.getY()+1,origin.getZ());
   s.appointPlayerMayor(mayor.getUUID());long epoch=s.governance().epoch();

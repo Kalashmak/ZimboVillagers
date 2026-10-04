@@ -303,6 +303,11 @@ public final class BuildingOrders {
   var step=HallConstructionPlan.step(op);var now=l.getBlockState(step.pos());
   if(now.equals(step.before()))return true;
   if(l.getBlockEntity(step.pos())!=null||!now.getFluidState().isEmpty()||now.is(Blocks.LADDER)||step.before().is(Blocks.LADDER)||now.is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())||step.before().is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get()))return false;
+  // Removing a roof or wall also drops its lanterns, torches and other supported
+  // decoration. An already empty demolition cell needs no second removal;
+  // it never grants materials or bypasses a core, ladder or scaffold operation.
+  if(now.isAir()&&step.after().isAir()&&!(step.before().getBlock() instanceof BuildingCoreBlock)){
+   op.put("before",NbtUtils.writeBlockState(now));return true;}
   boolean floor=step.pos().getY()<=origin.getY();
   // AD-112: a core of another grade than planned is no drift: taking it as one could let a later operation lower the grade.
   if(now.getBlock() instanceof BuildingCoreBlock||step.before().getBlock() instanceof BuildingCoreBlock)return false;

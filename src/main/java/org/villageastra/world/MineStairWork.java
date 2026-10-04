@@ -12,6 +12,28 @@ import org.villageastra.server.SettlementData;
 /** Persistent stair orders, including partial deliveries and old, skipped rows. */
 public final class MineStairWork {
  private MineStairWork(){}
+ private static final List<Item> MATERIALS=List.of(Items.COBBLESTONE,Items.COBBLED_DEEPSLATE,Items.SANDSTONE,Items.RED_SANDSTONE,Items.ANDESITE,Items.DIORITE,Items.GRANITE);
+ public static Item carriedStone(ListTag cargo){
+  Item best=Items.COBBLESTONE;int most=0;
+  for(var item:MATERIALS){int n=ResourceWorkGoal.count(cargo,item);if(n>most){best=item;most=n;}}
+  return best;
+ }
+ public static net.minecraft.world.level.block.Block stairs(Item item){
+  if(item==Items.COBBLED_DEEPSLATE)return Blocks.COBBLED_DEEPSLATE_STAIRS;
+  if(item==Items.SANDSTONE)return Blocks.SANDSTONE_STAIRS;
+  if(item==Items.RED_SANDSTONE)return Blocks.RED_SANDSTONE_STAIRS;
+  if(item==Items.ANDESITE)return Blocks.ANDESITE_STAIRS;
+  if(item==Items.DIORITE)return Blocks.DIORITE_STAIRS;
+  if(item==Items.GRANITE)return Blocks.GRANITE_STAIRS;
+  return Blocks.COBBLESTONE_STAIRS;
+ }
+ /** Old unpaid orders may use freshly excavated stone. Never reinterpret a paid receipt. */
+ public static void selectUnpaid(ServerLevel l,CompoundTag t){
+  if(t.getInt("stairPlaced")!=0||t.getBoolean("stairTaken")||t.getInt("stairTakeRound")!=0||WorldJournal.exists(l,takeId(t)))return;
+  var cargo=t.getList("cargo",Tag.TAG_COMPOUND);if(ResourceWorkGoal.count(cargo,stone(t))>0)return;
+  var chosen=carriedStone(cargo);if(ResourceWorkGoal.count(cargo,chosen)==0)return;
+  t.putString("stairItem",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(chosen).toString());
+ }
  public static UUID takeId(CompoundTag t){int round=t.getInt("stairTakeRound");return Settlement.childId(t.getUUID("operation"),round==0?"stair_take":"stair_take/"+round);}
  public static Item stone(CompoundTag t){return net.minecraft.core.registries.BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation(t.getString("stairItem")));}
  public static void reconcile(ServerLevel l,CompoundTag t){

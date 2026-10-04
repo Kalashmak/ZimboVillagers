@@ -10,7 +10,7 @@ import org.villageastra.world.*;
 public final class ResourceLeaseGameTests {
  @GameTest(template="empty",batch="resource_lease",timeoutTicks=700)
  public static void expeditionLeaseTicksItsChunkAndExpiresWithoutPersistentForce(GameTestHelper h){
-  var l=h.getLevel();var p=h.absolutePos(BlockPos.ZERO).offset(8192,0,0);var cp=new ChunkPos(p);
+  var l=h.getLevel();var p=h.absolutePos(BlockPos.ZERO).offset(1_500_000,0,0);var cp=new ChunkPos(p);
   for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++)l.getChunk(cp.x+x,cp.z+z);
   h.assertTrue(!TouchLoad.ticking(l,p),"A distant loaded chunk initially does not tick entities");
   var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(p.getX()+.5,p.getY(),p.getZ()+.5);ResourceExpedition.hold(npc);
@@ -21,7 +21,7 @@ public final class ResourceLeaseGameTests {
  }
  @GameTest(template="empty",batch="resource_lease_resume",timeoutTicks=2400)
  public static void loadedSavedTripResumesWithoutWaitingForItsFirstEntityTick(GameTestHelper h){
-  var l=h.getLevel();var p=h.absolutePos(BlockPos.ZERO).offset(24576,0,0);var cp=new ChunkPos(p);
+  var l=h.getLevel();var p=h.absolutePos(BlockPos.ZERO).offset(1_500_512,0,0);var cp=new ChunkPos(p);
   for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++)l.getChunk(cp.x+x,cp.z+z);
   var s=new org.villageastra.domain.Settlement(java.util.UUID.randomUUID());var home=java.util.UUID.randomUUID();s.addHome(new org.villageastra.domain.Settlement.Home(home,1,8,true));
   var e=new org.villageastra.server.SettlementData.Entry(s,l.dimension().location().toString(),p);org.villageastra.server.SettlementData.get(l.getServer()).add(e);

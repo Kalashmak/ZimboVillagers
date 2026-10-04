@@ -145,6 +145,6 @@ public final class MineWork {
  public static boolean diggable(BlockState s){
   if(s.isAir()||s.is(Blocks.BEDROCK)||!s.getFluidState().isEmpty())return false;
   return s.is(BlockTags.BASE_STONE_OVERWORLD)||s.is(BlockTags.COAL_ORES)||s.is(BlockTags.IRON_ORES)||s.is(BlockTags.COPPER_ORES)||s.is(BlockTags.GOLD_ORES)
-   ||s.is(BlockTags.REDSTONE_ORES)||s.is(BlockTags.LAPIS_ORES)||s.is(BlockTags.DIAMOND_ORES)||s.is(BlockTags.DIRT)||s.is(Blocks.GRAVEL)||s.is(BlockTags.SAND)||s.is(Blocks.CLAY)||s.is(Blocks.TUFF)||s.is(Blocks.CALCITE)||s.is(Blocks.DRIPSTONE_BLOCK);
+   ||s.is(BlockTags.REDSTONE_ORES)||s.is(BlockTags.LAPIS_ORES)||s.is(BlockTags.DIAMOND_ORES)||s.is(BlockTags.DIRT)||s.is(Blocks.GRAVEL)||s.is(BlockTags.SAND)||s.is(Blocks.SANDSTONE)||s.is(Blocks.RED_SANDSTONE)||s.is(Blocks.CLAY)||s.is(Blocks.TUFF)||s.is(Blocks.CALCITE)||s.is(Blocks.DRIPSTONE_BLOCK);
  }
 }

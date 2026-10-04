@@ -26,6 +26,12 @@ if progress:
 audits = re.findall(r'ASTRA_AUTONOMY_GROWTH audit [^\r\n]+', text)
 if not audits or 'absent=[]' not in audits[-1]:
     errors.append('required workplaces missing')
+terminal = re.findall(r'ASTRA_AUTONOMY_GROWTH terminal blockers=([^\r\n]+)', text)
+if not terminal or terminal[-1] != '{}':
+    errors.append('terminal building geometry or working levels not verified')
+for milestone in ('first_house', 'population_growth', 'first_research', 'civilization_6'):
+    if not re.search(r'ASTRA_AUTONOMY_GROWTH milestone=' + milestone + r' active=\d+', text):
+        errors.append('missing observed milestone: ' + milestone)
 if errors:
     sys.exit('; '.join(errors))
 print('PASSED: natural starter village completed all progression without player supplies')

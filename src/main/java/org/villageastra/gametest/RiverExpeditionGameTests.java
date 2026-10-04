@@ -11,8 +11,14 @@ import org.villageastra.world.*;
 public final class RiverExpeditionGameTests {
  @GameTest(template="empty",batch="river_expedition",timeoutTicks=7000)
  public static void distantWorkerFindsAndWalksAReturnableRouteAcrossRiverTerrain(GameTestHelper h){
-  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+53248,90,at.getZ());var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
-  for(int x=(base.getX()-4)>>4;x<=(base.getX()+184)>>4;x++)for(int z=(base.getZ()-124)>>4;z<=(base.getZ()+124)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);}
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var anchor=new BlockPos(at.getX()+53248,90,at.getZ());var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
+  for(int x=(anchor.getX()-4)>>4;x<=(anchor.getX()+184)>>4;x++)for(int z=(anchor.getZ()-124)>>4;z<=(anchor.getZ()+124)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(cp.x,cp.z,true);forced.add(cp);}l.getChunk(x,z);}
+  // Batch placement changes X/Z. Keep this controlled river above generated hills and trees,
+  // otherwise its dirt floor at Y=90 leaves unrelated terrain inside the walking volume.
+  int surface=86;for(int x=-4;x<=184;x++)for(int z=-124;z<=124;z++)surface=Math.max(surface,l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.WORLD_SURFACE,anchor.getX()+x,anchor.getZ()+z));
+  final var base=new BlockPos(anchor.getX(),surface+4,anchor.getZ());
+  h.assertTrue(base.getY()+3<l.getMaxBuildHeight(),"Controlled river fits above generated terrain");
+  com.mojang.logging.LogUtils.getLogger().info("ASTRA_RIVER_FIXTURE surface={} floor={}",surface,base.getY());
   for(int x=-4;x<=184;x++)for(int z=-124;z<=124;z++){
    l.setBlock(base.offset(x,0,z),Blocks.DIRT.defaultBlockState(),2);
    if(x>=90&&x<=109&&Math.abs(z)<=120){l.setBlock(base.offset(x,-4,z),Blocks.STONE.defaultBlockState(),2);for(int y=-3;y<=0;y++)l.setBlock(base.offset(x,y,z),Blocks.WATER.defaultBlockState(),2);}

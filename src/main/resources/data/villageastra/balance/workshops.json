@@ -324,6 +324,19 @@
     },
     "smithy": {
       "profession": "blacksmith",
+      "custom": [{
+        "id": "reinforced_terminal_ring",
+        "min_level": 5,
+        "inputs": [
+          {"item": "minecraft:iron_ingot", "count": 36},
+          {"item": "minecraft:copper_ingot", "count": 36},
+          {"item": "minecraft:gold_ingot", "count": 36},
+          {"item": "minecraft:diamond", "count": 36}
+        ],
+        "outputs": [{"item": "villageastra:core_ring_6", "count": 1}],
+        "fuel_ticks": 1600,
+        "labor_seconds": 180
+      }],
       "modes": [
         "crafting",
         "smelting"
@@ -379,7 +392,7 @@
         "minecraft:diamond_chestplate",
         "minecraft:diamond_leggings",
         "minecraft:diamond_boots"
-      ], "4": ["villageastra:wolf_armor"]}
+      ], "4": ["villageastra:wolf_armor"], "5": ["minecraft:netherite_scrap", "minecraft:netherite_ingot", "minecraft:netherite_block"]}
     },
     "town_hall": {
       "profession": "builder",

@@ -17,8 +17,9 @@ import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class CartographyLadderGameTests {
  private record Office(ServerLevel l,Settlement s,SettlementData.Entry e,Settlement.Building house){}
- private static Office office(GameTestHelper h){
-  var l=h.getLevel();var center=h.absolutePos(new BlockPos(8,3,8));var s=new Settlement(UUID.randomUUID());
+ private static Office office(GameTestHelper h){return office(h,h.absolutePos(new BlockPos(8,3,8)));}
+ private static Office office(GameTestHelper h,BlockPos center){
+  var l=h.getLevel();var s=new Settlement(UUID.randomUUID());
   var house=new Settlement.Building(Settlement.childId(s.id(),"building/cartographer"),"cartographer",0,0,0);s.addBuilding(house);
   for(int x=-6;x<14;x++)for(int z=-6;z<14;z++){l.setBlock(center.offset(x,0,z),Blocks.STONE.defaultBlockState(),2);
    for(int y=1;y<5;y++)l.setBlock(center.offset(x,y,z),Blocks.AIR.defaultBlockState(),2);}
@@ -78,7 +79,8 @@ public final class CartographyLadderGameTests {
   }finally{Atlas.forgetMargins();BuildingLevels.forgetBest(o.s.id());SettlementData.get(o.l.getServer()).remove(o.s.id());}
  }
  @GameTest(template="empty",timeoutTicks=300) public static void theSecondCartographerFindsTheNeighbours(GameTestHelper h){
-  var o=office(h);
+  // The discovery scenario has exactly its own neighbours, independent of prior test settlements.
+  var o=office(h,new BlockPos(2_500_000,160,2_500_000));
   // A neighbour within the embassy's reach, with a name of its own, and nothing else between them.
   var l=o.l;var other=new Settlement(UUID.randomUUID());other.name("Соседово");
   other.addBuilding(new Settlement.Building(Settlement.childId(other.id(),"building/town_hall"),"town_hall",0,0,0));

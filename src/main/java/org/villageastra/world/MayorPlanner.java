@@ -75,7 +75,7 @@ public final class MayorPlanner {
   *  hall or is one the village can make more of from what it brings in (Workshops.producible, recursive: the workshops and annexes it has
   *  and the hall's crafts, down to the raw output of its farm, forester's hut, mine and pen). The order reserves what lies there (HallReserve)
   *  and the shortfall becomes workshop demand (Workshops.wants). An item only a workshop the village lacks makes, or a raw resource nobody
-  *  brings in (netherite: ring VI without a player's block), still refuses the order, so a village of its own stops at level V. */
+  *  brings in (ancient debris without a physical supply source), still refuses the order. */
  public static boolean affordable(ServerLevel l,SettlementData.Entry e,Settlement.Building b){return affordable(l,e,BuildingTiers.cost(b.type(),BuildingTiers.built(e,b)+1,b.wood()));}
  public static boolean affordable(ServerLevel l,SettlementData.Entry e,Map<String,Integer> cost){
   var hall=Workshops.hall(e);var chest=hall==null?null:LogisticsRoutes.chest(l,e,hall);if(chest==null)return false;
@@ -166,7 +166,9 @@ public final class MayorPlanner {
  /** One bounded planning pass: the current need and, if found, a surveyed site. */
  public static Proposal plan(ServerLevel l,SettlementData.Entry e){
   var s=e.settlement();if(!npcMayor(s)||HallUpgradeGoal.pending(l,s.id()))return null;
-  var design=wanted(l,e);if(design==null)return null;var site=site(l,e,design);if(site==null)return null;
+  var design=wanted(l,e);if(design==null)return null;
+  if(BuildingOrders.HOUSING.contains(BuildingBlueprints.base(design))&&BuildingWood.choose(l,e,design).isEmpty())return null;
+  var site=site(l,e,design);if(site==null)return null;
   var proposal=new Proposal(design,site,"shortage");PROPOSALS.put(s.id(),proposal);return proposal;
  }
  /** Called by the mayor standing at the site: re-survey and approve through the same paid queue as a player order. */
@@ -174,6 +176,7 @@ public final class MayorPlanner {
   var p=PROPOSALS.get(e.settlement().id());if(p==null)return "no_proposal";
   if(mayor.distanceToSqr(p.site().getX()+.5,p.site().getY()+1,p.site().getZ()+.5)>BuildingOrders.SITE_DISTANCE*BuildingOrders.SITE_DISTANCE)return "walking";
   if(!GrowthPlots.available(e,p.design(),p.site(),0)){PROPOSALS.remove(e.settlement().id());return "rejected_growth_space";}
+  if(BuildingOrders.HOUSING.contains(BuildingBlueprints.base(p.design()))&&BuildingWood.choose(l,e,p.design()).isEmpty()){PROPOSALS.remove(e.settlement().id());return "rejected_timber_source";}
   var reason=BuildingOrders.approve(l,e,p.design(),0,p.site());PROPOSALS.remove(e.settlement().id());
   if(reason.isEmpty()){SettlementData.get(l.getServer()).setDirty();return "approved";}
   return "rejected_"+reason;

@@ -35,7 +35,7 @@ public final class NaturalFurnace {
  private static boolean legacyFuel(ServerLevel l,CompoundTag t,BlockPos at){int bank=t.getInt("fuelBank");if(bank<=0)return false;int amount=Math.min(32766,bank),credit=t.getInt("fuelCredits");if(!WorldJournal.furnaceCredit(l,op(t,"smelt/legacy_fuel/"+credit),at,amount))return false;t.putInt("fuelBank",bank-amount);t.putInt("fuelCredits",credit+1);return true;}
  private static ItemStack take(ServerLevel l,CompoundTag t,String key,BlockPos at,net.minecraft.world.Container c,int slot,int count){var id=op(t,key);var old=WorldJournal.recoverAmount(l,id);if(!old.isEmpty()||WorldJournal.exists(l,id))return old;var stack=c.getItem(slot);return stack.isEmpty()?ItemStack.EMPTY:WorldJournal.takeAmount(l,id,at,slot,stack.copy(),Math.min(count,stack.getCount()));}
  /** Keep sticks/planks for crafting when dedicated fuel is available, irrespective of chest slot order. */
- private static int fuelSlot(net.minecraft.world.Container chest){int fallback=-1;for(int i=0;i<chest.getContainerSize();i++){var s=chest.getItem(i);if(net.minecraftforge.common.ForgeHooks.getBurnTime(s,RecipeType.SMELTING)<=0||s.hasCraftingRemainingItem())continue;if(s.is(Items.COAL)||s.is(Items.CHARCOAL))return i;if(fallback<0)fallback=i;}return fallback;}
+ private static int fuelSlot(net.minecraft.world.Container chest){int fallback=-1;for(int i=0;i<chest.getContainerSize();i++){var s=chest.getItem(i);if(WorkshopFuel.ticks(s)<=0)continue;if(s.is(Items.COAL)||s.is(Items.CHARCOAL)||s.is(Items.COAL_BLOCK)||s.is(Items.DRIED_KELP_BLOCK))return i;if(fallback<0)fallback=i;}return fallback;}
  public static String advance(ServerLevel l,SettlementData.Entry e,Settlement.Building b,CompoundTag t,long now){
   var chest=LogisticsRoutes.chest(l,e,b);if(chest==null)return "workshop_missing_chest";
   if(t.getString("stage").equals("smelt_deliver")){
@@ -55,8 +55,8 @@ public final class NaturalFurnace {
    if(!WorldJournal.putSlot(l,op(t,"smelt/put_raw"),at,0,ItemStack.of(t.getCompound("carried"))))return "output_full";t.remove("carried");t.putString("stage","smelt_wait");
    legacyFuel(l,t,at);
   }else if(stage.equals("smelt_fuel")){
-   String key="smelt/fuel/"+t.getInt("fuels");var carried=WorldJournal.recoverAmount(l,op(t,key));if(carried.isEmpty()){int slot=fuelSlot(chest);if(slot>=0)carried=take(l,t,key,stock,chest,slot,1);}
-   if(carried.isEmpty())return missing(l,b,t,Ingredient.of(Items.COAL,Items.CHARCOAL),1);t.put("carried",carried.save(new CompoundTag()));t.putString("stage","smelt_put_fuel");
+   String key="smelt/fuel/"+t.getInt("fuels");var carried=WorldJournal.recoverAmount(l,op(t,key));if(carried.isEmpty()){int slot=fuelSlot(b.type().equals("town_hall")?HallReserve.view(l,e,chest):chest);if(slot>=0)carried=take(l,t,key,stock,chest,slot,1);}
+   if(carried.isEmpty())return missing(l,b,t,WorkshopFuel.demand(),1);t.put("carried",carried.save(new CompoundTag()));t.putString("stage","smelt_put_fuel");
   }else if(stage.equals("smelt_put_fuel")){
    if(!WorldJournal.putSlot(l,op(t,"smelt/put_fuel/"+t.getInt("fuels")),at,1,ItemStack.of(t.getCompound("carried"))))return "output_full";t.remove("carried");t.putInt("fuels",t.getInt("fuels")+1);t.putString("stage","smelt_wait");
   }else if(stage.equals("smelt_wait")){

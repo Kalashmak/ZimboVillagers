@@ -15,9 +15,26 @@ public final class BuildingWood {
  private static final List<String> KINDS=List.of("dark_oak","spruce","birch","jungle","acacia","cherry","oak");
  public static String choose(ServerLevel l,SettlementData.Entry e,String design) {
   if(!BuildingOrders.HOUSING.contains(BuildingBlueprints.base(design)))return "";
+  boolean surveyed=true;
   for(var hut:e.settlement().buildings())if(hut.type().equals("forester")){
    var tree=ForestWork.next(l,e,hut,BuildingLevels.level(l,e,hut),ForesterHut.door(e,hut),0,l.getGameTime());
    if(tree!=null&&tree.sapling()!=null){var key=BuiltInRegistries.ITEM.getKey(tree.sapling()).getPath();return key.substring(0,key.length()-"_sapling".length());}
+   surveyed&=ForestWork.searched(hut.id());
+  }
+  if(surveyed){
+   String selected="";int most=0;
+   for(var kind:KINDS){int stock=0;
+    var log=BuiltInRegistries.ITEM.get(new ResourceLocation("minecraft",kind+"_log"));
+    var sapling=BuiltInRegistries.ITEM.get(new ResourceLocation("minecraft",kind+"_sapling"));
+    for(var building:e.settlement().buildings())if(building.type().equals("town_hall")||building.type().equals("forester")){
+     var chest=LogisticsRoutes.chest(l,e,building);if(chest==null)continue;
+     stock+=LogisticsRoutes.count(chest,s->s.is(log));
+     int plants=LogisticsRoutes.count(chest,s->s.is(sapling));
+     if(!kind.equals("dark_oak")||plants>=4)stock+=plants;
+    }
+    if(stock>most){most=stock;selected=kind;}
+   }
+   if(!selected.isEmpty())return selected;
   }
   // No observed supply: keep the quoted design rather than inventing a timber source.
   return "";
