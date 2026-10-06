@@ -209,6 +209,7 @@ public final class MayorPlanner {
   var s=e.settlement();if(!npcMayor(s))return;var l=server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,new net.minecraft.resources.ResourceLocation(e.dimension())));if(l==null)return;
   FoodConstruction.resume(l,e);
   FarmStockProject.requote(l,e);
+  FarmFieldTimber.requote(l,e);
   // An unfunded building must not freeze the independent research/material queue.
   if(data.clock().ticks()%PLAN_INTERVAL<20)BookResearch.autoSelect(l,e);
   if(HallUpgradeGoal.pending(l,s.id())&&!FoodConstruction.maySuspend(l,e)){PROPOSALS.remove(s.id());if(data.clock().ticks()%WATCH_EVERY<20){LocalBuildingTimber.requote(l,e);watch(l,e,l.getGameTime());}return;}

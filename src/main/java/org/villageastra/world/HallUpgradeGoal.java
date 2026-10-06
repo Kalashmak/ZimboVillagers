@@ -694,7 +694,7 @@ public final class HallUpgradeGoal extends Goal {
    var candidateSite=candidate.contains("site")?BlockPos.of(candidate.getLong("site")):origin;
    boolean here=!candidate.contains("stand")?!aloft(candidateSite)&&!l.getBlockState(worker.blockPosition()).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())&&eye.distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(cell))<=reachSq
      :BlockPos.of(candidate.getLong("stand")).equals(worker.blockPosition());
-   if(placing&&here&&wanted.after().canSurvive(l,cell)&&BuildingOrders.reconcile(l,candidate,BlockPos.of(state.getLong("origin"))))handy=i;
+   if(placing&&here&&wanted.after().canSurvive(l,cell)&&BuildingOrders.reconcile(l,candidate,BlockPos.of(state.getLong("origin")),state))handy=i;
   }
   if(chosen<0&&!helper){
    // Everything left is on a retry pause: the earliest unfinished operation is taken up again at once instead of the site standing idle.
@@ -710,6 +710,7 @@ public final class HallUpgradeGoal extends Goal {
    +" shift="+worker.isShiftKeyDown()+" climb="+worker.onClimbable()+" move="+String.format(java.util.Locale.ROOT,"%.2f,%.2f",worker.getDeltaMovement().x,worker.getDeltaMovement().z);
   if(worker.tickCount%20==0)opDiag=lastOp;
   // A cell nobody can reach right now waits its turn instead of stopping the whole site: it is retried whenever the rest of the site has moved on.
+  if(stuckTicks>=100&&CanopyAccess.append(l,worker,state,op,reachSq)){save();stuckIndex=-1;modeIndex=-1;worker.workStatus("planning_access");return;}
   if(stuckIndex!=current){stuckIndex=current;stuckTicks=0;}
   else if(++stuckTicks>300&&(!op.contains("deferredAt")||op.getInt("deferredAt")<state.getInt("progress"))){
    op.putInt("deferred",op.getInt("deferred")+1);op.putInt("deferredAt",state.getInt("progress"));op.putLong("retry",gameTime+2400);
@@ -731,7 +732,7 @@ public final class HallUpgradeGoal extends Goal {
    op.putInt("deferred",op.getInt("deferred")+1);op.putInt("deferredAt",state.getInt("progress"));op.putLong("retry",gameTime+200);
    state.putInt("deferrals",state.getInt("deferrals")+1);save();stuckIndex=-1;stuckTicks=0;modeIndex=-1;worker.workStatus("column_in_the_way");return;
   }
-  if(!op.getBoolean("dismantle")&&!BuildingOrders.reconcile(l,op,site)){worker.workStatus("changed_target");return;}
+  if(!op.getBoolean("dismantle")&&!BuildingOrders.reconcile(l,op,site,state)){worker.workStatus("changed_target");return;}
   var planned=HallConstructionPlan.step(op);var target=planned.pos();
   if(planned.before().equals(planned.after())){op.putBoolean("done",true);state.putInt("progress",state.getInt("progress")+1);save();return;}
   // AD-112 (owner, 2026-09-19): a core or ring goes in only once its level's research of this building's branch is done; until then that

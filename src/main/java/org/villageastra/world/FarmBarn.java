@@ -216,7 +216,7 @@ public final class FarmBarn {
    // An unchanged deck or roof in the column's shaft still has to be restored
    // after the paid scaffold is removed. Reserve its replacement explicitly.
    if(same(now,after)&&!(column&&caps(after)))continue;
-   boolean mine=own.contains(now)&&layout(from).containsKey(local)||now.is(Blocks.FARMLAND)||now.equals(FarmField.COVER)&&local.getY()%FarmField.FLOOR_PITCH==1;
+   boolean mine=own.contains(now)&&layout(from).containsKey(local)||now.is(Blocks.FARMLAND)||FarmField.waterCover(now,b)&&local.getY()%FarmField.FLOOR_PITCH==1;
    boolean fluid=!now.getFluidState().isEmpty()&&!(now.is(Blocks.WATER)&&after.is(Blocks.WATER));
    if(l.getBlockEntity(pos)!=null&&!mine||fluid||!mine&&!FarmField.natural(now)||local.getY()<=1&&(Roads.cell(l,pos)!=null)){conflicts.add(pos);continue;}
    var it=items(column&&caps(after)?AIR:now,after);if(it==null)return new BarnPlan(new ListTag(),Map.of(),conflicts,"material");

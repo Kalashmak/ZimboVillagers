@@ -289,9 +289,9 @@ public final class BuildingOrders {
   if(repair==null&&BuildingBlueprints.base(design).equals(Walls.TOWER))state.putInt("upgradeLevel",BuildingBlueprints.level(design));
   if(repair!=null){state.putBoolean("repair",true);state.putUUID("building",repair.id());}
   if(repair==null&&design.equals("farm")&&conflicts.isEmpty()){
-   var offset=origin.subtract(e.center());var farm=new Settlement.Building(buildingId(state),"farm",offset.getX(),offset.getY(),offset.getZ(),variant);
+   var offset=origin.subtract(e.center());var farm=new Settlement.Building(buildingId(state),"farm",offset.getX(),offset.getY(),offset.getZ(),variant,1,wood);
    var field=FarmField.initial(l,e,farm);if(!field.ok())return new Survey(state,field.conflicts(),field.reason());
-   for(var op:field.ops())list.add(op);field.cost().forEach((k,v)->cost.putInt(k,cost.getInt(k)+v));state.putInt("fieldLevel",1);
+   for(var op:field.ops())list.add(op);field.cost().forEach((k,v)->cost.putInt(k,cost.getInt(k)+v));state.putInt("fieldLevel",1);state.putInt("fieldTimberRevision",328);
   }
   return new Survey(state,conflicts,conflicts.isEmpty()?"":"conflicts");
  }
@@ -311,6 +311,10 @@ public final class BuildingOrders {
   HallUpgradeGoal.enqueue(l,e,survey.state());SettlementData.get(l.getServer()).setDirty();return "";
  }
  /** Natural drift since the survey (snowy grass, stair shape, grass spreading, vanished plants) is accepted; player-made or protected changes are not. */
+ public static boolean reconcile(ServerLevel l,CompoundTag op,BlockPos origin,CompoundTag project){
+  if(FieldWaterDrift.reconcile(l,project,op))return true;
+  return reconcile(l,op,origin);
+ }
  public static boolean reconcile(ServerLevel l,CompoundTag op,BlockPos origin){
   var step=HallConstructionPlan.step(op);var now=l.getBlockState(step.pos());
   if(now.equals(step.before()))return true;

@@ -318,8 +318,10 @@ public final class Workshops {
   for(var job:candidates(l,spec,target,wanted)){
    if(recyclesNeededMaterial(job,visiting))continue;
    if(supplied(chest,job,bank))return job;
-   // AD-104 P2: a custom batch shrinks to the whole units the chest and the bank pay for, so the mill grinds the wheat it has instead of waiting for sixteen.
-   if(job.units()>1&&job.recipe().startsWith("custom:")){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)return scale(unit,Math.min(job.units(),fit));}
+   // Start whole affordable units of custom work or vanilla smelting rather
+   // than strand three paid inputs while waiting for a fourth. Unit costs,
+   // fuel, labor and the maximum batch remain unchanged.
+   if(job.units()>1&&(job.recipe().startsWith("custom:")||NaturalFurnace.recipe(l,job))){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)return scale(unit,Math.min(job.units(),fit));}
    if(depth>=(spec.building().equals("town_hall")?12:3))continue;
    for(var in:dependencies(job)){int missing=in.count()-available(chest,in);if(missing<=0)continue;
     for(var option:in.ingredient().getItems()){var sub=plan(l,spec,chest,option.getItem(),missing,depth+1,bank,memo,visiting);if(sub!=null)return sub;}}

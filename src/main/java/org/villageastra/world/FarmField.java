@@ -192,6 +192,9 @@ public final class FarmField {
  /** What stands over a module's water: a slab, as players cover a farm's water — ice forms only on open water, so the field stays wet in
   *  a snowy biome (the world generator freezes open water after the village is laid, and snowfall freezes it later), and nobody steps in. */
  public static final BlockState COVER=Blocks.OAK_SLAB.defaultBlockState();
+ /** Paid new fields use the farmhouse's frozen timber; old covers remain valid. */
+ public static BlockState cover(Settlement.Building b){return BuildingWood.replace(COVER,b.wood());}
+ public static boolean waterCover(BlockState state,Settlement.Building b){return state.equals(COVER)||state.equals(cover(b));}
  /** Layers of air laid over the field (y 2..HEADROOM): no bush, drift, bank or low branch stands on the plots or shades them. */
  public static final int HEADROOM=3;
  /** The field as the world generator lays it for a farm standing unturned at base: moist farmland, one covered water source per module and
@@ -246,7 +249,8 @@ public final class FarmField {
   var box=box(modules(e,b));int wide=BuildingPlacement.size(b.type(),0)[0];
   record Op(BlockPos pos,BlockState before,BlockState after,String item){}
   var clears=new ArrayList<Op>();var supports=new ArrayList<Op>();var ground=new ArrayList<Op>();var water=new ArrayList<Op>();var cover=new ArrayList<Op>();
-  var air=Blocks.AIR.defaultBlockState();var dirt=Blocks.DIRT.defaultBlockState();
+  var air=Blocks.AIR.defaultBlockState();var dirt=Blocks.DIRT.defaultBlockState();var localCover=cover(b);
+  String coverItem=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(localCover.getBlock().asItem()).toString();
   for(int lv=from+1;lv<=level;lv++)for(var m:added(lv,west,legacy)){if(floor(m)>0)continue;var wet=localWater(m);
    for(var column:localColumns(List.of(m))){
     var g=BuildingPlacement.at(e,b,column.getX(),0,column.getZ());boolean spring=column.equals(wet);
@@ -255,16 +259,16 @@ public final class FarmField {
     if(!own&&org.villageastra.server.MayorSurvey.underBuilding(l,g)||Roads.cell(l,g)!=null||Roads.cell(l,g.above())!=null){conflicts.add(g);continue;}
     boolean blocked=false;
     for(int y=0;y<=HEADROOM+8&&!blocked;y++){var p=g.above(y);var now=l.getBlockState(p);
-     if(y<=HEADROOM)blocked=l.getBlockEntity(p)!=null||!now.getFluidState().isEmpty()&&!(spring&&y==0)||!natural(now)&&!(spring&&y==0&&now.getFluidState().isSource()&&now.is(Blocks.WATER))&&!(spring&&y==1&&now.equals(COVER));
+     if(y<=HEADROOM)blocked=l.getBlockEntity(p)!=null||!now.getFluidState().isEmpty()&&!(spring&&y==0)||!natural(now)&&!(spring&&y==0&&now.getFluidState().isSource()&&now.is(Blocks.WATER))&&!(spring&&y==1&&waterCover(now,b));
      else blocked=!now.isAir()&&!now.is(BlockTags.LEAVES)&&now.canOcclude();
      if(blocked)conflicts.add(p);}
     if(blocked)continue;
-    for(int y=HEADROOM;y>=1;y--){var p=g.above(y);var now=l.getBlockState(p);if(!now.isAir()&&!(spring&&y==1&&now.equals(COVER)))clears.add(new Op(p,now,air,""));}
+    for(int y=HEADROOM;y>=1;y--){var p=g.above(y);var now=l.getBlockState(p);if(!now.isAir()&&!(spring&&y==1&&waterCover(now,b)))clears.add(new Op(p,now,air,""));}
     var now=l.getBlockState(g);
     if(spring){var below=l.getBlockState(g.below());
      if(below.getFluidState().isEmpty()&&(below.isAir()||below.canBeReplaced()||!below.isFaceSturdy(l,g.below(),Direction.UP))&&l.getBlockEntity(g.below())==null)supports.add(new Op(g.below(),below,dirt,""));
      if(!(now.is(Blocks.WATER)&&now.getFluidState().isSource()))water.add(new Op(g,now,Blocks.WATER.defaultBlockState(),""));
-     if(!l.getBlockState(g.above()).equals(COVER))cover.add(new Op(g.above(),air,COVER,COVER_ITEM));}
+     if(!waterCover(l.getBlockState(g.above()),b))cover.add(new Op(g.above(),air,localCover,coverItem));}
     else if(!soil(now))ground.add(new Op(g,now,dirt,""));
    }}
   if(!conflicts.isEmpty())return new FieldPlan(new ListTag(),Map.of(),conflicts,"field",west);
