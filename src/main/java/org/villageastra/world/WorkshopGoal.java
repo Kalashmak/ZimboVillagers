@@ -6,10 +6,12 @@ import net.minecraft.world.item.ItemStack;
 import org.villageastra.server.SettlementData;
 /** AD-029: the assigned worker walks to the workshop chest and advances the durable job only while standing there. */
 public final class WorkshopGoal extends Goal {
- private final ResidentEntity worker;private final boolean withoutPlayers;private int lastCheck=-100;private boolean useful,yielded;
+ private final ResidentEntity worker;private final boolean withoutPlayers;private final java.util.function.LongSupplier jobClock;private int lastCheck=-100;private boolean useful,yielded;
  public WorkshopGoal(ResidentEntity worker){this(worker,false);}
  /** For GameTests, which have no player online. */
- public WorkshopGoal(ResidentEntity worker,boolean withoutPlayers){this.worker=worker;this.withoutPlayers=withoutPlayers;setFlags(EnumSet.of(Flag.MOVE,Flag.LOOK));}
+ public WorkshopGoal(ResidentEntity worker,boolean withoutPlayers){this(worker,withoutPlayers,()->SettlementData.get(worker.getServer()).clock().ticks());}
+ /** Physical tests without players may use actual game ticks, without moving the production clock. */
+ public WorkshopGoal(ResidentEntity worker,boolean withoutPlayers,java.util.function.LongSupplier jobClock){this.worker=worker;this.withoutPlayers=withoutPlayers;this.jobClock=jobClock;setFlags(EnumSet.of(Flag.MOVE,Flag.LOOK));}
  private org.villageastra.domain.Settlement.Building workplace(SettlementData.Entry e){var b=e.settlement().workplace(worker.getUUID());var r=e.settlement().resident(worker.getUUID());return b==null&&r!=null&&r.life()==org.villageastra.domain.Resident.Life.ADULT&&r.profession()==null?Workshops.hall(e):b;}
  private SettlementData.Entry entry(){
   if(!(worker.level() instanceof ServerLevel l)||!withoutPlayers&&worker.getServer().getPlayerCount()==0||worker.settlementId()==null||worker.escortPlayer()!=null||!worker.isAlive())return null;
@@ -27,7 +29,7 @@ public final class WorkshopGoal extends Goal {
   // AD-104 P2: a station with nothing to make now still says what it lacks, so the porters bring it. Its needs were written only by a job
   // turn, and a turn needs something to make: a new bakery with an empty chest waited for flour it never asked for. Idle, the turn only
   // records the needs (the station's record is idle, and no job can be planned from this chest).
-  if(t.isEmpty()||t.getString("stage").equals("idle"))Workshops.advance(l,e,b,SettlementData.get(l.getServer()).clock().ticks(),wants);
+  if(t.isEmpty()||t.getString("stage").equals("idle"))Workshops.advance(l,e,b,jobClock.getAsLong(),wants);
   return false;
  }
  /** The hall's simple crafting gives way while the village's hand bread wants this worker (HandBreadGoal.calls). */
@@ -52,8 +54,8 @@ public final class WorkshopGoal extends Goal {
   var sight=l.clip(new net.minecraft.world.level.ClipContext(worker.getEyePosition(),net.minecraft.world.phys.Vec3.atCenterOf(pos),net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,worker));
   if(worker.distanceToSqr(pos.getX()+1.5,pos.getY(),pos.getZ()+.5)>6.25||sight.getType()!=net.minecraft.world.phys.HitResult.Type.MISS&&!sight.getBlockPos().equals(pos)){worker.getNavigation().moveTo(pos.getX()+1.5,pos.getY(),pos.getZ()+.5,.8);worker.workStatus("walking");return;}
   worker.getNavigation().stop();if(worker.tickCount%20!=0)return;
-  if(b.type().equals("town_hall")&&HallPacking.advance(l,e,SettlementData.get(l.getServer()).clock().ticks())){worker.workStatus("working");return;}
-  var status=Workshops.advance(l,e,b,SettlementData.get(l.getServer()).clock().ticks(),Workshops.wants(l,e),worker.getUUID());worker.workStatus(status);
+  if(b.type().equals("town_hall")&&HallPacking.advance(l,e,jobClock.getAsLong())){worker.workStatus("working");return;}
+  var status=Workshops.advance(l,e,b,jobClock.getAsLong(),Workshops.wants(l,e),worker.getUUID());worker.workStatus(status);
   var t=Workshops.inspect(l,b.id());worker.displayWorkItem(t.getBoolean("physicalSmelt")?ItemStack.of(t.getCompound("carried")):t.contains("outputs")&&!t.getString("stage").equals("idle")?ItemStack.of(t.getList("outputs",10).getCompound(0)):ItemStack.EMPTY);
   if(status.equals("workshop_idle")||status.equals("workshop_missing_inputs")){useful=false;lastCheck=worker.tickCount;}
  }

@@ -21,6 +21,22 @@ public final class NaturalFurnace {
  private static String missing(ServerLevel l,Settlement.Building b,CompoundTag t,Ingredient ingredient,int count){var list=new ListTag();var in=new CompoundTag();in.putString("ingredient",ingredient.toJson().toString());in.putInt("count",count);list.add(in);t.put("needs",list);save(l,b,t);return "workshop_missing_inputs";}
  private static UUID op(CompoundTag t,String suffix){return Settlement.childId(t.getUUID("id"),suffix);}
  public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle"))return true;if(t.hasUUID("worker"))return t.getUUID("worker").equals(worker);t.putUUID("worker",worker);save(l,b,t);return true;}
+ /** Finish paid transfers before an emergency bread turn; a burning furnace
+  * still leaves its carrier free to bake while it cooks. Observation only. */
+ public static boolean finishing(ResidentEntity worker,SettlementData.Entry e){
+  var l=(ServerLevel)worker.level();var b=e.settlement().workplace(worker.getUUID());if(b==null)b=Workshops.hall(e);if(b==null)return false;
+  var t=Workshops.inspect(l,b.id());if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle")||!t.hasUUID("worker")||!t.getUUID("worker").equals(worker.getUUID()))return false;
+  if(!ItemStack.of(t.getCompound("carried")).isEmpty())return true;
+  String stage=t.getString("stage");if(!Set.of("smelt_wait","smelt_fuel").contains(stage)||!t.contains("furnace"))return false;
+  var at=BlockPos.of(t.getLong("furnace"));if(!l.hasChunkAt(at)||!(l.getBlockEntity(at) instanceof FurnaceBlockEntity f))return false;
+  if(stage.equals("smelt_wait")){
+   var expected=ItemStack.of(t.getList("outputs",Tag.TAG_COMPOUND).getCompound(0));var output=f.getItem(2);
+   if(!expected.isEmpty()&&output.is(expected.getItem())&&output.getCount()>=expected.getCount()||WorldJournal.exists(l,op(t,"smelt/output")))return true;
+   if(f.getBlockState().getValue(net.minecraft.world.level.block.FurnaceBlock.LIT)||!f.getItem(1).isEmpty())return false;
+  }
+  var chest=LogisticsRoutes.chest(l,e,b);
+  return !f.getItem(0).isEmpty()&&chest!=null&&fuelSlot(b.type().equals("town_hall")?HallReserve.view(l,e,chest):chest)>=0;
+ }
  /** Recover the exact boundary between a resident's hands and the furnace/chest receipts. */
  public static CompoundTag custody(ServerLevel l,CompoundTag original,ListTag held){if(original.getString("stage").startsWith("equip_"))return FurnaceEquipment.custody(l,original,held);var t=original.copy();String stage=t.getString("stage");var carried=ItemStack.of(t.getCompound("carried"));
   if(stage.equals("smelt_raw")){var pending=WorldJournal.recoverAmount(l,op(t,"smelt/raw/"+t.getInt("withdrawals")));if(!pending.isEmpty()){if(carried.isEmpty())carried=pending;else carried.grow(pending.getCount());t.putInt("withdrawals",t.getInt("withdrawals")+1);}}

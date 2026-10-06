@@ -26,13 +26,25 @@ public final class HarvestRouteCache {
  public static Stats stats(ResidentEntity worker){var m=MEMOS.get(worker);return m==null?new Stats(0,0,0):new Stats(m.plans,m.hits,m.misses.size());}
  public static Path plan(ResidentEntity worker,BlockPos feet,int range){
   if(ACTIVE.get()!=worker||!(worker.level() instanceof ServerLevel l))return nativePlan(worker,feet,range);
+  if(!withinSurveyRange(worker,feet,range))return null;
   return remember(worker,l,new Key(feet.immutable(),range),()->nativePlan(worker,feet,range));
  }
  public static Path planAny(ResidentEntity worker,Set<BlockPos> feet,int range){
   if(feet.isEmpty())return null;
   var targets=Set.copyOf(feet);
   if(ACTIVE.get()!=worker||!(worker.level() instanceof ServerLevel l))return worker.routeToAny(targets,range);
-  return remember(worker,l,new Key(targets,range),()->worker.routeToAny(targets,range));
+  targets=targets.stream().filter(p->withinSurveyRange(worker,p,range)).collect(java.util.stream.Collectors.toUnmodifiableSet());
+  if(targets.isEmpty())return null;
+  var reachableTargets=targets;
+  return remember(worker,l,new Key(reachableTargets,range),()->worker.routeToAny(reachableTargets,range));
+ }
+ /** A generous horizontal lower bound only; native planning still decides all
+  * possible routes. Do not retain a refusal when the body moves nearer, and
+  * leave actual work/partial-route planning outside Survey unchanged. */
+ private static boolean withinSurveyRange(ResidentEntity worker,BlockPos feet,int range){
+  if(range<=0)return true;
+  var from=worker.blockPosition();double dx=(double)feet.getX()-from.getX(),dz=(double)feet.getZ()-from.getZ();double bound=(double)range+4;
+  return dx*dx+dz*dz<=bound*bound;
  }
  private static Path remember(ResidentEntity worker,ServerLevel l,Key key,java.util.function.Supplier<Path> nativeQuery){
   long now=l.getGameTime();var m=MEMOS.computeIfAbsent(worker,w->new Memo());

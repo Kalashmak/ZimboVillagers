@@ -29,6 +29,7 @@ public final class HandBreadGoal extends Goal {
   if(r==null||!r.alive()||r.life()!=Resident.Life.ADULT||r.profession()==Profession.FARMER||r.profession()!=null&&r.profession().military())return null;
   // A teacher at the school and a recruit at the drill ground work by standing there, so neither is idle then — unless a meal was already missed.
   if((r.profession()==Profession.TEACHER||r.recruit())&&!HandBread.missedMeal(e))return null;
+  if(Population.mayWork(r)&&NaturalFurnace.finishing(worker,e))return null;
   return CargoCustody.pending(l.getServer(),worker.getUUID())||CargoCustody.dead(l.getServer(),worker.getUUID())?null:e;
  }
  /** The village's hand bread wants this resident now: it may bake (by day, an adult of the village, not the farmer or the army), it may take the
