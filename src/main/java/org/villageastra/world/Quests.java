@@ -27,6 +27,8 @@ public final class Quests {
  public static final int MAX_OPEN=ROOT.get("max_open").getAsInt(),POST_EVERY=ROOT.get("post_every").getAsInt(),ABANDON_REPUTATION=ROOT.get("abandon_reputation").getAsInt(),FAIL_REPUTATION=ROOT.get("fail_reputation").getAsInt();
  /** QUEST-004: whoever kills a quest character pays for it as for killing a resident of that village. */
  public static final int KILL_REPUTATION=ROOT.get("kill_reputation").getAsInt();
+ private static long BOARD_READS;
+ public static long boardReads(){return BOARD_READS;}
  private Quests(){}
  private static JsonObject root(){try(var s=Quests.class.getResourceAsStream("/data/villageastra/balance/quests.json")){if(s==null)throw new IllegalStateException("Missing quest balance");return JsonParser.parseReader(new InputStreamReader(s,StandardCharsets.UTF_8)).getAsJsonObject();}catch(IOException e){throw new IllegalStateException(e);}}
  static JsonObject spec(String template){return ROOT.getAsJsonObject(template);}
@@ -132,7 +134,26 @@ public final class Quests {
  public static void store(ServerLevel l,UUID village,CompoundTag quest){replace(l,village,quest);}
  static void saveBoard(ServerLevel l,UUID village,CompoundTag board){save(l,village,board);}
  public static Path path(ServerLevel l,UUID village){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-quests/"+village+".bin");}
- public static CompoundTag board(ServerLevel l,UUID village){var p=path(l,village);if(Files.exists(p))return NbtRecord.read(p);var t=new CompoundTag();t.putInt("schema",1);t.put("quests",new ListTag());return t;}
+ private record BoardStamp(int tick,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record CachedBoard(BoardStamp stamp,CompoundTag tag){}
+ private static final Map<MinecraftServer,Map<Path,CachedBoard>> BOARDS=new WeakHashMap<>();
+ /** Independent caller copies, shared only inside one actual server tick; authoritative writes invalidate immediately. */
+ public static synchronized CompoundTag board(ServerLevel l,UUID village){
+  var p=path(l,village).toAbsolutePath().normalize();
+  if(Files.exists(p)){
+   try{
+    var attributes=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);
+    var stamp=new BoardStamp(l.getServer().getTickCount(),AtomicRecord.revision(p),attributes.lastModifiedTime(),attributes.creationTime(),attributes.size(),attributes.fileKey());
+    var cache=BOARDS.computeIfAbsent(l.getServer(),server->new LinkedHashMap<Path,CachedBoard>(16,.75F,true){
+     @Override protected boolean removeEldestEntry(Map.Entry<Path,CachedBoard> entry){return size()>256;}
+    });
+    var cached=cache.get(p);if(cached!=null&&cached.stamp().equals(stamp))return cached.tag().copy();
+    BOARD_READS++;var tag=NbtRecord.read(p);cache.put(p,new CachedBoard(stamp,tag));return tag.copy();
+   }catch(IOException ex){throw new IllegalStateException("Cannot read "+p,ex);}
+  }
+  var cache=BOARDS.get(l.getServer());if(cache!=null)cache.remove(p);
+  var t=new CompoundTag();t.putInt("schema",1);t.put("quests",new ListTag());return t;
+ }
  private static void save(ServerLevel l,UUID village,CompoundTag board){NbtRecord.write(path(l,village),board);}
  public static CompoundTag quest(ServerLevel l,UUID village,UUID id){for(var raw:board(l,village).getList("quests",Tag.TAG_COMPOUND))if(((CompoundTag)raw).getUUID("id").equals(id))return (CompoundTag)raw;return null;}
  private static void replace(ServerLevel l,UUID village,CompoundTag quest){var board=board(l,village);var list=board.getList("quests",Tag.TAG_COMPOUND);
