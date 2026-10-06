@@ -287,7 +287,25 @@ public final class Workshops {
  /** A non-construction recipe must not bypass the same grain protection used by
   * hand baking. Construction itself sees the real stock and can fund its bed. */
  private static Job villagePlan(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){
-  var hall=e==null?null:hall(e);int held=hall!=null&&spec.building().equals("town_hall")?HandBread.constructionWheat(l,e,hall):0;
+  var hall=e==null?null:hall(e);
+  // Finish paid work normally, but do not start another building batch while a
+  // staffed kitchen lacks inputs and the real pantries lack one round of meals.
+  // The kitchen still pays its own fuel, inputs and full baking labor.
+  if(hall!=null&&spec.building().equals("town_hall")&&wants.stream().anyMatch(w->w.need()==LogisticsRoutes.NEED_FOOD)){
+   long mouths=e.settlement().residents().stream().filter(Resident::alive).count();
+   if(Population.storedNutrition(l,e)<mouths*Population.MEAL_NUTRITION){
+    var kitchenInputs=new ArrayList<Want>();
+    for(var b:Dining.restaurants(e)){
+     boolean staffed=e.settlement().residents().stream().anyMatch(r->b.equals(e.settlement().workplace(r.id()))&&eligible(r,b)&&Population.mayWork(r));
+     var c=LogisticsRoutes.chest(l,e,b);if(!staffed||c==null||LogisticsRoutes.count(c,Dining::dish)>=mouths)continue;
+     for(var need:published(l,b.id()))kitchenInputs.add(new Want(need.ingredient(),need.count(),b.id(),LogisticsRoutes.NEED_FOOD));
+    }
+    if(!kitchenInputs.isEmpty()){
+     var safe=HallReserve.view(l,e,chest);var food=plan(l,spec,safe,kitchenInputs,bank);if(food!=null)return food;
+    }
+   }
+  }
+  int held=hall!=null&&spec.building().equals("town_hall")?HandBread.constructionWheat(l,e,hall):0;
   if(held<=0)return plan(l,spec,chest,wants,bank);
   var other=new net.minecraft.world.SimpleContainer(chest.getContainerSize());
   for(int slot=0;slot<chest.getContainerSize();slot++){var stack=chest.getItem(slot).copy();if(stack.is(Items.WHEAT)){int keep=Math.min(held,stack.getCount());stack.shrink(keep);held-=keep;}other.setItem(slot,stack);}
