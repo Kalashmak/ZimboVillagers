@@ -132,7 +132,7 @@ public final class JobCargo {
   boolean support=miner&&(stage.startsWith("support_")||s.getBoolean("resumeSupport")||(stage.equals("deliver")&&MineWork.needsBeam(s)));
   if(stage.equals("support_place")&&placed>=width)support=false;
   s.putString("stage","tool");s.putUUID("operation",UUID.randomUUID());s.putBoolean("resumeSupport",support);
-  for(String key:List.of("worker","tool","cargo","delivered","advanced","lightsHeld","lightItem","lightsOp","labor","target","before","status","plantSource","plantPlacement","sapling","crop","seekSeedHarvest","seedAllowance","tree","treeBefore","support_fetched","support_placed","supportTimber","treeLeaves","base","trees","lastFoot","plantCells","species","fromBare","felledKind"))s.remove(key);
+  for(String key:List.of("worker","tool","cargo","delivered","advanced","lightsHeld","lightItem","lightsOp","labor","target","before","status","plantSource","plantPlacement","sapling","crop","seekSeedHarvest","seedAllowance","tree","treeBefore","support_fetched","support_placed","supportTimber","treeLeaves","base","trees","lastFoot","forestDeliveryAt","plantCells","species","fromBare","felledKind"))s.remove(key);
   if(support)s.putInt("support_placed",placed);else s.remove("beam");
   return s;
  }

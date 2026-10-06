@@ -109,7 +109,7 @@ public final class NaturalSupplyGoal extends Goal {
   if(!work.getList("cargo",Tag.TAG_COMPOUND).isEmpty())return true;
   String stage=work.getString("stage"),status=work.getString("status");
   return Set.of("dig","deliver","sapling","replant","nursery_soil").contains(stage)
-      ||stage.equals("choose")&&!Set.of("no_trees_in_reach","seeking_trees","evening").contains(status);
+      ||stage.equals("choose")&&!Set.of("no_trees_in_reach","seeking_trees","evening","output_full").contains(status);
  }
  public static boolean primaryResourcePending(ServerLevel l,SettlementData.Entry e,ResidentEntity worker){
   if(primaryForestryPending(l,e,worker))return true;

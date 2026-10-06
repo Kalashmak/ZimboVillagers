@@ -590,7 +590,7 @@ public final class ResourceWorkGoal extends Goal {
     /** The trip goes home: the trees it holds, three stacks' worth of items, the evening or the night, or a worn-out axe. */
     private boolean tripDue(int level){long day=Math.floorMod(dayTime.getAsLong(),24000L);var cargo=state.getList("cargo",Tag.TAG_COMPOUND);
         return state.getInt("trees")>=ForestBalance.treesPerTrip(level)||count(cargo,null)>=3*64||ItemStack.of(state.getCompound("tool")).isEmpty()||day>=SleepGoal.DUSK-EVENING&&day<SleepGoal.DAWN;}
-    private void forestDelivery(){state.putString("stage","deliver");state.putInt("delivered",0);state.putUUID("operation",UUID.randomUUID());status("carrying_trees");save();}
+    private void forestDelivery(){state.remove("forestDeliveryAt");state.putString("stage","deliver");state.putInt("delivered",0);state.putUUID("operation",UUID.randomUUID());status("carrying_trees");save();}
     /** What the village has of an item for the forester: in his load, the hut chest, the hall stock. */
     private int have(ServerLevel level,Item item,boolean load){int n=load?count(state.getList("cargo",Tag.TAG_COMPOUND),item):0;
         if(level.getBlockEntity(output) instanceof Container c)n+=c.countItem(item);if(level.getBlockEntity(stock) instanceof Container c)n+=c.countItem(item);return n;}
@@ -661,6 +661,7 @@ public final class ResourceWorkGoal extends Goal {
             if(carrying){forestDelivery();return;}
             if(lv==1&&ForestWork.searched(hut.id())){boolean renewal=ForestRenewal.plan(level,e,hut,worker,state,atHand(level));save();if(renewal){status("replanting");return;}}
             if(ForestWork.searched(hut.id())){forestWait=now+600;status("no_trees_in_reach");}else status("seeking_trees");return;}
+        if(!carrying&&tree.sapling()!=null&&!forestRoom(level,output,new ItemStack(tree.sapling()))){status("output_full");return;}
         state.putLongArray("base",tree.base().stream().mapToLong(BlockPos::asLong).toArray());
         // A route that is planned and ends short of the trunk refuses that foot for a day. No route at all (the navigator plans none in the air
         // or over ground it has not loaded) proves nothing: he sets out, and the walk itself shows.
@@ -756,15 +757,34 @@ public final class ResourceWorkGoal extends Goal {
     }
     /** The load goes into the hut chest: a stack a call to IV, all of it in one visit from V. */
     private void forestDeliver(ServerLevel level,int lv,UUID id){
-        if(!near(beside(output)))return;
+        boolean overflow=state.contains("forestDeliveryAt");
+        var destination=overflow?BlockPos.of(state.getLong("forestDeliveryAt")):output;
+        if(!near(beside(destination)))return;
         ListTag cargo=state.getList("cargo",Tag.TAG_COMPOUND);
         for(int index=state.getInt("delivered");index<cargo.size();index++){
             ItemStack item=ItemStack.of(cargo.getCompound(index));
-            if(!WorldJournal.deposit(level,Settlement.childId(id,"delivery/"+index),output,item)){status("output_full");return;}
+            var delivery=Settlement.childId(id,"delivery/"+index);
+            if(!WorldJournal.deposit(level,delivery,destination,item)){
+                if(!overflow&&!WorldJournal.exists(level,delivery)&&!stock.equals(output)&&forestRoom(level,stock,item)){
+                    state.putLong("forestDeliveryAt",stock.asLong());save();
+                }
+                status("output_full");return;
+            }
             state.putInt("delivered",index+1);save();if(lv<5&&index+1<cargo.size())return;
         }
-        for(var k:List.of("cargo","trees","lastFoot","delivered"))state.remove(k);
+        for(var k:List.of("cargo","trees","lastFoot","delivered","forestDeliveryAt"))state.remove(k);
+        if(overflow)status("output_full");
         state.putString("stage",ItemStack.of(state.getCompound("tool")).isEmpty()?"tool":"choose");state.putUUID("operation",UUID.randomUUID());save();
+    }
+    /** A whole journalled stack must fit before selecting a different physical destination. */
+    private static boolean forestRoom(ServerLevel level,BlockPos pos,ItemStack stack){
+        if(!level.hasChunkAt(pos)||!(level.getBlockEntity(pos) instanceof Container c))return false;
+        int max=Math.min(c.getMaxStackSize(),stack.getMaxStackSize());
+        for(int i=0;i<c.getContainerSize();i++){
+            var before=c.getItem(i);
+            if((before.isEmpty()||ItemStack.isSameItemSameTags(before,stack))&&before.getCount()+stack.getCount()<=max)return true;
+        }
+        return false;
     }
     /** Items as stacks of at most 64, one kind after another in the order they came. */
     static ListTag merged(List<ItemStack> items){var out=new ArrayList<ItemStack>();
