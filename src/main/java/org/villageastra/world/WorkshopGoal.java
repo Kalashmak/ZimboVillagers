@@ -22,7 +22,7 @@ public final class WorkshopGoal extends Goal {
  private boolean work(){
   var e=entry();if(e==null)return false;var l=(ServerLevel)worker.level();var b=workplace(e);
   if(bakes(l,e,b))return false;
-  var t=Workshops.inspect(l,b.id());if(t.getBoolean("physicalSmelt")&&!t.getString("stage").equals("idle")&&t.hasUUID("worker")&&!t.getUUID("worker").equals(worker.getUUID()))return false;if(!t.isEmpty()&&!t.getString("stage").equals("idle"))return true;
+  var t=Workshops.inspect(l,b.id());if(!NaturalFurnace.availableTo(l,b,t,worker.getUUID()))return false;if(!t.isEmpty()&&!t.getString("stage").equals("idle"))return true;
   // AD-104 P2: the station's fuel bank counts, so a bakery whose bank covers the bake starts without a fuel item in the chest.
   var chest=LogisticsRoutes.chest(l,e,b);if(chest==null)return false;var wants=Workshops.wants(l,e);
   if(Workshops.plan(l,e,b,chest,wants)!=null)return true;

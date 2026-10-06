@@ -20,7 +20,30 @@ public final class NaturalFurnace {
  private static void save(ServerLevel l,Settlement.Building b,CompoundTag t){NbtRecord.write(Workshops.path(l,b.id()),t);}
  private static String missing(ServerLevel l,Settlement.Building b,CompoundTag t,Ingredient ingredient,int count){var list=new ListTag();var in=new CompoundTag();in.putString("ingredient",ingredient.toJson().toString());in.putInt("count",count);list.add(in);t.put("needs",list);save(l,b,t);return "workshop_missing_inputs";}
  private static UUID op(CompoundTag t,String suffix){return Settlement.childId(t.getUUID("id"),suffix);}
- public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle"))return true;if(t.hasUUID("worker"))return t.getUUID("worker").equals(worker);t.putUUID("worker",worker);save(l,b,t);return true;}
+ /** A sick colleague can leave a cooking furnace to another eligible worker,
+  * only while all paid goods remain in the furnace and no output take exists. */
+ public static boolean availableTo(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){
+  if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle")||!t.hasUUID("worker")||t.getUUID("worker").equals(worker))return true;
+  if(!t.getString("stage").equals("smelt_wait")||!t.hasUUID("id")||!t.contains("furnace")
+    ||!ItemStack.of(t.getCompound("carried")).isEmpty()||WorldJournal.exists(l,op(t,"smelt/output")))return false;
+  if(!(l.getEntity(t.getUUID("worker")) instanceof ResidentEntity old)||!old.isAlive()||old.escortPlayer()!=null
+    ||CargoCustody.pending(l.getServer(),old.getUUID())||old.settlementId()==null)return false;
+  var e=SettlementData.get(l.getServer()).entry(old.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;
+  var r=e.settlement().resident(old.getUUID());var replacement=e.settlement().resident(worker);
+  var post=e.settlement().workplace(worker);if(post==null&&replacement!=null&&replacement.profession()==null)post=Workshops.hall(e);
+  if(r==null||!r.alive()||!r.sick()||Population.mayWork(r)||!Workshops.eligible(r,b)||!Workshops.eligible(replacement,b)||!Population.mayWork(replacement)
+    ||post==null||!post.id().equals(b.id())||CargoCustody.pending(l.getServer(),worker))return false;
+  if(!(l.getEntity(worker) instanceof ResidentEntity helper)||!helper.isAlive()||helper.escortPlayer()!=null||!old.settlementId().equals(helper.settlementId()))return false;
+  var oldPost=e.settlement().workplace(old.getUUID());if(oldPost==null&&r.profession()==null)oldPost=Workshops.hall(e);
+  if(oldPost==null||!oldPost.id().equals(b.id()))return false;
+  var at=BlockPos.of(t.getLong("furnace"));return l.hasChunkAt(at)&&l.getBlockEntity(at) instanceof FurnaceBlockEntity f
+    &&f.getPersistentData().hasUUID("AstraSmeltJob")&&f.getPersistentData().getUUID("AstraSmeltJob").equals(t.getUUID("id"));
+ }
+ public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){
+  if(!availableTo(l,b,t,worker))return false;
+  if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle")||t.hasUUID("worker")&&t.getUUID("worker").equals(worker))return true;
+  t.putUUID("worker",worker);save(l,b,t);return true;
+ }
  /** Finish paid transfers before an emergency bread turn; a burning furnace
   * still leaves its carrier free to bake while it cooks. Observation only. */
  public static boolean finishing(ResidentEntity worker,SettlementData.Entry e){
