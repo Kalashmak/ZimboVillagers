@@ -105,7 +105,7 @@ public final class ServerEvents {
         // AD-138 V: a pen beast, loaded again, takes up its grazing life.
         if(event.getLevel() instanceof net.minecraft.server.level.ServerLevel&&event.getEntity() instanceof net.minecraft.world.entity.animal.Animal beast)org.villageastra.world.LivestockGrazing.attach(beast);
     }
-    /** AD-138 V (spec §6): a village's beast out grazing never tramples a field's soil. */
+    /** AD-138 V (spec В§6): a village's beast out grazing never tramples a field's soil. */
     @SubscribeEvent public static void trample(net.minecraftforge.event.level.BlockEvent.FarmlandTrampleEvent event){
         if(event.getEntity()!=null&&event.getEntity().getPersistentData().hasUUID(org.villageastra.world.LivestockGoal.OWNER))event.setCanceled(true);
     }
@@ -132,7 +132,7 @@ public final class ServerEvents {
         if(!event.getLevel().isClientSide()&&event.getEntity() instanceof net.minecraft.world.entity.animal.Wolf dog&&dog.getRemovalReason()!=null&&!dog.getRemovalReason().shouldDestroy())org.villageastra.world.CaravanDogs.unload(dog);
         if(!event.getLevel().isClientSide()&&event.getEntity() instanceof ResidentEntity npc&&npc.getRemovalReason()!=null&&!npc.getRemovalReason().shouldDestroy())org.villageastra.world.Caravans.dematerialize(npc);
     }
-    @SubscribeEvent public static void stopping(net.minecraftforge.event.server.ServerStoppingEvent event){org.villageastra.world.Roads.flush(event.getServer());org.villageastra.world.ResourceExpedition.clear();}
+    @SubscribeEvent public static void stopping(net.minecraftforge.event.server.ServerStoppingEvent event){org.villageastra.world.Roads.flush(event.getServer());org.villageastra.world.ResourceExpedition.clear();org.villageastra.world.QuarryKnowledge.clear(event.getServer());}
     @SubscribeEvent public static void babies(net.minecraftforge.event.entity.living.BabyEntitySpawnEvent event){
         var parent=event.getParentA().getPersistentData();
         if(event.getChild()!=null&&parent.hasUUID(org.villageastra.world.LivestockGoal.OWNER)){event.getChild().getPersistentData().putUUID(org.villageastra.world.LivestockGoal.OWNER,parent.getUUID(org.villageastra.world.LivestockGoal.OWNER));event.getChild().setPersistenceRequired();}

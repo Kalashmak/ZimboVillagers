@@ -65,7 +65,7 @@ public final class NaturalSupplyGoal extends Goal {
  private SettlementData.Entry entry(){if(!(worker.level() instanceof ServerLevel)||worker.settlementId()==null||worker.escortPlayer()!=null)return null;var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());return e!=null&&e.dimension().equals(worker.level().dimension().location().toString())&&eligible(e.settlement().resident(worker.getUUID()))?e:null;}
  private void save(){advanceSearchArea();state.putInt("surveyRadius",surveyRadius);state.putInt("surveyCursor",cursor);if(surveyY==Integer.MAX_VALUE)state.remove("surveyY");else state.putInt("surveyY",surveyY);NbtRecord.write(path((ServerLevel)worker.level(),worker.getUUID()),state);}
  private void saveSurvey(){advanceSearchArea();int next=cursor;if(state.getInt("surveyRadius")!=surveyRadius||!state.contains("surveyCursor")||state.getInt("surveyCursor")!=next||(state.contains("surveyY")?state.getInt("surveyY"):Integer.MAX_VALUE)!=surveyY)save();}
- /** AD-131 (check fix 7): no logs вЂ” wood is the forester's, felled a whole wild tree at a time (ForestWork), never a log out of a crown. */
+ /** AD-131 (check fix 7): no logs Р Р†Р вЂљРІР‚Сњ wood is the forester's, felled a whole wild tree at a time (ForestWork), never a log out of a crown. */
  public static boolean natural(BlockState s){return !s.requiresCorrectToolForDrops()&&(s.is(BlockTags.SAND)||s.is(BlockTags.DIRT)||s.is(BlockTags.FLOWERS)||s.is(Blocks.GRAVEL)||s.is(Blocks.CLAY)||s.is(Blocks.MOSS_BLOCK)||s.is(Blocks.SUGAR_CANE)||s.is(Blocks.CACTUS));}
  /** Capability of this gatherer, not a promise that the biome contains the deposit. */
  public static boolean provides(Item item){if(item==Items.CLAY_BALL||item==Items.FLINT)return true;if(!(item instanceof BlockItem block)||item==Items.GRASS_BLOCK||item==Items.PODZOL||item==Items.MYCELIUM||item==Items.ROOTED_DIRT)return false;return natural(block.getBlock().defaultBlockState());}
@@ -157,6 +157,8 @@ public final class NaturalSupplyGoal extends Goal {
     &&quarry&&resumeFace(l,e,quarryDemand,reserved))return true;
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
     &&quarry&&resumeQuarryDeposit(l,e,quarryDemand,reserved,surveyDeadline,surveyPlans))return true;
+  if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
+    &&quarry&&knownQuarry(l,e,quarryDemand,reserved,surveyDeadline,surveyPlans))return true;
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
     &&resumeLoose(l,wanted,reserved,surveyDeadline,surveyPlans))return true;
   for(;surveyLeft>0;surveyLeft--){if(System.nanoTime()>=surveyDeadline){surveyPending=true;break;}var offset=nextColumn();var column=e.center().offset(offset);if(!l.hasChunkAt(column)){var touch=TouchLoad.ensure(l,column);if(touch!=TouchLoad.Touch.OK){cursor--;surveyPending=touch==TouchLoad.Touch.DEFERRED;saveSurvey();return false;}}int top=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ());int start=Math.min(Math.min(l.getMaxBuildHeight()-1,top+3),surveyY);surveyY=Integer.MAX_VALUE;for(int y=start;y>=Math.max(l.getMinBuildHeight(),deepQuarry?quarryFloor:top-8);y--){if(System.nanoTime()>=surveyDeadline||HarvestRouteCache.stats(worker).plans()-surveyPlans>=SURVEY_PLANS)return pauseSurvey(y);var pos=new BlockPos(column.getX(),y,column.getZ());if(reserved.contains(pos))continue;var before=l.getBlockState(pos);if(y<top-8&&!MineOutcrops.wanted(before,quarryDemand))continue;boolean quarryYield=quarry&&(MineOutcrops.wanted(before,wanted)||before.is(Blocks.STONE)&&wanted.contains(Items.COBBLESTONE)||before.is(Blocks.DEEPSLATE)&&wanted.contains(Items.COBBLED_DEEPSLATE));if(!mayYield(before,wanted)&&!quarryYield)continue;if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&before.is(Blocks.SUGAR_CANE)&&!l.getBlockState(pos.above()).is(Blocks.SUGAR_CANE))com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE plantCandidate pos={} wanted={} safe={}",pos,wanted.contains(Items.SUGAR_CANE),safe(l,pos));boolean stone=quarry&&SurfaceQuarry.safe(l,pos);int slot=stone?SurfaceQuarry.tool(l,e,before):-1;if(stone&&slot<0||!stone&&!safe(l,pos))continue;var pick=stone?chest.getItem(slot):ItemStack.EMPTY;var loot=Block.getDrops(before,l,pos,null,worker,pick);if(loot.stream().noneMatch(s->wanted.contains(s.getItem())))continue;
@@ -251,6 +253,32 @@ public final class NaturalSupplyGoal extends Goal {
   }
   state.putBoolean("quarryResumeChecked",true);state.remove("quarryResumeCursor");save();return false;
  }
+ private UUID knownSite;private int knownCell;private long knownRetry;private final Map<UUID,Long> knownMisses=new HashMap<>();
+ /** Shared remembered deposits survive unrelated trips. Actual terrain, demand,
+  * paid tool availability and fresh native navigation still decide each job. */
+ private boolean knownQuarry(ServerLevel l,SettlementData.Entry e,Set<Item> wanted,Set<BlockPos> reserved,long deadline,long plans){
+  QuarryKnowledge.poll(l);if(System.nanoTime()>=deadline||l.getGameTime()<knownRetry)return false;
+  var mine=e.settlement().workplace(worker.getUUID());if(mine==null)return false;int floor=MineWork.floorY(l,e,mine,BuildingTiers.level(l,e,mine));
+  var sites=QuarryKnowledge.sites(l).stream().filter(s->MineOutcrops.wanted(s.material(),wanted)
+   &&Math.abs(s.pos().getX()-e.center().getX())<=ROUTE_RANGE&&Math.abs(s.pos().getZ()-e.center().getZ())<=ROUTE_RANGE
+   &&s.pos().getY()>=floor)
+   .sorted(Comparator.comparingDouble(s->s.pos().distSqr(worker.blockPosition()))).toList();
+  if(knownSite!=null&&sites.stream().noneMatch(s->s.receipt().equals(knownSite))){knownSite=null;knownCell=0;}
+  long now=l.getGameTime();knownMisses.entrySet().removeIf(x->x.getValue()<=now);
+  for(var site:sites){
+   if(knownMisses.containsKey(site.receipt())||knownSite!=null&&!knownSite.equals(site.receipt())||SurfaceQuarry.tool(l,e,site.material())<0)continue;
+   if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS)return false;
+   if(!ResourceExpedition.survey(worker,site.pos()))return false;
+   knownSite=site.receipt();var positions=new ArrayList<BlockPos>();for(var p:BlockPos.betweenClosed(site.pos().offset(-4,-2,-4),site.pos().offset(4,2,4)))positions.add(p.immutable());positions.sort(Comparator.comparingDouble(p->p.distSqr(site.pos())));
+   for(;knownCell<positions.size();knownCell++){
+    if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){surveyPending=true;return false;}
+    var p=positions.get(knownCell);if(p.getY()<floor||!l.hasChunkAt(p))continue;var before=l.getBlockState(p);if(reserved.contains(p)||!before.is(site.material().getBlock())||!MineOutcrops.wanted(before,wanted)||!SurfaceQuarry.safe(l,p))continue;
+    var stand=HarvestAccess.find(worker,p,ROUTE_RANGE);if(stand!=null){knownSite=null;knownCell=0;return begin(p,stand,before,true);}
+   }
+   knownMisses.put(site.receipt(),now+1200);knownSite=null;knownCell=0;
+  }
+  knownRetry=now+100;return false;
+ }
  private boolean pauseSurvey(int y){cursor--;surveyY=y;surveyPending=true;saveSurvey();return false;}
  private boolean begin(BlockPos pos,BlockPos stand,BlockState before,boolean stone){state=new CompoundTag();state.putUUID("id",UUID.randomUUID());state.putLong("target",pos.asLong());state.putLong("stand",stand.asLong());state.put("before",NbtUtils.writeBlockState(before));state.putBoolean("quarry",stone);state.putString("stage",stone?"tool":"dig");save();return true;}
  @Override public boolean canContinueToUse(){return entry()!=null&&(test||worker.getServer().getPlayerCount()>0)&&active(state)&&!CargoCustody.pending(worker.getServer(),worker.getUUID());}
@@ -298,6 +326,7 @@ public final class NaturalSupplyGoal extends Goal {
   var held=cargo(l,state);boolean quarry=state.getBoolean("quarry");int amount=0;var pick=ItemStack.EMPTY;var bag=new ListTag();
   for(var raw:held){var stack=ItemStack.of((CompoundTag)raw);if(quarry&&stack.getItem() instanceof PickaxeItem){pick=stack;continue;}amount+=stack.getCount();bag.add(raw.copy());}
   var reserved=reservedTargets(l,entry(),worker.getUUID());boolean harvested=WorldJournal.recoverExisting(l,state.getUUID("id"))!=null;
+  if(quarry&&harvested)QuarryKnowledge.remember(l.getServer(),WorldJournal.recoverExisting(l,state.getUUID("id")));
   var face=quarry&&harvested&&!pick.isEmpty()?QuarryFace.next(worker,state,reserved):null;
   var next=face!=null?new BulkHarvest.Next(face.target(),face.stand()):quarry?(harvested?OreBulkHarvest.next(worker,target,before,pick,amount,reserved):null):BulkHarvest.next(worker,target,before,amount,reserved);
   if(next==null){returnCargo(l);return;}

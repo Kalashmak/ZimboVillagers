@@ -26,10 +26,16 @@ public final class PartialFaceResumeGameTests {
  @GameTest(template="empty",batch="quarry_deposit_resume",timeoutTicks=400)
  public static void floodedCompletedStoneDepositNeverReplaysCargo(GameTestHelper h){exercise(h,true,true);}
  private static void exercise(GameTestHelper h,boolean flooded){exercise(h,flooded,false);}
- private static void exercise(GameTestHelper h,boolean flooded,boolean deposit){
+ @GameTest(template="empty",batch="quarry_knowledge",timeoutTicks=2400)
+ public static void unrelatedSandTripKeepsEarlierPaidStoneDiscovery(GameTestHelper h){exercise(h,false,true,true);}
+ @GameTest(template="empty",batch="quarry_knowledge",timeoutTicks=400)
+ public static void floodedSharedDiscoveryCannotAllocateAnotherLoan(GameTestHelper h){exercise(h,true,true,true);}
+ private static void exercise(GameTestHelper h,boolean flooded,boolean deposit){exercise(h,flooded,deposit,false);}
+ private static void exercise(GameTestHelper h,boolean flooded,boolean deposit,boolean shared){
+
   var rock=deposit?Blocks.ANDESITE:Blocks.COAL_ORE;var product=deposit?Items.ANDESITE:Items.COAL;int already=deposit?1:0;
 
-  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+524288+(flooded?65536:0),120,at.getZ());
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+524288+(flooded?65536:0)+(shared?1048576:0),120,at.getZ());
   var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
   for(int x=(base.getX()-18)>>4;x<=(base.getX()+53)>>4;x++)for(int z=(base.getZ()-18)>>4;z<=(base.getZ()+20)>>4;z++){
    var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);
@@ -48,17 +54,18 @@ public final class PartialFaceResumeGameTests {
   var npc=VillageAstra.RESIDENT.get().create(l);var person=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);s.admit(person,home);s.assign(person.id(),Profession.MINER,mine.id());npc.bind(s.id(),s.resident(person.id()));npc.moveTo(base.getX()+2.5,121,base.getZ()+2.5);npc.setOnGround(true);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);l.addFreshEntity(npc);
   var old=new CompoundTag();var previous=UUID.randomUUID();old.putUUID("id",previous);old.putBoolean("complete",true);old.putBoolean("quarry",true);old.putString("stage","carry");old.putLong("oreTarget",ore.asLong());old.putInt("faceDepth",3);old.putInt("surveyCursor",385*385-1);
   if(deposit){var previousBlock=ore.west();l.setBlock(previousBlock,rock.defaultBlockState(),2);WorldJournal.harvest(l,previous,previousBlock,rock.defaultBlockState(),new ItemStack(Items.STONE_PICKAXE));chest.setItem(2,new ItemStack(product));old.remove("oreTarget");old.remove("faceDepth");old.putLong("target",previousBlock.asLong());old.put("before",NbtUtils.writeBlockState(rock.defaultBlockState()));}
+  if(shared){QuarryKnowledge.clear(l.getServer());QuarryKnowledge.remember(l.getServer(),WorldJournal.recoverExisting(l,previous));old.putUUID("id",UUID.randomUUID());old.putBoolean("quarry",false);old.putLong("target",base.offset(-4,1,-4).asLong());old.put("before",NbtUtils.writeBlockState(Blocks.SAND.defaultBlockState()));}
   NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),old);
   if(flooded)l.setBlock(ore.east(),Blocks.WATER.defaultBlockState(),2);
   var supply=new NaturalSupplyGoal(npc,true);
   if(flooded){
    h.assertTrue(!supply.canUse(),"An unsafe remembered face cannot start a new trip");
    Runnable check=()->{
-    h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getBoolean(deposit?"quarryResumeChecked":"faceResumeChecked"),"The finite unsafe deposit check finishes without stranding the ordinary survey");
+    if(!shared)h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getBoolean(deposit?"quarryResumeChecked":"faceResumeChecked"),"The finite unsafe deposit check finishes without stranding the ordinary survey");
     h.assertTrue(l.getBlockState(ore).is(rock)&&chest.countItem(product)==already&&chest.getItem(0).getDamageValue()==3&&chest.countItem(Items.COBBLESTONE)==3,"No free harvest, borrowed tool, wear or replayed cargo");
     npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);
    };
-   if(deposit){h.startSequence().thenWaitUntil(()->{
+   if(deposit&&!shared){h.startSequence().thenWaitUntil(()->{
     h.assertTrue(!supply.canUse(),"A yielded flooded deposit still cannot allocate a trip");
     h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getBoolean("quarryResumeChecked"),"Resumable sensing completes under its ordinary per-window budget");
    }).thenExecute(check).thenSucceed();}else{check.run();h.succeed();}return;
@@ -76,6 +83,7 @@ public final class PartialFaceResumeGameTests {
     ItemStack returned=ItemStack.EMPTY;for(int slot=0;slot<chest.getContainerSize();slot++)if(chest.getItem(slot).is(Items.STONE_PICKAXE))returned=chest.getItem(slot);
     h.assertTrue(returned.getDamageValue()==4&&WorldJournal.recoverExisting(l,job)!=null,"The fresh loan pays one wear and has an actual harvest receipt");
     com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_PARTIAL_FACE VERIFIED old={} new={} labor={} wear=3->4 coal=1",previous,job,finished.getInt("labor"));
+    if(shared)com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_SHARED_QUARRY VERIFIED bodyTicks={} oldAndesite=1 newAndesite=1 unrelatedSandJobPreservedKnowledge=true",npc.tickCount);
     if(deposit)com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_DEPOSIT_RETURN VERIFIED bodyTicks={} oldAndesite=1 newAndesite=1 paidLabor=200 wear=3->4",npc.tickCount);
     npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);
    }).thenSucceed();
