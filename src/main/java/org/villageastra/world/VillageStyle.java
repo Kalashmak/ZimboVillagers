@@ -1431,20 +1431,20 @@ public final class VillageStyle {
         beamRun(true,5,0,0,6,BEAM);brace(0,4,0,"south");brace(6,4,0,"south");
         gable(true,0,1,5,6,h,3,-1,new int[]{2,7},new int[]{4,7});barge(true,0,1,5,3,h);
         gable(true,6,1,5,6,h,3,-1,new int[]{2,6},new int[]{4,6});barge(true,6,1,5,3,h);
-        as(OTHER);set(3,6,0,trapdoor("spruce","north",false,true));set(3,6,1,"hay_block[axis=y]");
+        as(OTHER);set(3,6,0,trapdoor("spruce","north",false,true));set(3,6,1,"barrel[facing=up,open=false]");
         for(int x=1;x<=5;x++)set(x,5,2,PLANKS);
         beamRun(true,6,4,1,5,POST);
         // The goods under the overhang.
-        // Round 2 review ("clutter piled against the door"): the way to the barn door clear, a bale at each corner post only.
-        as(OTHER);set(0,1,0,"hay_block[axis=y]");set(6,1,0,"hay_block[axis=y]");
+        // Round 2 review ("clutter piled against the door"): the way to the barn door clear, storage at each corner post only.
+        as(OTHER);set(0,1,0,"barrel[facing=up,open=false]");set(6,1,0,"barrel[facing=up,open=false]");
         set(3,4,0,hung());set(3,4,4,hung());
-        door(3,1);as(KIT);set(1,1,4,CHEST);set(1,1,2,"composter");for(int z=2;z<=4;z++)set(5,1,z,"hay_block[axis=y]");set(5,1,5,"crafting_table");
+        door(3,1);as(KIT);set(1,1,4,CHEST);set(1,1,2,"composter");for(int z=2;z<=4;z++)set(5,1,z,"barrel[facing=up,open=false]");set(5,1,5,"crafting_table");
         as(OTHER);for(var e:FARM_FURNITURE.entrySet())set(e.getKey().x(),e.getKey().y(),e.getKey().z(),e.getValue());
     }
     /** Design review 2026-09-24 (lateFurniture): the lamp over the barn floor hung from the tie beam by a fence post (it hung in the air), a
-     *  stack of straw in the free back corner, bales in both ends of the hay loft. */
-    private static final Map<Cell,String> FARM_FURNITURE=Map.of(new Cell(3,5,4),fence("dark_oak",false,false,false,false),new Cell(1,1,5),"hay_block[axis=y]",
-        new Cell(1,2,5),"hay_block[axis=y]",new Cell(1,6,2),"hay_block[axis=x]",new Cell(5,6,2),"hay_block[axis=x]");
+     *  stack of empty grain barrels in the free back corner and both ends of the loft. */
+    private static final Map<Cell,String> FARM_FURNITURE=Map.of(new Cell(3,5,4),fence("dark_oak",false,false,false,false),new Cell(1,1,5),"barrel[facing=up,open=false]",
+        new Cell(1,2,5),"barrel[facing=up,open=false]",new Cell(1,6,2),"barrel[facing=up,open=false]",new Cell(5,6,2),"barrel[facing=up,open=false]");
     static{late("farm",FARM_FURNITURE.keySet());}
 
     // ---------- forester (AD-131): the forester's hut I..VI on its 15x21 lot, eaves to the street ----------

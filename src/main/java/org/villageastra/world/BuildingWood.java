@@ -9,12 +9,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Property;
 import org.villageastra.server.SettlementData;
 
-/** A new home's timber is chosen from real forestry trees, then frozen in its project and building record. */
+/** Timber chosen from real forestry trees, then frozen in the project and building record. */
 public final class BuildingWood {
  private BuildingWood() {}
  private static final List<String> KINDS=List.of("dark_oak","spruce","birch","jungle","acacia","cherry","oak");
  public static String choose(ServerLevel l,SettlementData.Entry e,String design) {
-  if(!BuildingOrders.HOUSING.contains(BuildingBlueprints.base(design)))return "";
+  if(!BuildingOrders.HOUSING.contains(BuildingBlueprints.base(design))&&e.settlement().governance().playerMayor()!=null)return "";
   boolean surveyed=true;
   for(var hut:e.settlement().buildings())if(hut.type().equals("forester")){
    var tree=ForestWork.next(l,e,hut,BuildingLevels.level(l,e,hut),ForesterHut.door(e,hut),0,l.getGameTime());

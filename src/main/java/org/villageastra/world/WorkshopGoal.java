@@ -52,7 +52,8 @@ public final class WorkshopGoal extends Goal {
   var sight=l.clip(new net.minecraft.world.level.ClipContext(worker.getEyePosition(),net.minecraft.world.phys.Vec3.atCenterOf(pos),net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,worker));
   if(worker.distanceToSqr(pos.getX()+1.5,pos.getY(),pos.getZ()+.5)>6.25||sight.getType()!=net.minecraft.world.phys.HitResult.Type.MISS&&!sight.getBlockPos().equals(pos)){worker.getNavigation().moveTo(pos.getX()+1.5,pos.getY(),pos.getZ()+.5,.8);worker.workStatus("walking");return;}
   worker.getNavigation().stop();if(worker.tickCount%20!=0)return;
-  var status=Workshops.advance(l,e,b,SettlementData.get(l.getServer()).clock().ticks(),Workshops.wants(l,e));worker.workStatus(status);
+  if(b.type().equals("town_hall")&&HallPacking.advance(l,e,SettlementData.get(l.getServer()).clock().ticks())){worker.workStatus("working");return;}
+  var status=Workshops.advance(l,e,b,SettlementData.get(l.getServer()).clock().ticks(),Workshops.wants(l,e),worker.getUUID());worker.workStatus(status);
   var t=Workshops.inspect(l,b.id());worker.displayWorkItem(t.getBoolean("physicalSmelt")?ItemStack.of(t.getCompound("carried")):t.contains("outputs")&&!t.getString("stage").equals("idle")?ItemStack.of(t.getList("outputs",10).getCompound(0)):ItemStack.EMPTY);
   if(status.equals("workshop_idle")||status.equals("workshop_missing_inputs")){useful=false;lastCheck=worker.tickCount;}
  }

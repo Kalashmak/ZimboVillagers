@@ -44,6 +44,9 @@ public final class ForestryMachines {
  private static void store(ServerLevel l,UUID building,CompoundTag t){NbtRecord.write(path(l,building),t);READS.remove(path(l,building));}
  /** One tick of every forester's hut of a settlement; how many did real work. */
  public static int tick(ServerLevel l,SettlementData.Entry e,long now,List<Workshops.Want> wants){
+  return tick(l,e,now,()->wants);
+ }
+ public static int tick(ServerLevel l,SettlementData.Entry e,long now,java.util.function.Supplier<List<Workshops.Want>> wants){
   int worked=0;
   for(var b:List.copyOf(e.settlement().buildings())){if(!b.type().equals(ForesterHut.TYPE))continue;
    boolean saw=false,grove=false;int period=0;
@@ -54,7 +57,7 @@ public final class ForestryMachines {
    int level=BuildingLevels.level(l,e,b);if(level<ForestBalance.SAW_FROM)continue;
    if(Sieges.besieged(l.getServer(),e.settlement().id()))continue;
    period=ForestBalance.sawPeriod(level);
-   if(period>0&&now%period==0&&saw(l,e,b,level,now,wants))worked++;
+   if(period>0&&now%period==0&&saw(l,e,b,level,now,wants.get()))worked++;
    if(groveCells(level)>0&&grove&&grove(l,e,b,now))worked++;
   }
   return worked;

@@ -10,7 +10,11 @@ import java.util.Arrays;
 /** Atomic, checksummed record. Never interpret corruption as an empty operation. */
 public final class AtomicRecord {
     private static final int MAGIC=0x41535452;
+    // Only explicitly watched records occupy this map; millions of journal receipts
+    // do not create entries. Metadata caches can detect same-timestamp replacement.
+    private static final java.util.Map<Path,java.util.concurrent.atomic.AtomicLong> REVISIONS=new java.util.concurrent.ConcurrentHashMap<>();
     private AtomicRecord() {}
+    public static long revision(Path file){return REVISIONS.computeIfAbsent(file.toAbsolutePath().normalize(),p->new java.util.concurrent.atomic.AtomicLong()).get();}
     public static void write(Path file,byte[] payload) throws IOException {
         Files.createDirectories(file.getParent());
         Path temporary=file.resolveSibling(file.getFileName()+".pending");
@@ -28,6 +32,8 @@ public final class AtomicRecord {
                 try {Thread.sleep(10L<<attempt);}catch(InterruptedException interrupted){Thread.currentThread().interrupt();throw new InterruptedIOException("Interrupted atomic record commit");}
             }
         }
+        var revision=REVISIONS.get(file.toAbsolutePath().normalize());
+        if(revision!=null)revision.incrementAndGet();
     }
     public static byte[] read(Path file) throws IOException {
         byte[] bytes=Files.readAllBytes(file);

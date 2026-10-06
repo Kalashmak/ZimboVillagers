@@ -15,7 +15,7 @@ public final class MineProspecting {
   }
   return t.contains("prospectFloor")?Math.min(limit,t.getInt("prospectFloor")):limit;
  }
- private static Set<net.minecraft.world.item.Item> needed(ServerLevel l,SettlementData.Entry e,Settlement.Building mine){
+ public static Set<net.minecraft.world.item.Item> needed(ServerLevel l,SettlementData.Entry e,Settlement.Building mine){
   var result=new HashSet<net.minecraft.world.item.Item>();var hall=Workshops.hall(e);var stock=hall==null?null:LogisticsRoutes.chest(l,e,hall);if(stock==null)return result;var own=LogisticsRoutes.chest(l,e,mine);
   var free=HallReserve.view(l,e,stock);
   for(var want:Workshops.wants(l,e))for(var in:Workshops.needs(l,e,Workshops.spec("town_hall"),free,List.of(want)))

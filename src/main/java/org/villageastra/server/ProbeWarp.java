@@ -4,6 +4,7 @@ import com.mojang.logging.LogUtils;
 import java.lang.reflect.Field;
 import net.minecraft.Util;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.server.TickTask;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -17,7 +18,7 @@ import org.villageastra.VillageAstra;
 @Mod.EventBusSubscriber(modid = VillageAstra.ID)
 public final class ProbeWarp {
     private static final String FLAG = "villageastra.probeWarp";
-    private static Field nextTickTime;
+    private static Field nextTickTime, delayedTasksTime;
     private static boolean announced, broken;
     private static volatile boolean ended;
     private static long sampleTick = -1, sampleMillis;
@@ -60,6 +61,20 @@ public final class ProbeWarp {
             // The loop has already moved the deadline 50 ms on for the tick that just ran: at N times speed it moves 50/N ms.
             long target = factor == 0 ? now : next - 50L + 50L / factor;
             nextTickTime.setLong(server, Math.max(target, now));
+            // runServer replaces the task deadline with now+50 after END. A queued task
+            // runs in waitUntilNextTick, after that assignment; shorten this second wait
+            // too. Do not skip tickServer, change game clocks or advance any worker.
+            if (delayedTasksTime == null) delayedTasksTime = ObfuscationReflectionHelper.findField(MinecraftServer.class, "f_129727_");
+            long deadline = Math.max(target, now);
+            server.tell(new TickTask(server.getTickCount(), () -> {
+                if (ended || broken) return;
+                try {
+                    delayedTasksTime.setLong(server, deadline);
+                } catch (IllegalAccessException ex) {
+                    broken = true;
+                    LogUtils.getLogger().error("ASTRA_WARP task wait disabled: {}", ex.toString());
+                }
+            }));
         } catch (RuntimeException | IllegalAccessException ex) {
             broken = true;
             LogUtils.getLogger().error("ASTRA_WARP disabled: {}", ex.toString());

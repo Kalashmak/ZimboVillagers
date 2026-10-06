@@ -6,7 +6,7 @@
 python tools/astra.py run build-check -- compileJava test build
 ```
 
-Результат: `build/libs/ZimboVillagers-0.9.2-preview.jar`. Используйте основной JAR, а не `sources` или промежуточный архив. Для игры нужны Minecraft 1.20.1 и Forge 47.4.0–47.x. [Установка и управление](PLAYING.md).
+Результат: `build/libs/ZimboVillagers-0.9.3-preview.jar`. Используйте основной JAR, а не `sources` или промежуточный архив. Для игры нужны Minecraft 1.20.1 и Forge 47.4.0–47.x. [Установка и управление](PLAYING.md).
 
 Обёртка сохраняет полный вывод в `build/astra-runs/` и печатает короткую сводку. Ключ `--evidence` сохраняет лог в `docs/runs/`. Чтение существующего лога:
 

@@ -80,6 +80,7 @@ public final class SettlementData extends SavedData {
                 if (r.contains("lastMeal", Tag.TAG_LONG)) restored.restoreNeeds(r.getLong("born"), r.getLong("lastMeal"), r.getInt("missedMeals"), r.getLong("schoolTicks"));
                 if (r.getBoolean("cadet")) restored.restoreCadet(true);
                 if (r.getBoolean("sick")) restored.restoreSick(true);
+                restored.restoreRecoveryRest(r.getLong("recoveryRest"));
                 if (r.contains("drillTicks", Tag.TAG_LONG)) restored.restoreTraining(r.getBoolean("military"), r.getBoolean("recruit"), r.getLong("drillTicks"));
                 s.restoreResident(restored);
             }
@@ -189,7 +190,7 @@ public final class SettlementData extends SavedData {
                 if (s.workplace(resident.id()) != null) r.putUUID("workplace",s.workplace(resident.id()).id());
                 if (resident.home() != null) r.putUUID("home", resident.home());
                 r.putLong("homelessSince", resident.homelessSince());
-                r.putLong("born", resident.born()); r.putLong("lastMeal", resident.lastMeal()); r.putInt("missedMeals", resident.missedMeals()); r.putLong("schoolTicks", resident.schoolTicks());if(resident.cadet())r.putBoolean("cadet",true);if(resident.sick())r.putBoolean("sick",true); r.putBoolean("military", resident.military()); r.putBoolean("recruit", resident.recruit()); r.putLong("drillTicks", resident.drillTicks());
+                r.putLong("born", resident.born()); r.putLong("lastMeal", resident.lastMeal()); r.putInt("missedMeals", resident.missedMeals()); r.putLong("schoolTicks", resident.schoolTicks());if(resident.cadet())r.putBoolean("cadet",true);if(resident.sick()){r.putBoolean("sick",true);r.putLong("recoveryRest",resident.recoveryRest());} r.putBoolean("military", resident.military()); r.putBoolean("recruit", resident.recruit()); r.putLong("drillTicks", resident.drillTicks());
                 residents.add(r);
             }
             t.put("residents", residents); t.putLong("lastBirth", s.lastBirth()); settlements.add(t);

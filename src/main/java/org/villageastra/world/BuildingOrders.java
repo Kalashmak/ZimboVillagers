@@ -15,7 +15,7 @@ import org.villageastra.server.*;
 /** Field-ordered new buildings on the existing paid construction queue (AD-028). Pure survey; approval writes the same queue file. */
 public final class BuildingOrders {
  /** Field-orderable designs: housing and workplaces without special areas (farm/forester/mine fields, towers of the hall, siege camps stay separate). */
- public static final Set<String> ORDERABLE=Set.of("home","home_2","carpentry","masonry","mill","restaurant","smithy","warehouse","school","laboratory","clinic","engineering","cartographer","expedition","caravan","livestock","barracks","guard_house","archery","quarry","wall_tower");
+ public static final Set<String> ORDERABLE=Set.of("farm","home","home_2","carpentry","masonry","mill","restaurant","smithy","warehouse","school","laboratory","clinic","engineering","cartographer","expedition","caravan","livestock","barracks","guard_house","archery","quarry","wall_tower");
  /** AD-046: designs that plan and build correctly on paper but that a live builder does not finish yet — surveyed and tested, never offered
   *  in the palette. The two-storey house left this list once a live builder really finished it (761 of 761 operations, AD-084). */
  public static final Set<String> WITHHELD=Set.of();
@@ -186,13 +186,20 @@ public final class BuildingOrders {
  }
  /** A relocation retains its saved timber instead of choosing a new local species. */
  public static Survey survey(ServerLevel l,SettlementData.Entry e,String requested,int variant,BlockPos origin,Settlement.Building repair,int cap,boolean anyDesign,UUID beside,String wood){
+  return survey(l,e,requested,variant,origin,repair,cap,anyDesign,beside,wood,false);
+ }
+ /** A mayor may survey a food rescue while an untouched, unfunded project waits. */
+ public static Survey foodSurvey(ServerLevel l,SettlementData.Entry e,int rotation,BlockPos site){
+  return survey(l,e,"farm",rotation,site,null,-1,false,null,BuildingWood.choose(l,e,"farm"),FoodConstruction.maySuspend(l,e));
+ }
+ private static Survey survey(ServerLevel l,SettlementData.Entry e,String requested,int variant,BlockPos origin,Settlement.Building repair,int cap,boolean anyDesign,UUID beside,String wood,boolean priorityFood){
   var conflicts=new LinkedHashSet<BlockPos>();var empty=new CompoundTag();
   if(repair==null&&!anyDesign&&!planned(requested))return new Survey(empty,conflicts,"design");
   String design=repair==null&&requested.equals(Walls.TOWER)?TowerStages.design(l,e):requested;
   // AD-068: a design may be turned by quarter turns; a repair keeps the turn of the building it repairs.
   if(variant<0||variant>3)return new Survey(empty,conflicts,"rotation");
   // AD-078: the crew's own repair, still untouched, is no reason to refuse a survey.
-  if(HallUpgradeGoal.pending(l,e.settlement().id())&&!HallUpgradeGoal.yields(l,e.settlement().id()))return new Survey(empty,conflicts,"busy");
+  if(HallUpgradeGoal.pending(l,e.settlement().id())&&!HallUpgradeGoal.yields(l,e.settlement().id())&&!priorityFood)return new Survey(empty,conflicts,"busy");
   if(repair==null&&e.settlement().buildings().stream().noneMatch(b->{var at=e.center().offset(b.x(),b.y(),b.z());double dx=at.getX()-origin.getX(),dz=at.getZ()-origin.getZ();return dx*dx+dz*dz<=REACH*REACH;}))return new Survey(empty,conflicts,"reach");
   var local=BuildingWood.apply(BuildingPlacement.layout(design,BlockPos.ZERO,variant),wood);
   // An upgrade retires only its own entrance plaque, including a plaque outside the next footprint.
@@ -281,6 +288,11 @@ public final class BuildingOrders {
   if(!wood.isEmpty())state.putString("wood",wood);
   if(repair==null&&BuildingBlueprints.base(design).equals(Walls.TOWER))state.putInt("upgradeLevel",BuildingBlueprints.level(design));
   if(repair!=null){state.putBoolean("repair",true);state.putUUID("building",repair.id());}
+  if(repair==null&&design.equals("farm")&&conflicts.isEmpty()){
+   var offset=origin.subtract(e.center());var farm=new Settlement.Building(buildingId(state),"farm",offset.getX(),offset.getY(),offset.getZ(),variant);
+   var field=FarmField.initial(l,e,farm);if(!field.ok())return new Survey(state,field.conflicts(),field.reason());
+   for(var op:field.ops())list.add(op);field.cost().forEach((k,v)->cost.putInt(k,cost.getInt(k)+v));state.putInt("fieldLevel",1);
+  }
   return new Survey(state,conflicts,conflicts.isEmpty()?"":"conflicts");
  }
  /** Server re-survey at the moment of approval; nothing from the client except the chosen design/site is trusted. */

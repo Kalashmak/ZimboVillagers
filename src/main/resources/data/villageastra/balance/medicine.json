@@ -1,6 +1,6 @@
 {
  "schema": 1,
- "note": "AD-152 (owner's Medicine ladder): residents sometimes fall ill and are healed only by the village's medicine. sick_permille_per_day: the chance an adult or child falls ill on a village day; cure_ticks: time a patient lies in the hospital with a medic at work (one bandage when cured); visits_level: from this clinic level the medics walk to the sick at home; medicine_level: the sick are cured where they are with a bandage from the clinic (medicine carried to them); automatic_level: everyone is healed without medics.",
+ "note": "AD-152 (owner's Medicine ladder): residents sometimes fall ill and recover through village medicine or slowly through fed physical rest at home. sick_permille_per_day: the chance an adult or child falls ill on a village day; cure_ticks: time a patient lies in the hospital with a medic at work (one bandage when cured); visits_level: from this clinic level the medics walk to the sick at home; medicine_level: the sick are cured where they are with a bandage from the clinic (medicine carried to them); automatic_level: everyone is healed without medics.",
  "sick_permille_per_day": 40,
  "cure_ticks": 1200,
  "visits_level": 4,

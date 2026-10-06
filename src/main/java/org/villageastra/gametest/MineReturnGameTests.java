@@ -12,6 +12,7 @@ import org.villageastra.server.*;
 import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class MineReturnGameTests {
+ private static final net.minecraft.server.level.TicketType<UUID> RETURN_TICKET=net.minecraft.server.level.TicketType.create("zimbovillagers_mine_return",Comparator.<UUID>naturalOrder());
  @GameTest(template="empty",batch="mine_return",timeoutTicks=2400)
  public static void surfaceWorkerReturnsThroughEntranceAndMinesDeepGallery(GameTestHelper h){
   returning(h,25,false);
@@ -26,10 +27,13 @@ public final class MineReturnGameTests {
  }
  private static void returning(GameTestHelper h,int floor,boolean lowerBranch){
   var l=h.getLevel();var corner=h.absolutePos(new BlockPos(5,0,5));var base=new BlockPos(corner.getX(),64,corner.getZ());
-  var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
+  var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();var ticketOwner=UUID.randomUUID();
   for(int x=(base.getX()-3)>>4;x<=(base.getX()+25)>>4;x++)for(int z=(base.getZ()-3)>>4;z<=(base.getZ()+36)>>4;z++){
-   var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);
+   var cp=new net.minecraft.world.level.ChunkPos(x,z);l.getChunkSource().addRegionTicket(RETURN_TICKET,cp,3,ticketOwner);forced.add(cp);l.getChunk(x,z);
   }
+  // Entity-ticking readiness also depends on the surrounding full chunks.
+  // Complete their loading before the accelerated test's tick deadline starts.
+  for(int x=((base.getX()-3)>>4)-2;x<=((base.getX()+25)>>4)+2;x++)for(int z=((base.getZ()-3)>>4)-2;z<=((base.getZ()+36)>>4)+2;z++)l.getChunk(x,z);
   var s=new Settlement(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),base);
   var mine=new Settlement.Building(UUID.randomUUID(),"mine",0,0,0);s.addBuilding(mine);s.addBuilding(new Settlement.Building(UUID.randomUUID(),"town_hall",-20,0,0));
   var home=UUID.randomUUID();s.addHome(new Settlement.Home(home,1,8,true));SettlementData.get(l.getServer()).add(e);
@@ -49,10 +53,13 @@ public final class MineReturnGameTests {
   npc.moveTo(base.getX()+20.5,base.getY()+1,base.getZ()+7.5+floor);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);
   if(lowerBranch)npc.moveTo(base.getX()+20.5,base.getY()-19,base.getZ()+19.5);
   npc.goalSelector.addGoal(3,new ResidentDoorGoal(npc));npc.goalSelector.addGoal(1,new SafeDescentGoal(npc));npc.goalSelector.addGoal(1,new PitEscapeGoal(npc));npc.goalSelector.addGoal(6,new ResourceWorkGoal(npc,true,()->6000));
-  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Waiting for surface entity chunk")).thenExecute(()->l.addFreshEntity(npc));
-  h.onEachTick(()->{if(l.getBlockState(target).isAir()){
-   h.assertTrue(npc.getY()<base.getY()-5-floor,"The worker physically descended before mining");npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();
+  // Own tickets cannot be released by a neighbouring fixture's force-load
+  // cleanup. Verify actual entity ticks before testing the physical journey.
+  h.assertTrue(l.addFreshEntity(npc),"The returning worker is registered");
+  h.startSequence().thenWaitUntil(()->h.assertTrue(npc.tickCount>0,"Waiting for the registered worker to tick"));
+  h.onEachTick(()->{l.resetEmptyTime();if(l.getBlockState(target).isAir()){
+   h.assertTrue(npc.getY()<base.getY()-5-floor,"The worker physically descended before mining");npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.getChunkSource().removeRegionTicket(RETURN_TICKET,cp,3,ticketOwner);h.succeed();
   }});
-  h.runAtTickTime(2200,()->h.assertTrue(false,"Worker did not return to its deep face: "+npc.position()+" status="+npc.workStatus()+" goals="+npc.runningGoals()+" path="+(npc.getNavigation().getPath()==null?null:npc.getNavigation().getPath().getTarget())));
+  h.runAtTickTime(2200,()->h.assertTrue(false,"Worker did not return to its deep face: "+npc.position()+" ticks="+npc.tickCount+" registered="+(l.getEntity(npc.getUUID())==npc)+" ticking="+l.isPositionEntityTicking(npc.blockPosition())+" removed="+npc.isRemoved()+" noAi="+npc.isNoAi()+" status="+npc.workStatus()+" goals="+npc.runningGoals()+" path="+(npc.getNavigation().getPath()==null?null:npc.getNavigation().getPath().getTarget())));
  }
 }

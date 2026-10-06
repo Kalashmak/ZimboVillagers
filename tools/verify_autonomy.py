@@ -5,13 +5,19 @@ import sys
 from pathlib import Path
 
 parser = argparse.ArgumentParser()
-parser.add_argument('log', type=Path)
+parser.add_argument('log', type=Path, nargs='+', help='Ordered, unmodified log segments from the same observation')
 args = parser.parse_args()
-text = args.log.read_bytes().decode('utf-8', errors='replace')
+text = '\n'.join(log.read_bytes().decode('utf-8', errors='replace') for log in args.log)
 errors = []
 starts = re.findall(r'ASTRA_AUTONOMY_GROWTH START [^\r\n]+', text)
 if len(starts) != 1 or 'initialResidents=6 initialBuildings=7' not in starts[0]:
     errors.append('missing unique natural starter baseline')
+villages = re.findall(r'ASTRA_AUTONOMY_GROWTH (?:START|RESUME) village=([^ ]+)', text)
+if len(set(villages)) != 1:
+    errors.append('log segments do not belong to a unique village')
+observed_ticks = [int(t) for t in re.findall(r'ASTRA_AUTONOMY_GROWTH progress active=(\d+)', text)]
+if any(b <= a for a, b in zip(observed_ticks, observed_ticks[1:])):
+    errors.append('observation ticks must increase across ordered segments')
 if 'ASTRA_AUTONOMY_GROWTH VERIFIED fullProgression=true noPlayerSupplies=true' not in text:
     errors.append('full progression was not verified')
 if re.search(r'ASTRA_AUTONOMY_GROWTH (?:INCOMPLETE|FAILED)', text):

@@ -68,7 +68,7 @@ public final class BuildingBlueprints {
     private static void add(String id,int w,int d,Block wall,Block timber,Block roof) { DESIGNS.put(id,new Design(id,w,d,wall,timber,roof)); }
     public static Collection<Design> designs() { return Collections.unmodifiableCollection(DESIGNS.values()); }
     /** AD-073: "type@N" names level N of a design; its footprint is the design's own. */
-    public static Design design(String id) { int at=id.indexOf('@');return Objects.requireNonNull(DESIGNS.get(at<0?id:id.substring(0,at)),"Unknown blueprint "+id); }
+    public static Design design(String id) { int at=id.indexOf('@');var design=DESIGNS.get(at<0?id:id.substring(0,at));if(design==null)throw new NullPointerException("Unknown blueprint "+id);return design; }
     /** The lot-local x of a design's door on its street face (z 0): the middle of the lot, except the forester's hut (AD-131), whose door is
      *  in the middle of its level-I cabin (ForesterHut.DOOR). Roads end in front of it. */
     /** AD-138 (livestock spec F3): a design whose door is not in the middle of its street face names it here; the forester's hut (AD-131)
@@ -78,7 +78,19 @@ public final class BuildingBlueprints {
     public static String base(String id) { int at=id.indexOf('@');return at<0?id:id.substring(0,at); }
     public static int level(String id) { int at=id.indexOf('@');return at<0?1:Integer.parseInt(id.substring(at+1)); }
     public static final String CASTLE="castle";
+    private static final Map<String,Map<BlockPos,BlockState>> LOCAL_LAYOUTS=new java.util.concurrent.ConcurrentHashMap<>();
+    /** The catalogue geometry is fixed. Callers receive their own ordered map;
+     * actual world damage, placement, wood and rotation are still checked later. */
     public static Map<BlockPos,BlockState> layout(String id,BlockPos base) {
+        // Cache only the finite playable tiers; legacy inputs outside this range
+        // keep their previous behaviour without extending a process-wide cache.
+        int tier=level(id);if(tier<1||tier>6)return buildLayout(id,base);
+        var local=LOCAL_LAYOUTS.computeIfAbsent(id,key->Collections.unmodifiableMap(buildLayout(key,BlockPos.ZERO)));
+        var blocks=new LinkedHashMap<BlockPos,BlockState>();
+        for(var cell:local.entrySet())blocks.put(base.offset(cell.getKey()),cell.getValue());
+        return blocks;
+    }
+    private static Map<BlockPos,BlockState> buildLayout(String id,BlockPos base) {
         if(base(id).equals(Walls.TOWER))return BuildingSigns.label(id,base,FenceJoins.join(TowerStages.palette(level(id),base,raw(Walls.TOWER,base))));
         if(base(id).equals(CASTLE))return BuildingSigns.label(id,base,FenceJoins.join(CastleArchitecture.shell(level(id),base)));
         // Owner 2026-09-24: framed windows side by side join into one window (FramedWindowBlock.join) in the laid design itself.

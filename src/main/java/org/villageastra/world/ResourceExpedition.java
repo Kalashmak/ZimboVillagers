@@ -29,7 +29,7 @@ public final class ResourceExpedition {
   var data=SettlementData.get(l.getServer());
   for(var entity:l.getAllEntities())if(entity instanceof ResidentEntity npc&&npc.isAlive()&&npc.settlementId()!=null&&!MOVING.containsKey(npc.getUUID())){
    var e=data.entry(npc.settlementId());var record=e==null?null:e.settlement().resident(npc.getUUID());
-   if(record!=null&&record.alive()&&e.dimension().equals(l.dimension().location().toString())&&NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID())))follow(npc,test);
+   if(record!=null&&record.alive()&&e.dimension().equals(l.dimension().location().toString())&&(NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))||HomeNeighborhood.recovery(npc)))follow(npc,test);
   }
  }
  /** Server-owned renewal also reaches a worker waiting for an asynchronous chunk transition. */
@@ -40,7 +40,7 @@ public final class ResourceExpedition {
    if(l.getServer()!=server||!trip.test()&&server.getPlayerCount()==0){it.remove();continue;}
    if(!(l.getEntity(en.getKey()) instanceof ResidentEntity npc)||!npc.isAlive()||npc.settlementId()==null){it.remove();continue;}
    var e=SettlementData.get(server).entry(npc.settlementId());
-   if(e==null||!e.dimension().equals(l.dimension().location().toString())||!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))){it.remove();continue;}
+   if(e==null||!e.dimension().equals(l.dimension().location().toString())||!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))&&!HomeNeighborhood.recovery(npc)){it.remove();continue;}
    hold(npc);
   }
  }

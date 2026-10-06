@@ -9,15 +9,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import org.villageastra.domain.*;
 import org.villageastra.server.*;
 
-/** A blocked or exhausted shaft may send its miner to exposed, dry rock instead. */
+/** A blocked or exhausted shaft may send its miner to exposed, dry rock, including reachable caves. */
 public final class SurfaceQuarry {
  private SurfaceQuarry() {}
  public static boolean blocked(CompoundTag work){return work.getString("status").equals("missing_stair_stone")||work.getString("status").equals("fluid_boundary")||work.getString("status").equals("unsafe_ground")||work.getString("status").equals("mine_floor");}
  public static boolean rock(BlockState s){return s.is(BlockTags.BASE_STONE_OVERWORLD)||s.is(Blocks.SANDSTONE)||s.is(Blocks.RED_SANDSTONE)||s.is(BlockTags.COAL_ORES)||s.is(BlockTags.IRON_ORES)||s.is(BlockTags.COPPER_ORES)||s.is(BlockTags.GOLD_ORES);}
  public static boolean safe(ServerLevel l,BlockPos p){
   var s=l.getBlockState(p);if(!rock(s)||l.getBlockEntity(p)!=null||OwnershipEvents.protectedBlock(l,p))return false;
-  if(!l.getBlockState(p.above()).getCollisionShape(l,p.above()).isEmpty()||!l.getBlockState(p.above(2)).getCollisionShape(l,p.above(2)).isEmpty())return false;
-  if(!l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP))return false;
+  if(l.getBlockState(p.above()).getBlock() instanceof net.minecraft.world.level.block.FallingBlock)return false;
   for(var d:Direction.values())if(!l.getFluidState(p.relative(d)).isEmpty())return false;return true;
  }
  public static int tool(ServerLevel l,SettlementData.Entry e,BlockState rock){

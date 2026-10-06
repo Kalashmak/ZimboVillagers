@@ -59,7 +59,7 @@ public final class ClientSmokeTest {
                 try {
                     worldName = Files.readString(mc.gameDirectory.toPath().resolve("astra-smoke-world.txt")).trim();
                     if (!worldName.matches("astra-smoke-[0-9]+")) throw new IllegalStateException("Not a generated smoke world");
-                    if(CaravanRestartProbe.reloading()||ScienceProbe.enabled()||MedicineReloadProbe.enabled()||LiveUpgradeReloadProbe.enabled()||LiveProductionProbe.reloading()||FirstHouseProbe.enabled())Files.deleteIfExists(mc.gameDirectory.toPath().resolve("saves").resolve(worldName).resolve("icon.png"));
+                    if(CaravanRestartProbe.reloading()||ScienceProbe.enabled()||MedicineReloadProbe.enabled()||LiveUpgradeReloadProbe.enabled()||LiveProductionProbe.reloading()||FirstHouseProbe.enabled()||GrowthQuarryAudit.enabled()||AutonomyGrowthProbe.enabled())Files.deleteIfExists(mc.gameDirectory.toPath().resolve("saves").resolve(worldName).resolve("icon.png"));
                     mc.createWorldOpenFlows().loadLevel(new TitleScreen(),worldName);
                 } catch (Exception ex) { failure = ex.toString(); }
                 return;
@@ -157,7 +157,7 @@ public final class ClientSmokeTest {
                         if(entry.settlement().civilization().level()!=2)throw new IllegalStateException("Tier-three harness requires completed tier-two world");
                         fundHall(server);
                     }
-                    if(!FirstHouseProbe.enabled()||!Boolean.getBoolean("villageastra.reloadSmoke"))level.setDayTime(6000);
+                    if(!AutonomyGrowthProbe.enabled()&&!GrowthQuarryAudit.enabled()&&(!FirstHouseProbe.enabled()||!Boolean.getBoolean("villageastra.reloadSmoke")))level.setDayTime(6000);
                     var player = server.getPlayerList().getPlayers().get(0);
                     player.teleportTo(level, viewpoint.getX(),viewpoint.getY(),viewpoint.getZ(),Boolean.getBoolean("villageastra.naturalSmoke")?45:0,Boolean.getBoolean("villageastra.naturalSmoke")?35:25);
                     player.getAbilities().flying = true;
@@ -176,6 +176,7 @@ public final class ClientSmokeTest {
             if(CreativeTradeProbe.enabled()){CreativeTradeProbe.tick(mc);return;}
             if(TradeProbe.enabled()){TradeProbe.tick(mc);return;}
             if(FirstHouseProbe.enabled()){FirstHouseProbe.tick(mc);return;}
+            if(GrowthQuarryAudit.enabled()){GrowthQuarryAudit.tick(mc);return;}
             if(AutonomyGrowthProbe.enabled()){AutonomyGrowthProbe.tick(mc);return;}
             if(GiftProbe.enabled()){GiftProbe.tick(mc);return;}
             if(AtlasProbe.enabled()){AtlasProbe.tick(mc);return;}

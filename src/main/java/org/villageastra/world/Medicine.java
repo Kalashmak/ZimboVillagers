@@ -9,11 +9,11 @@ import org.villageastra.VillageAstra;
 import org.villageastra.domain.*;
 import org.villageastra.persistence.WorldJournal;
 import org.villageastra.server.SettlementData;
-/** AD-152 (owner's Medicine ladder): residents sometimes fall ill and are healed only by the village's medicine. I–III: the hospital (the
+/** AD-152 (owner's Medicine ladder): residents sometimes fall ill; medicine cures them quickly, fed rest at home slowly. I–III: the hospital (the
  *  clinic) — the sick walk there (PatientGoal) and lie while a medic is at work, as many at once as it has beds (1/2/4/6/8/12), each cured
  *  after cure_ticks with one real bandage from the clinic chest; IV: the two medics also walk to the sick at home (DoctorGoal); V: the residents
  *  carry a paid dose collected at the counter or delivered by a kennel wolf (MedicineDelivery); VI: everyone is healed without medics — the sick at
- *  once, the hurt a little every pass. Illness comes to every village; only the cure needs the clinic. balance/medicine.json. */
+ *  once, the hurt a little every pass. Illness comes to every village; fed residents can also recover slowly while resting at home. balance/medicine.json. */
 public final class Medicine {
  private Medicine(){}
  public static final int SICK_PERMILLE,CURE_TICKS,VISITS,MEDICINE,AUTOMATIC;
@@ -26,6 +26,8 @@ public final class Medicine {
  public static int beds(int level){return CoreEffects.value("clinic","beds",level);}
  /** Blocks from the clinic's station a patient counts as lying in it. */
  public static final int WARD=6;
+ public static final long REST_RECOVERY=3L*24000;
+ private static final Map<UUID,Long> REST_CLOCK=new HashMap<>();
  private static final Map<UUID,Long> DAY=new HashMap<>();
  private static final Map<UUID,long[]> LYING=new HashMap<>();
  /** The village's clinic of the best working level, or null. */
@@ -33,7 +35,11 @@ public final class Medicine {
   Settlement.Building best=null;int top=0;for(var b:e.settlement().buildings())if(b.type().equals("clinic")){int lv=BuildingLevels.level(l,e,b);if(lv>top){top=lv;best=b;}}return best;
  }
  /** The ill fall ill: whether this resident falls ill on this village day (a pure roll of its id and the day). */
- public static boolean fallsIll(UUID resident,long day){return Math.floorMod(Objects.hash(resident,day),1000)<SICK_PERMILLE;}
+ public static boolean fallsIll(UUID resident,long day){
+  long roll=resident.getMostSignificantBits()^Long.rotateLeft(resident.getLeastSignificantBits(),23)^day*0x9e3779b97f4a7c15L;
+  roll=(roll^(roll>>>30))*0xbf58476d1ce4e5b9L;roll=(roll^(roll>>>27))*0x94d049bb133111ebL;roll^=roll>>>31;
+  return Math.floorMod(roll,1000)<SICK_PERMILLE;
+ }
  /** A medic of this clinic at work in it now. */
  static boolean medicAt(ServerLevel l,SettlementData.Entry e,Settlement.Building clinic){
   var at=LogisticsRoutes.position(e,clinic);
@@ -57,6 +63,7 @@ public final class Medicine {
   boolean changed=false;long day=now/24000L;var s=e.settlement();
   var last=DAY.get(s.id());
   if(last==null||last!=day){DAY.put(s.id(),day);if(last!=null)for(var r:s.residents())if(r.alive()&&fallsIll(r.id(),day)&&r.fallIll())changed=true;}
+  changed|=restRecovery(l,e,now);
   MedicineDelivery.tick(l,e);
   var clinic=clinic(l,e);int level=clinic==null?0:BuildingLevels.level(l,e,clinic);
   if(level>=AUTOMATIC){
@@ -79,5 +86,15 @@ public final class Medicine {
   return changed;
  }
  /** Tests: forget the day counter and the ward's time of a village. */
- public static void forget(UUID village){DAY.remove(village);}
+ public static boolean restRecovery(ServerLevel l,SettlementData.Entry e,long now){
+  Long previous=REST_CLOCK.put(e.settlement().id(),now);long step=previous==null?0:Math.max(0,Math.min(20,now-previous));boolean changed=false;
+  for(var r:e.settlement().residents()){
+   if(!r.alive()||!r.sick()||r.missedMeals()!=0||r.lastMeal()<0||now-r.lastMeal()>Population.MEAL_INTERVAL
+    ||!(l.getEntity(r.id()) instanceof ResidentEntity npc)||npc.escortPlayer()!=null||CargoCustody.pending(l.getServer(),r.id()))continue;
+   var home=HomeNeighborhood.anchor(npc);if(home==null||npc.blockPosition().distSqr(home)>8*8||!npc.getNavigation().isDone()
+    ||npc.getDeltaMovement().horizontalDistanceSqr()>.0025)continue;
+   if(step>0){r.restForRecovery(step);changed=true;}if(r.recoveryRest()>=REST_RECOVERY)changed|=r.cure();
+  }return changed;
+ }
+ public static void forget(UUID village){DAY.remove(village);REST_CLOCK.remove(village);}
 }

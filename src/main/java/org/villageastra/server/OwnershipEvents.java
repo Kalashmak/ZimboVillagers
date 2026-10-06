@@ -32,7 +32,8 @@ public final class OwnershipEvents {
         var data = SettlementData.get(level.getServer());
         for (var entry : data.entries()) {
             if(!entry.dimension().equals(level.dimension().location().toString()))continue;
-            boolean legacy=entry.settlement().buildings().stream().anyMatch(b->b.id().equals(org.villageastra.domain.Settlement.childId(entry.settlement().id(),"house/0"))&&b.x()==10&&b.z()==0);
+            var originalHouse=org.villageastra.domain.Settlement.childId(entry.settlement().id(),"house/0");
+            boolean legacy=entry.settlement().buildings().stream().anyMatch(b->b.id().equals(originalHouse)&&b.x()==10&&b.z()==0);
             // AD-125: the starter layout as a whole guards every starter cell; a move asks only about the other buildings' own bounds.
             if(legacy&&consider==EVERY&&Layout.STRUCTURAL.contains(pos.subtract(entry.center())))return true;
             for(var building:entry.settlement().buildings()){

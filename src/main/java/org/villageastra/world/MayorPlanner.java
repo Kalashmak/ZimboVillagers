@@ -8,7 +8,7 @@ import org.villageastra.server.SettlementData;
 import org.villageastra.server.BookResearch;
 /** AD-032: an NPC mayor chooses the next project from real shortages, walks to a surveyed site and approves the paid order there. */
 public final class MayorPlanner {
- public static final long PLAN_INTERVAL=2400;public static final int SURVEYS_PER_PASS=24,MAX_RADIUS=120;
+ public static final long PLAN_INTERVAL=200;public static final int SURVEYS_PER_PASS=24,MAX_RADIUS=120;
  /** A chosen site waiting for the mayor to arrive. */
  public record Proposal(String design,BlockPos site,String reason){}
  private static final Map<UUID,Proposal> PROPOSALS=new HashMap<>();
@@ -25,8 +25,13 @@ public final class MayorPlanner {
   long free=s.homes().stream().filter(Settlement.Home::usable).mapToLong(h->h.capacity()-s.occupancy(h.id())).sum();
   boolean homeless=s.residents().stream().anyMatch(r->r.alive()&&r.home()==null);
   boolean children=s.residents().stream().anyMatch(r->r.alive()&&r.life()==Resident.Life.CHILD);
-  if(free==0||homeless)return s.civilization().level()>=2?"home_2":"home";
-  if(children&&!has(s,"school")&&orderable.test("school"))return "school";
+  if(homeless)return s.civilization().level()>=2?"home_2":"home";
+  // Once the first family has a roof, full beds must not replace its school with
+  // an endless sequence of growth houses. Children may grow before a site is found.
+  boolean education=children||s.residents().stream().filter(Resident::alive).count()>6
+   &&s.residents().stream().anyMatch(r->r.alive()&&r.life()==Resident.Life.ADULT&&!r.educated());
+  if(education&&!has(s,"school")&&orderable.test("school"))return "school";
+  if(free==0)return s.civilization().level()>=2?"home_2":"home";
   boolean idle=s.residents().stream().anyMatch(r->r.alive()&&r.life()==Resident.Life.ADULT&&r.profession()==null);
   if(idle)for(var type:List.of("mill","restaurant","carpentry","masonry","warehouse","smithy"))if(!has(s,type)&&orderable.test(type))return type;
   return null;
@@ -34,7 +39,26 @@ public final class MayorPlanner {
  /** AD-123 (H4, C7): the same shortages, but the big house only once its research (Housing II) is done; otherwise the standard house,
   *  so an NPC village without the research keeps growing instead of stalling on a refused design. AD-136 (CF13): a design its research
   *  still refuses is passed over, so the school of a village without Education I never holds up everything else. */
- public static String need(ServerLevel l,SettlementData.Entry e){var n=need(e.settlement(),type->!Set.of("mill","carpentry","masonry").contains(type)&&ResearchGate.designRefusal(l,e,type).isEmpty());return "home_2".equals(n)?HousingLadder.houseFor(l,e):n;}
+ public static String need(ServerLevel l,SettlementData.Entry e){
+  if(e.settlement().governance().playerMayor()==null&&foodShortage(l,e)&&ResearchGate.designRefusal(l,e,"farm").isEmpty())return "farm";
+  var n=need(e.settlement(),type->!Set.of("mill","carpentry","masonry").contains(type)&&ResearchGate.designRefusal(l,e,type).isEmpty());return "home_2".equals(n)?HousingLadder.houseFor(l,e):n;
+ }
+ /** The next project must feed the existing population and the next child of a
+  * spare home. Count only fields already laid and currently workable, with
+  * vanilla crop growth and the real conversion of the staffed food chain. */
+ public static boolean foodShortage(ServerLevel l,SettlementData.Entry e){
+  var s=e.settlement();long alive=s.residents().stream().filter(Resident::alive).count();if(alive<6)return false;
+  var farms=s.buildings().stream().filter(b->b.type().equals("farm")).toList();if(farms.isEmpty())return false;
+  long target=alive+(s.homes().stream().anyMatch(h->h.usable()&&s.occupancy(h.id())<h.capacity())?1:0);
+  int randomTicks=l.getGameRules().getInt(net.minecraft.world.level.GameRules.RULE_RANDOMTICKING);
+  double wheat=farms.stream().mapToDouble(b->FarmField.wheatPerDay(FarmField.worked(l,e,b),randomTicks)).sum();
+  double wheatPerBread=HandBread.chainStaffed(l,e)?2D:HandBread.WHEAT_PER_UNIT/(double)HandBread.BREAD_PER_UNIT;
+  double food=wheat/wheatPerBread*Population.nutrition(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD));
+  double demand=target*Population.MEAL_NUTRITION*24000D/Population.MEAL_INTERVAL;
+  // FarmYield is uninterrupted vanilla growth. Use the same quarter reserve as
+  // the farm rating instead of treating its theoretical maximum as dependable food.
+  return food*FarmYield.WHEAT_PER_RESIDENT+1e-9<demand*FarmField.RATING;
+ }
  /** AD-101: what a village of its own mayor builds next — the shortages first, then the watch and the barracks once it is large enough
   *  and has the research for them, so an NPC village grows the way a played one does. */
  public static String wanted(ServerLevel l,SettlementData.Entry e){
@@ -134,38 +158,67 @@ public final class MayorPlanner {
    return Walls.order(l,e,shape,r).isEmpty()?shape.name().toLowerCase(Locale.ROOT)+r:"";}
   return "";
  }
- /** Nearest free surveyed site on a spiral of ground positions around the hall; a bounded number of surveys per pass. */
+ /** Loaded local soil under a canopy; roofs, trunks and submerged ground are excluded. */
+ public static BlockPos siteGround(ServerLevel l,BlockPos c){
+  if(!l.hasChunkAt(c))return null;
+  int top=l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,c.getX(),c.getZ())-1;
+  for(int y=top;y>=Math.max(l.getMinBuildHeight(),top-64);y--){
+   var p=new BlockPos(c.getX(),y,c.getZ());var s=l.getBlockState(p);
+   boolean soil=s.is(net.minecraft.tags.BlockTags.DIRT)||s.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD)||s.is(net.minecraft.tags.BlockTags.SAND)||s.is(net.minecraft.world.level.block.Blocks.GRAVEL)||s.is(net.minecraft.world.level.block.Blocks.SNOW_BLOCK);
+   if(soil&&s.isFaceSturdy(l,p,net.minecraft.core.Direction.UP)&&s.getFluidState().isEmpty()&&l.getBlockState(p.above()).canBeReplaced()&&l.getBlockState(p.above(2)).canBeReplaced()&&l.getFluidState(p.above()).isEmpty()&&l.getFluidState(p.above(2)).isEmpty())return p;
+  }
+  return null;
+ }
+ /** Bounded surveys around the hall and the existing outskirts; never clears the selected terrain. */
  public static BlockPos site(ServerLevel l,SettlementData.Entry e,String design){
-  var candidates=new ArrayList<BlockPos>();
-  for(int r=12;r<=MAX_RADIUS;r+=4)for(int a=0;a<360;a+=Math.max(10,360/(r/2))){
-   int x=e.center().getX()+(int)Math.round(r*Math.cos(Math.toRadians(a))),z=e.center().getZ()+(int)Math.round(r*Math.sin(Math.toRadians(a)));
-   candidates.add(new BlockPos(x,0,z));
+  // Expansion follows standing buildings: the original hall circle remains
+  // first, but a growing settlement must not run out of searchable land.
+  var anchors=new LinkedHashSet<BlockPos>();anchors.add(e.center());
+  e.settlement().buildings().stream().map(b->BuildingPlacement.origin(e,b))
+   .sorted(Comparator.comparingDouble(p->p.distSqr(e.center()))).forEach(anchors::add);
+  var unique=new LinkedHashSet<BlockPos>();
+  for(var anchor:anchors)for(int r=12;r<=MAX_RADIUS;r+=4)for(int a=0;a<360;a+=Math.max(10,360/(r/2))){
+   int x=anchor.getX()+(int)Math.round(r*Math.cos(Math.toRadians(a))),z=anchor.getZ()+(int)Math.round(r*Math.sin(Math.toRadians(a)));
+   unique.add(new BlockPos(x,0,z));
   }
+  var candidates=new ArrayList<>(unique);
   int start=CURSOR.getOrDefault(e.settlement().id(),0)%candidates.size();
+  var rejected=new TreeMap<String,Integer>();
   for(int i=0;i<Math.min(SURVEYS_PER_PASS,candidates.size());i++){
-   var c=candidates.get((start+i)%candidates.size());if(!l.hasChunkAt(c))continue;
-   BlockPos ground=null;
-   // Walk down from above the hall level: the first sturdy block with two free cells above is the site ground (tree crowns and roofs excluded by the free cells).
-   for(int y=e.center().getY()+6;y>=e.center().getY()-6&&ground==null;y--){var p=new BlockPos(c.getX(),y,c.getZ());if(l.getBlockState(p).isFaceSturdy(l,p,net.minecraft.core.Direction.UP)&&l.getBlockState(p.above()).canBeReplaced()&&l.getBlockState(p.above(2)).canBeReplaced()&&l.getFluidState(p.above()).isEmpty())ground=p;}
-   if(ground==null||!GrowthPlots.available(e,design,ground,0))continue;
-   if(BuildingOrders.survey(l,e,design,0,ground).ok()){CURSOR.put(e.settlement().id(),(start+i)%candidates.size());return ground;}
+   var c=candidates.get((start+i)%candidates.size());if(!l.hasChunkAt(c)){rejected.merge("no_chunk",1,Integer::sum);continue;}
+   BlockPos ground=siteGround(l,c);
+   // Loaded local terrain decides the height; roofs and tree trunks are not
+   // building ground. The bounded downward scan crosses a natural canopy.
+   if(ground==null){rejected.merge("no_ground",1,Integer::sum);continue;}
+   if(!GrowthPlots.available(e,design,ground,0)){rejected.merge("growth_space",1,Integer::sum);continue;}
+   var survey=design.equals("farm")?FoodConstruction.survey(l,e,ground):BuildingOrders.survey(l,e,design,0,ground);
+   if(survey.ok()){CURSOR.put(e.settlement().id(),(start+i)%candidates.size());if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke"))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MAYOR_SITE design={} cursor={} total={} approvedCandidate={} rejected={}",design,start,candidates.size(),ground,rejected);return ground;}
+   rejected.merge("survey_"+survey.reason(),1,Integer::sum);
+   if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke")&&survey.reason().equals("conflicts")){
+    var blocks=new TreeMap<String,Integer>();
+    for(var p:survey.conflicts())blocks.merge(net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(l.getBlockState(p).getBlock()).toString(),1,Integer::sum);
+    com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MAYOR_CONFLICT design={} candidate={} blocks={} sample={}",design,ground,blocks,survey.conflicts().stream().limit(6).map(BlockPos::toShortString).toList());
+   }
   }
+  if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke"))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MAYOR_SITE design={} cursor={} total={} rejected={}",design,start,candidates.size(),rejected);
   CURSOR.put(e.settlement().id(),(start+SURVEYS_PER_PASS)%candidates.size());
   return null;
  }
  /** Planner pass for NPC-mayor settlements without an active project. */
  public static void tick(MinecraftServer server,SettlementData data,SettlementData.Entry e){
   var s=e.settlement();if(!npcMayor(s))return;var l=server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,new net.minecraft.resources.ResourceLocation(e.dimension())));if(l==null)return;
+  FoodConstruction.resume(l,e);
+  FarmStockProject.requote(l,e);
   // An unfunded building must not freeze the independent research/material queue.
   if(data.clock().ticks()%PLAN_INTERVAL<20)BookResearch.autoSelect(l,e);
-  if(HallUpgradeGoal.pending(l,s.id())){PROPOSALS.remove(s.id());if(data.clock().ticks()%WATCH_EVERY<20)watch(l,e,l.getGameTime());return;}
+  if(HallUpgradeGoal.pending(l,s.id())&&!FoodConstruction.maySuspend(l,e)){PROPOSALS.remove(s.id());if(data.clock().ticks()%WATCH_EVERY<20){LocalBuildingTimber.requote(l,e);watch(l,e,l.getGameTime());}return;}
   var current=PROPOSALS.get(s.id());if(current!=null&&!current.design().equals(wanted(l,e)))PROPOSALS.remove(s.id());
   if(PROPOSALS.containsKey(s.id())||data.clock().ticks()%PLAN_INTERVAL>=20)return;
   if(plan(l,e)==null)develop(l,e);
  }
  /** One bounded planning pass: the current need and, if found, a surveyed site. */
  public static Proposal plan(ServerLevel l,SettlementData.Entry e){
-  var s=e.settlement();if(!npcMayor(s)||HallUpgradeGoal.pending(l,s.id()))return null;
+  var s=e.settlement();if(!npcMayor(s)||HallUpgradeGoal.pending(l,s.id())&&!FoodConstruction.maySuspend(l,e))return null;
   var design=wanted(l,e);if(design==null)return null;
   if(BuildingOrders.HOUSING.contains(BuildingBlueprints.base(design))&&BuildingWood.choose(l,e,design).isEmpty())return null;
   var site=site(l,e,design);if(site==null)return null;
@@ -177,7 +230,7 @@ public final class MayorPlanner {
   if(mayor.distanceToSqr(p.site().getX()+.5,p.site().getY()+1,p.site().getZ()+.5)>BuildingOrders.SITE_DISTANCE*BuildingOrders.SITE_DISTANCE)return "walking";
   if(!GrowthPlots.available(e,p.design(),p.site(),0)){PROPOSALS.remove(e.settlement().id());return "rejected_growth_space";}
   if(BuildingOrders.HOUSING.contains(BuildingBlueprints.base(p.design()))&&BuildingWood.choose(l,e,p.design()).isEmpty()){PROPOSALS.remove(e.settlement().id());return "rejected_timber_source";}
-  var reason=BuildingOrders.approve(l,e,p.design(),0,p.site());PROPOSALS.remove(e.settlement().id());
+  var reason=p.design().equals("farm")&&FoodConstruction.maySuspend(l,e)?FoodConstruction.approve(l,e,p.site()):BuildingOrders.approve(l,e,p.design(),0,p.site());PROPOSALS.remove(e.settlement().id());
   if(reason.isEmpty()){SettlementData.get(l.getServer()).setDirty();return "approved";}
   return "rejected_"+reason;
  }

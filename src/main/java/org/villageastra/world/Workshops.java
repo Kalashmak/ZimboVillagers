@@ -125,7 +125,7 @@ public final class Workshops {
  /** An NPC mayor can prepare ordered training that directly improves an unpaid active project. */
  private static boolean craftTrainingHelps(ServerLevel l,SettlementData.Entry e){
   if(e.settlement().governance().playerMayor()!=null||!HallUpgradeGoal.pending(l,e.settlement().id()))return false;
-  var project=HallUpgradeGoal.inspect(l,e.settlement().id());
+  var project=HallUpgradeGoal.fundingView(l,e.settlement().id());
   if(project.getBoolean("funded")||e.settlement().governance().paused(HallConstructionPlan.projectId(project)))return false;
   return ConstructionFunding.missing(project).keySet().stream().anyMatch(id->listed(hallCrafts("engineering.1"),new ItemStack(item(id))));
  }
@@ -137,7 +137,7 @@ public final class Workshops {
   boolean prepareCrafts=craftTrainingHelps(l,e);
   if(prepareCrafts)add(result,LogisticsRoutes.NEED_RESEARCH,org.villageastra.server.BookResearch.wants(l,e,id->id.equals("engineering.1")));
   if(hall!=null&&HallUpgradeGoal.pending(l,e.settlement().id())){
-   var state=HallUpgradeGoal.inspect(l,e.settlement().id());var chest=LogisticsRoutes.chest(l,e,hall);
+   var state=HallUpgradeGoal.fundingView(l,e.settlement().id());var chest=LogisticsRoutes.chest(l,e,hall);
    if(!state.getBoolean("funded")&&chest!=null){var cost=state.getCompound("cost");
     for(var key:cost.getAllKeys().stream().sorted().toList()){var item=item(key);int held=0;for(var raw:state.getList("cargo",Tag.TAG_COMPOUND)){var s=ItemStack.of((CompoundTag)raw);if(s.is(item))held+=s.getCount();}
      int missing=cost.getInt(key)-held-LogisticsRoutes.count(chest,s->s.is(item));if(missing>0)result.add(new Want(Ingredient.of(item),missing,hall.id(),LogisticsRoutes.NEED_BUILD));}}
@@ -152,11 +152,13 @@ public final class Workshops {
   add(result,LogisticsRoutes.NEED_WAYS,Trails.wants(l,e,hall));
   // Clinics keep a small bandage reserve (AD-034); AD-112: the clinic's core makes it larger with every level.
   for(var b:e.settlement().buildings())if(b.type().equals("clinic")){var chest=LogisticsRoutes.chest(l,e,b);if(chest!=null){int missing=reserve(l,e,b)-LogisticsRoutes.count(chest,s->s.is(org.villageastra.VillageAstra.BANDAGE.get()));if(missing>0)result.add(new Want(Ingredient.of(org.villageastra.VillageAstra.BANDAGE.get()),missing,b.id(),LogisticsRoutes.NEED_WAYS));}}
-  // AD-130: a farm the machine works alone (VI) has its seed and bone meal brought by the porters (its harvest goes out as every farm's).
-  for(var b:e.settlement().buildings())if(b.type().equals("farm")&&FarmField.farmers(b.level())==0&&!FarmField.legacy(e.settlement())){var chest=LogisticsRoutes.chest(l,e,b);if(chest==null)continue;
-   var policies=org.villageastra.server.FarmPolicies.get(l.getServer());var crops=new LinkedHashSet<FarmCrops>();for(int f=1;f<=FarmField.FIELDS;f++)crops.add(policies.crop(e.settlement().id(),b.id(),f));
-   for(var crop:crops){var seed=new ItemStack(crop.seed);int missing=LogisticsRoutes.reserve(b,seed)-LogisticsRoutes.count(chest,st->st.is(crop.seed));if(missing>0)result.add(new Want(Ingredient.of(crop.seed),missing,b.id(),LogisticsRoutes.NEED_WAYS));}
-   if(ResearchKnobs.boneMeal(l,e)>0){int missing=FARM_BONE_MEAL-LogisticsRoutes.count(chest,st->st.is(Items.BONE_MEAL));if(missing>0)result.add(new Want(Ingredient.of(Items.BONE_MEAL),missing,b.id(),LogisticsRoutes.NEED_WAYS));}}
+  // Every farm needs finite real seed for new plots. Machines also request bone meal.
+  for(var b:e.settlement().buildings())if(b.type().equals("farm")){var chest=LogisticsRoutes.chest(l,e,b);if(chest==null)continue;
+   var automatic=FarmField.farmers(b.level())==0&&!FarmField.legacy(e.settlement());var policies=org.villageastra.server.FarmPolicies.get(l.getServer());var crops=new LinkedHashSet<FarmCrops>();
+   if(automatic)for(int f=1;f<=FarmField.FIELDS;f++)crops.add(policies.crop(e.settlement().id(),b.id(),f));
+   else for(var module:FarmField.worked(l,e,b))crops.add(policies.crop(e.settlement().id(),b.id(),FarmField.number(module,FarmField.legacy(e.settlement()))));
+   for(var crop:crops){var seed=new ItemStack(crop.seed);int missing=LogisticsRoutes.reserve(b,seed)-LogisticsRoutes.count(chest,st->st.is(crop.seed));if(missing>0)result.add(new Want(Ingredient.of(crop.seed),missing,b.id(),automatic?LogisticsRoutes.NEED_WAYS:LogisticsRoutes.NEED_SUPPLY));}
+   if(automatic&&ResearchKnobs.boneMeal(l,e)>0){int missing=FARM_BONE_MEAL-LogisticsRoutes.count(chest,st->st.is(Items.BONE_MEAL));if(missing>0)result.add(new Want(Ingredient.of(Items.BONE_MEAL),missing,b.id(),LogisticsRoutes.NEED_WAYS));}}
   // AD-147 §2.2 (CF-O): the carts the warehouse's couriers and wolves lack, into the warehouse (the carpentry or the hall with Engineering II makes them).
   add(result,LogisticsRoutes.NEED_WAYS,WarehouseCarts.wants(l,e));
   // AD-156: Engineering III - the redstone mechanisms the engineering office puts up for sale, when its shelf is empty.
@@ -223,8 +225,14 @@ public final class Workshops {
   return false;
  }
  // ---- planning ----------------------------------------------------------------------------
- private static int available(Container c,Input in){int n=0;for(int i=0;i<c.getContainerSize();i++)if(in.matches(c.getItem(i)))n+=c.getItem(i).getCount();return n;}
- private static int fuel(Container c){int n=0;for(int i=0;i<c.getContainerSize();i++){var s=c.getItem(i);n+=WorkshopFuel.ticks(s)*s.getCount();}return n;}
+ /** One synchronous planning pass reads each real slot once, then counts only occupied stacks. */
+ private static final class PlanInventory extends net.minecraft.world.SimpleContainer {
+  private final List<ItemStack> occupied=new ArrayList<>();private final Map<Ingredient,Integer> counts=new IdentityHashMap<>();private int burn;
+  PlanInventory(Container source){super(source.getContainerSize());for(int i=0;i<source.getContainerSize();i++){var item=source.getItem(i).copy();setItem(i,item);if(!item.isEmpty()){occupied.add(item);burn+=WorkshopFuel.ticks(item)*item.getCount();}}}
+  int available(Input in){return counts.computeIfAbsent(in.ingredient(),k->{int count=0;for(var item:occupied)if(in.matches(item))count+=item.getCount();return count;});}
+ }
+ private static int available(Container c,Input in){if(c instanceof PlanInventory stock)return stock.available(in);int n=0;for(int i=0;i<c.getContainerSize();i++)if(in.matches(c.getItem(i)))n+=c.getItem(i).getCount();return n;}
+ private static int fuel(Container c){if(c instanceof PlanInventory stock)return stock.burn;int n=0;for(int i=0;i<c.getContainerSize();i++){var s=c.getItem(i);n+=WorkshopFuel.ticks(s)*s.getCount();}return n;}
  private static List<Input> group(List<Ingredient> ingredients){
   var groups=new LinkedHashMap<String,Input>();
   for(var ing:ingredients){if(ing.isEmpty())continue;var key=ing.toJson().toString();var old=groups.get(key);groups.put(key,new Input(ing,old==null?1:old.count()+1));}
@@ -239,7 +247,10 @@ public final class Workshops {
   var manager=l.getRecipeManager();if(manager!=cachedManager){CACHE.clear();cachedManager=manager;}
   var templates=CACHE.computeIfAbsent(spec.building()+"|"+spec.level()+"|"+BuiltInRegistries.ITEM.getKey(target),k->templates(l,spec,target));
   var result=new ArrayList<Job>();
-  for(var job:templates){int per=Math.max(1,job.outputs().stream().filter(o->o.is(target)).mapToInt(ItemStack::getCount).sum());int n=Math.max(1,Math.min(job.batch(),(wanted+per-1)/per));result.add(n>1?scale(job,n):job);}
+  // The shared hand bench must reconsider urgent tools between short paid batches.
+  // Dedicated workshops retain their published batches and labor per unit.
+  int hallBatch=4;
+  for(var job:templates){int per=Math.max(1,job.outputs().stream().filter(o->o.is(target)).mapToInt(ItemStack::getCount).sum());int limit=spec.building().equals("town_hall")?Math.min(hallBatch,job.batch()):job.batch();int n=Math.max(1,Math.min(limit,(wanted+per-1)/per));result.add(n>1?scale(job,n):job);}
   return result;
  }
  /** n units of a one-unit job: every input and output count, the fuel and the labour times n. */
@@ -284,7 +295,8 @@ public final class Workshops {
  /** Next job for this workshop without a fuel bank. */
  public static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants){return plan(l,spec,chest,wants,0);}
  private static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants,int bank){
-  for(var want:wants)for(var option:want.ingredient().getItems()){var job=plan(l,spec,chest,option.getItem(),want.count(),0,bank);if(job!=null)return job;}
+  var stock=chest instanceof PlanInventory?chest:new PlanInventory(chest);var memo=new HashMap<PlanKey,Job>();
+  for(var want:wants)for(var option:want.ingredient().getItems()){var job=plan(l,spec,stock,option.getItem(),want.count(),0,bank,memo);if(job!=null)return job;}
   return null;
  }
  private record PlanKey(Item item,int count,int depth,Set<Item> ancestors){}
@@ -318,6 +330,7 @@ public final class Workshops {
  public static List<Input> needs(ServerLevel l,Spec spec,Container chest,List<Want> wants){return needs(l,null,spec,chest,wants,0);}
  public static List<Input> needs(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants){return needs(l,e,spec,chest,wants,0);}
  private static List<Input> needs(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){
+  chest=chest instanceof PlanInventory?chest:new PlanInventory(chest);
   for(var want:wants)for(var option:want.ingredient().getItems()){var result=new ArrayList<Input>();if(needs(l,e,spec,chest,option.getItem(),want.count(),0,bank,result))return result;}
   return List.of();
  }
@@ -347,14 +360,21 @@ public final class Workshops {
  private static int burn(ItemStack s){return net.minecraftforge.common.ForgeHooks.getBurnTime(s,RecipeType.SMELTING)*s.getCount();}
  public static BlockPos station(SettlementData.Entry e,Settlement.Building b){return LogisticsRoutes.position(e,b);}
  /** Trusted service called by the physical worker at the station (or tests with an explicit clock). */
- public static String advance(ServerLevel l,SettlementData.Entry e,Settlement.Building b,long now,List<Want> wants){
+ public static String advance(ServerLevel l,SettlementData.Entry e,Settlement.Building b,long now,List<Want> wants){return advance(l,e,b,now,wants,null);}
+ public static String advance(ServerLevel l,SettlementData.Entry e,Settlement.Building b,long now,List<Want> wants,UUID contributor){
   var spec=spec(b.type());if(spec==null||e.settlement().buildings().stream().noneMatch(x->x.equals(b)))throw new IllegalArgumentException("Not a workshop");spec=spec(l,e,b);
   var real=LogisticsRoutes.chest(l,e,b);if(real==null)return "workshop_missing_chest";var pos=station(e,b);
   // AD-137: the hall as a workshop plans and takes from its stock less the active project's reserve; the take names the real slot.
   var chest=b.type().equals("town_hall")?HallReserve.view(l,e,real):real;
   var file=path(l,b.id());var t=inspect(l,b.id());int bank=t.getInt("fuelBank");
+  if(b.type().equals("town_hall")&&t.getBoolean("toolRepair"))chest=HallReserve.repairView(l,e,real);
   if(t.isEmpty()||t.getString("stage").equals("idle")){
-   var job=withFurnace(l,e,spec,chest,wants,bank);if(job!=null&&NaturalFurnace.recipe(l,job))job=NaturalFurnace.fit(job,chest);
+   Job job=null;boolean repair=false;
+   if(b.type().equals("town_hall")&&ToolSupplyReserve.needed(l,e)){
+    var repairWants=wants.stream().filter(w->java.util.Arrays.stream(w.ingredient().getItems()).anyMatch(ToolSupplyReserve::tool)).toList();
+    job=withFurnace(l,e,spec,HallReserve.repairView(l,e,real),repairWants,bank);repair=job!=null;
+   }
+   if(job==null)job=withFurnace(l,e,spec,chest,wants,bank);if(job!=null&&NaturalFurnace.recipe(l,job))job=NaturalFurnace.fit(job,chest);
    var record=new CompoundTag();record.putInt("schema",1);record.putUUID("building",b.id());record.putLong("lastTick",now);
    // AD-104 P2: burn time a finished job paid for and did not use stays with the station, in its idle record and in its next job's.
    if(bank>0)record.putInt("fuelBank",bank);
@@ -363,6 +383,7 @@ public final class Workshops {
     if(!record.equals(t.isEmpty()?null:withoutTick(t,now)))NbtRecord.write(file,record);
     return needs.isEmpty()?"workshop_idle":"workshop_missing_inputs";
    }
+   if(repair)record.putBoolean("toolRepair",true);
    record.putUUID("id",UUID.randomUUID());record.putString("recipe",job.recipe());record.putString("stage","fund");record.put("inputs",inputsTag(job.inputs()));record.putInt("fuelTicks",job.fuelTicks());
    if(job.tool()!=null){record.putString("tool",job.tool().ingredient().toJson().toString());record.putInt("toolDamage",job.toolDamage());}
    // AD-136: a hall job of a learned item takes the builder's pace, any other the slow bootstrap one.
@@ -371,24 +392,51 @@ public final class Workshops {
    if(NaturalFurnace.recipe(l,job)){record.putBoolean("physicalSmelt",true);record.putString("stage","smelt_raw");}
    NbtRecord.write(file,record);return "workshop_funding";
   }
-  if(now-t.getLong("lastTick")<20)return "workshop_wait_tick";t.putLong("lastTick",now);
+  var person=contributor==null?null:e.settlement().resident(contributor);
+  boolean helping=b.type().equals("town_hall")&&person!=null&&eligible(person,b)&&t.getString("stage").equals("work");
+  if(helping){
+   if(t.contains("workSince")&&now-t.getLong("workSince")<20)return "workshop_wait_tick";
+   var hands=t.getCompound("laborWorkers");String key=contributor.toString();
+   if(hands.contains(key)&&now-hands.getLong(key)<20)return "workshop_wait_tick";
+   hands.putLong(key,now);t.put("laborWorkers",hands);
+  }else if(now-t.getLong("lastTick")<20)return "workshop_wait_tick";
+  t.putLong("lastTick",now);
   if(t.getBoolean("physicalSmelt"))return NaturalFurnace.advance(l,e,b,t,now);
   var id=t.getUUID("id");var paid=stacks(t.getList("paid",Tag.TAG_COMPOUND));
+  if(t.getString("stage").equals("refund")){
+   int index=t.getInt("refundOutput");
+   if(index<paid.size()){
+    if(!WorldJournal.deposit(l,Settlement.childId(id,"refund/"+index),pos,paid.get(index)))return "output_full";
+    t.putInt("refundOutput",index+1);NbtRecord.write(file,t);return "workshop_funding";
+   }
+   var idle=new CompoundTag();idle.putInt("schema",1);idle.putUUID("building",b.id());idle.putString("stage","idle");idle.putLong("lastTick",now);if(bank>0)idle.putInt("fuelBank",bank);
+   NbtRecord.write(file,idle);return "workshop_complete";
+  }
   if(t.getString("stage").equals("fund")){
    Input need=null;int missing=0;boolean fuelNeed=false,toolNeed=false;
    var ins=inputs(t.getList("inputs",Tag.TAG_COMPOUND));var used=new boolean[paid.size()];
-   for(var in:ins){int held=0;for(int i=0;i<paid.size();i++)if(!used[i]&&in.matches(paid.get(i))){held+=paid.get(i).getCount();used[i]=true;}if(held<in.count()){need=in;missing=in.count()-held;break;}}
    Input tool=t.contains("tool")?new Input(Ingredient.fromJson(JsonParser.parseString(t.getString("tool"))),1):null;
-   if(need==null&&tool!=null){boolean has=false;for(int i=0;i<paid.size();i++)if(!used[i]&&tool.matches(paid.get(i))){has=true;used[i]=true;break;}if(!has){need=tool;missing=1;toolNeed=true;}}
+   // Secure the reusable tool before consuming recipe inputs. A producer can
+   // otherwise claim the only axe between planning and the later withdrawal.
+   if(tool!=null){boolean has=false;for(int i=0;i<paid.size();i++)if(!used[i]&&tool.matches(paid.get(i))){has=true;used[i]=true;break;}if(!has){need=tool;missing=1;toolNeed=true;}}
+   if(need==null)for(var in:ins){int held=0;for(int i=0;i<paid.size();i++)if(!used[i]&&in.matches(paid.get(i))){held+=paid.get(i).getCount();used[i]=true;}if(held<in.count()){need=in;missing=in.count()-held;break;}}
    int fuelTicks=t.getInt("fuelTicks"),burnt=bank;
    if(need==null&&fuelTicks>0){for(int i=0;i<paid.size();i++)if(!used[i])burnt+=burn(paid.get(i));if(burnt<fuelTicks){fuelNeed=true;missing=1;}}
    // AD-104 P2: the bank burns first; what the paid fuel leaves over becomes the new bank in the same write that starts the work, so a replay never counts it twice.
-   if(need==null&&!fuelNeed){t.putString("stage","work");if(fuelTicks>0){if(burnt>fuelTicks)t.putInt("fuelBank",burnt-fuelTicks);else t.remove("fuelBank");}NbtRecord.write(file,t);return "workshop_working";}
+   if(need==null&&!fuelNeed){t.putString("stage","work");t.putLong("workSince",now);if(fuelTicks>0){if(burnt>fuelTicks)t.putInt("fuelBank",burnt-fuelTicks);else t.remove("fuelBank");}NbtRecord.write(file,t);return "workshop_working";}
    var withdrawal=Settlement.childId(id,"input/"+t.getInt("withdrawals"));var taken=WorldJournal.recoverAmount(l,withdrawal);
    if(taken.isEmpty()&&!WorldJournal.exists(l,withdrawal))for(int slot=0;slot<chest.getContainerSize();slot++){var s=chest.getItem(slot);
     boolean fits=fuelNeed?WorkshopFuel.ticks(s)>0&&ins.stream().noneMatch(in->in.matches(s))&&(tool==null||!tool.matches(s)):need.matches(s);
     if(!fits)continue;int amount=fuelNeed||toolNeed?1:Math.min(missing,s.getCount());taken=WorldJournal.takeAmount(l,withdrawal,pos,slot,real.getItem(slot).copy(),amount);break;}
-   if(taken.isEmpty()){NbtRecord.write(file,t);return "workshop_missing_inputs";}
+   if(taken.isEmpty()){
+    if(need!=null&&b.type().equals("town_hall")&&withFurnace(l,e,spec,chest,List.of(new Want(need.ingredient(),missing,b.id())),bank)!=null){
+     // Another consumer may claim either the tool or ingredients after planning.
+     // Free this station to make the missing dependency, refunding paid stacks
+     // through durable receipts before re-planning the original order.
+     t.putString("stage","refund");t.putInt("refundOutput",0);NbtRecord.write(file,t);return "workshop_funding";
+    }
+    NbtRecord.write(file,t);return "workshop_missing_inputs";
+   }
    t.getList("paid",Tag.TAG_COMPOUND).add(taken.save(new CompoundTag()));t.putInt("withdrawals",t.getInt("withdrawals")+1);NbtRecord.write(file,t);return "workshop_funding";
   }
   // AD-052: a workshop with its second-level equipment really does more work per turn.

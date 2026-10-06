@@ -122,8 +122,8 @@ public final class FarmField {
   for(var m:worked)if(floor(m)==f){if(index%onFloor==q)out.add(m);index++;}
   return out;
  }
- /** AD-130: the farmers of a farm in the order they were posted (their rank). */
- public static List<UUID> farmers(Settlement s,Settlement.Building b){return s.employees(b.id());}
+ /** Working farmers in posting order. A resting colleague leaves his fields to the healthy crew. */
+ public static List<UUID> farmers(Settlement s,Settlement.Building b){return s.employees(b.id()).stream().filter(id->{var r=s.resident(id);return r!=null&&r.alive()&&r.life()==org.villageastra.domain.Resident.Life.ADULT&&r.profession()==org.villageastra.domain.Profession.FARMER&&Population.mayWork(r);}).toList();}
  /** AD-130: the plots one farmer works — his own farm's worked modules, his share of them by rank; all of them when he is not posted here. */
  public static List<BlockPos> workedCells(ServerLevel l,SettlementData.Entry e,Settlement.Building b,UUID farmer){
   var crew=farmers(e.settlement(),b);return world(e,b,localCells(share(worked(l,e,b),crew.indexOf(farmer),crew.size())));}
@@ -236,8 +236,13 @@ public final class FarmField {
   *  modules), a road, a block entity, a fluid outside the water cell, anything not natural at y 0..HEADROOM, or an opaque solid other
   *  than leaves up to 8 blocks above the headroom. */
  public static FieldPlan survey(ServerLevel l,SettlementData.Entry e,Settlement.Building b,int level,boolean west){
+  return survey(l,e,b,level,west,e.settlement().fieldLevel(b.id()));
+ }
+ /** The first field of a paid new farmhouse is surveyed before registration. */
+ public static FieldPlan initial(ServerLevel l,SettlementData.Entry e,Settlement.Building b){return survey(l,e,b,1,false,0);}
+ private static FieldPlan survey(ServerLevel l,SettlementData.Entry e,Settlement.Building b,int level,boolean west,int from){
   var conflicts=new LinkedHashSet<BlockPos>();var none=new FieldPlan(new ListTag(),Map.of(),conflicts,"",west);
-  int from=e.settlement().fieldLevel(b.id());if(level<=from)return none;boolean legacy=legacy(e.settlement());
+  if(level<=from)return none;boolean legacy=legacy(e.settlement());
   var box=box(modules(e,b));int wide=BuildingPlacement.size(b.type(),0)[0];
   record Op(BlockPos pos,BlockState before,BlockState after,String item){}
   var clears=new ArrayList<Op>();var supports=new ArrayList<Op>();var ground=new ArrayList<Op>();var water=new ArrayList<Op>();var cover=new ArrayList<Op>();

@@ -13,37 +13,47 @@ import org.villageastra.server.*;
 
 /** Bring wild cane home as a paid living plant before relying on its renewable harvest. */
 public final class ReedNursery {
- public static final int CAPACITY=8,RADIUS=96;
+ // Keep renewable plots near the village, including real shores beyond the first hillside.
+ public static final int CAPACITY=8,RADIUS=120;
  private static final List<BlockPos> CELLS=new ArrayList<>();
  static{for(int x=-RADIUS;x<=RADIUS;x++)for(int z=-RADIUS;z<=RADIUS;z++)if(x*x+z*z<=RADIUS*RADIUS)CELLS.add(new BlockPos(x,0,z));CELLS.sort(Comparator.comparingDouble(p->p.distSqr(BlockPos.ZERO)));}
  private ReedNursery(){}
  private static Path path(ServerLevel l,UUID village){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-reeds/"+village+".bin");}
  public static List<BlockPos> planted(ServerLevel l,UUID village){
   var file=path(l,village);var out=new ArrayList<BlockPos>();if(!Files.exists(file))return out;
-  for(long p:NbtRecord.read(file).getLongArray("plants")){var at=BlockPos.of(p);if(!l.hasChunkAt(at)||l.getBlockState(at).is(Blocks.SUGAR_CANE))out.add(at);}return out;
+  // Old records could count a paid upper segment as another plant. Keep the
+  // real growing base; its already placed upper blocks remain untouched.
+  for(long p:NbtRecord.read(file).getLongArray("plants")){var at=BlockPos.of(p);if(!l.hasChunkAt(at)||l.getBlockState(at).is(Blocks.SUGAR_CANE)&&!l.getBlockState(at.below()).is(Blocks.SUGAR_CANE))out.add(at);}return out;
  }
- public static void record(ServerLevel l,UUID village,BlockPos p){var plants=planted(l,village);if(!plants.contains(p))plants.add(p.immutable());var t=new CompoundTag();t.putLongArray("plants",plants.stream().mapToLong(BlockPos::asLong).toArray());NbtRecord.write(path(l,village),t);}
+ public static void record(ServerLevel l,UUID village,BlockPos p){var plants=planted(l,village);if((!l.hasChunkAt(p)||!l.getBlockState(p.below()).is(Blocks.SUGAR_CANE))&&!plants.contains(p))plants.add(p.immutable());var t=new CompoundTag();t.putLongArray("plants",plants.stream().mapToLong(BlockPos::asLong).toArray());NbtRecord.write(path(l,village),t);}
  public static boolean safe(ServerLevel l,BlockPos p){
   return l.hasChunkAt(p)&&l.getBlockState(p).isAir()&&l.getBlockState(p.above()).isAir()&&l.getBlockState(p.above(2)).isAir()
-   &&l.canSeeSky(p)&&Blocks.SUGAR_CANE.defaultBlockState().canSurvive(l,p)
+   &&!l.getBlockState(p.below()).is(Blocks.SUGAR_CANE)
+   &&Blocks.SUGAR_CANE.defaultBlockState().canSurvive(l,p)
    &&!OwnershipEvents.protectedBlock(l,p)&&!OwnershipEvents.disallowedPlacement(l,p);
  }
  private static boolean plan(ResidentEntity worker,SettlementData.Entry e,CompoundTag t){
   var l=(ServerLevel)worker.level();if(planted(l,e.settlement().id()).size()>=CAPACITY)return false;
   // Only already loaded nearby shores; never dig a canal, replace soil, or force a permanent area.
   for(var offset:CELLS){var column=e.center().offset(offset);if(!l.hasChunkAt(column))continue;
-   var p=new BlockPos(column.getX(),l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ()),column.getZ());if(!safe(l,p))continue;
-   var stand=HarvestAccess.find(worker,p,NaturalSupplyGoal.ROUTE_RANGE);if(stand==null)continue;
-   t.putLong("nurseryTarget",p.asLong());t.putLong("nurseryStand",stand.asLong());return true;
+   int top=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ());
+   // A real shore may lie below a bank overhang. Cane needs soil, water and
+   // three clear cells, not sky visibility; never cut away the covering bank.
+   for(int y=top;y>=Math.max(l.getMinBuildHeight()+1,top-16);y--){
+    var p=new BlockPos(column.getX(),y,column.getZ());if(!safe(l,p))continue;
+    var stand=HarvestAccess.find(worker,p,NaturalSupplyGoal.ROUTE_RANGE);if(stand==null)continue;
+    t.putLong("nurseryTarget",p.asLong());t.putLong("nurseryStand",stand.asLong());return true;
+   }
   }return false;
  }
  public record Harvest(BlockPos target,BlockPos stand){}
  /** Inspect only remembered loaded plots; ordinary random growth supplies their harvestable tops. */
- public static Harvest mature(ResidentEntity worker,SettlementData.Entry e){
+ public static Harvest mature(ResidentEntity worker,SettlementData.Entry e){return mature(worker,e,NaturalSupplyGoal.reservedTargets((ServerLevel)worker.level(),e,worker.getUUID()));}
+ public static Harvest mature(ResidentEntity worker,SettlementData.Entry e,Set<BlockPos> reserved){
   var l=(ServerLevel)worker.level();var roots=planted(l,e.settlement().id());roots.sort(Comparator.comparingDouble(p->p.distSqr(worker.blockPosition())));
   for(var root:roots.stream().limit(CAPACITY).toList()){
    if(!l.hasChunkAt(root))continue;var target=root;while(target.getY()<l.getMaxBuildHeight()-1&&l.getBlockState(target.above()).is(Blocks.SUGAR_CANE))target=target.above();
-   if(target.equals(root)||!NaturalSupplyGoal.safe(l,target))continue;
+   if(target.equals(root)||reserved.contains(target)||!NaturalSupplyGoal.safe(l,target))continue;
    if(!ResourceExpedition.survey(worker,target))continue;var stand=HarvestAccess.find(worker,target,NaturalSupplyGoal.ROUTE_RANGE);if(stand!=null)return new Harvest(target,stand);
   }return null;
  }

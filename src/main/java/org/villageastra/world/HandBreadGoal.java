@@ -12,7 +12,8 @@ import org.villageastra.server.SettlementData;
  *  (lower numbers) take the resident back at once. One baker per village holds HandBread's claim; the job itself is the village's and durable. */
 public final class HandBreadGoal extends Goal {
  private final ResidentEntity worker;private final boolean withoutPlayers;private final LongSupplier dayTime;
- private int lastCheck=-100,repath;private boolean done,fetching;private BlockPos target;
+ public static final int STALLED_TRAVEL=1200,RETRY_TRAVEL=1200;
+ private int lastCheck=-100,repath,travel;private double bestDistance=Double.POSITIVE_INFINITY;private boolean done,fetching;private BlockPos target;
  public HandBreadGoal(ResidentEntity worker){this(worker,false,()->worker.level().getDayTime());}
  /** Tests: no players needed, their own day clock, a turn on every tick() and the game time as the job's clock (the active clock stands still without players). */
  public HandBreadGoal(ResidentEntity worker,boolean withoutPlayers,LongSupplier dayTime){this.worker=worker;this.withoutPlayers=withoutPlayers;this.dayTime=dayTime;setFlags(EnumSet.of(Flag.MOVE,Flag.LOOK));}
@@ -46,21 +47,25 @@ public final class HandBreadGoal extends Goal {
   return HandBread.mayClaim(l,e.settlement().id(),worker.getUUID(),l.getGameTime())&&HandBread.actionable(l,e);
  }
  @Override public boolean canContinueToUse(){if(done)return false;var e=entry();if(e==null)return false;var l=(ServerLevel)worker.level();return HandBread.holds(l,e.settlement().id(),worker.getUUID(),l.getGameTime());}
- @Override public void start(){done=false;target=null;repath=0;var e=entry();if(e!=null){var l=(ServerLevel)worker.level();HandBread.claim(l,e.settlement().id(),worker.getUUID(),l.getGameTime());}}
+ @Override public void start(){done=false;target=null;repath=0;travel=0;bestDistance=Double.POSITIVE_INFINITY;var e=entry();if(e!=null){var l=(ServerLevel)worker.level();HandBread.claim(l,e.settlement().id(),worker.getUUID(),l.getGameTime());}}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){
   if(done)return;var e=entry();if(e==null)return;var l=(ServerLevel)worker.level();var id=e.settlement().id();
   // Override 11: the claim is refreshed on every tick, walking included, so a long walk never lets a second adult take the job over meanwhile.
   if(!HandBread.claim(l,id,worker.getUUID(),l.getGameTime())){done=true;return;}
   if(target==null&&!aim(l,e)){done=true;return;}
-  if(worker.distanceToSqr(target.getX()+1.5,target.getY(),target.getZ()+.5)>6.25){
+  double distance=worker.distanceToSqr(target.getX()+1.5,target.getY(),target.getZ()+.5);
+  if(distance>6.25){
+   double remaining=Math.sqrt(distance);if(remaining+.5<bestDistance){bestDistance=remaining;travel=0;}
+   if(++travel>STALLED_TRAVEL){HandBread.defer(l,id,worker.getUUID(),l.getGameTime(),RETRY_TRAVEL);done=true;worker.getNavigation().stop();worker.workStatus("needs_access");return;}
    if(--repath<=0){repath=20;worker.getNavigation().moveTo(target.getX()+1.5,target.getY(),target.getZ()+.5,.8);}
    worker.workStatus(fetching?"hand_bread_fetching":"walking");return;}
   worker.getNavigation().stop();if(!withoutPlayers&&worker.tickCount%20!=0)return;
   // The job runs on the active clock, like every workshop's; a test world has no players, so its goal counts the game time instead.
   long now=withoutPlayers?l.getGameTime():SettlementData.get(l.getServer()).clock().ticks();
+  var hall=Workshops.hall(e);if(hall!=null&&target.equals(LogisticsRoutes.position(e,hall))&&HallPacking.advance(l,e,now)){worker.workStatus("working");return;}
   var status=HandBread.advance(l,e,worker.getUUID(),now);worker.workStatus(status);
-  var was=target;if(!aim(l,e)){done=true;return;}if(!target.equals(was))repath=0;
+  var was=target;if(!aim(l,e)){done=true;return;}if(!target.equals(was)){repath=0;travel=0;bestDistance=Double.POSITIVE_INFINITY;}
   switch(status){
    // Override 11: a full hall chest lets the baker go too, so other work of priority 6 is not held up behind it.
    case "hand_bread_idle","hand_bread_missing_wheat","hand_bread_output_full","workshop_missing_chest"->done=true;

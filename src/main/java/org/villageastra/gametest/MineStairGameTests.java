@@ -33,6 +33,24 @@ public final class MineStairGameTests {
    s.putInt("stairPlaced",1);s.putString("stairItem","minecraft:cobblestone");MineStairWork.selectUnpaid(t.l,s);h.assertTrue(MineStairWork.stone(s)==Items.COBBLESTONE,"Partially paid orders cannot change material");
   }finally{npc.discard();ResearchV2Town.done(t);}h.succeed();
  }
+ @GameTest(template="empty",batch="mine_stairs",timeoutTicks=200)
+ public static void newStairOrderChoosesOwnSandstoneBeforeCommitting(GameTestHelper h){
+  var t=town(h);var npc=VillageAstra.RESIDENT.get().create(t.l);
+  try{
+   var work=MineWork.read(t.l,t.shop);work.putString("stage","choose");work.putInt("step",2);work.putInt("cell",0);work.putInt("stairStep",1);
+   work.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
+   var cargo=new ListTag();cargo.add(new ItemStack(Items.COBBLESTONE).save(new CompoundTag()));work.put("cargo",cargo);
+   var cells=MineDrive.stairs(1,MineWork.shape(work));for(var cell:cells)t.l.setBlock(MineWork.at(t.e,t.shop,cell),Blocks.AIR.defaultBlockState(),2);
+   MineWork.write(t.l,t.shop,work);var chest=LogisticsRoutes.chest(t.l,t.e,t.shop);chest.clearContent();chest.setItem(0,new ItemStack(Items.SANDSTONE,23));
+   var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));npc.setNoAi(true);t.l.addFreshEntity(npc);
+   var p=LogisticsRoutes.position(t.e,t.shop);npc.moveTo(p.getX()+1.5,p.getY(),p.getZ()+.5);npc.setOnGround(true);
+   var goal=new ResourceWorkGoal(npc,true,()->6000L);h.assertTrue(goal.canUse(),"Miner starts unpaid order");goal.tick();
+   var order=MineWork.read(t.l,t.shop);h.assertTrue(order.getString("stage").equals("stair")&&MineStairWork.stone(order)==Items.SANDSTONE,"Actual goal chooses the stocked material before committing a row");
+   h.assertTrue(chest.countItem(Items.SANDSTONE)==23&&count(order.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"Choosing alone never creates or spends goods");
+   goal=new ResourceWorkGoal(npc,true,()->6000L);h.assertTrue(goal.canUse(),"New order resumes");goal.tick();
+   var paid=MineWork.read(t.l,t.shop);h.assertTrue(chest.countItem(Items.SANDSTONE)==23-cells.size()&&count(paid.getList("cargo",Tag.TAG_COMPOUND),Items.SANDSTONE)==cells.size(),"Matching row stones are actually withdrawn once");
+  }finally{npc.discard();ResearchV2Town.done(t);}h.succeed();
+ }
  private static int count(ListTag cargo,Item item){int n=0;for(var tag:cargo){var stack=ItemStack.of((CompoundTag)tag);if(stack.is(item))n+=stack.getCount();}return n;}
  private static ResearchV2Town.Town town(GameTestHelper h){
   var t=ResearchV2Town.town(h,"mine");var data=org.villageastra.server.SettlementData.get(t.l.getServer());data.remove(t.s.id());

@@ -28,7 +28,7 @@ public final class ResourceWorkGoal extends Goal {
     private final boolean withoutPlayers;
     private final java.util.function.LongSupplier dayTime;
     /** AD-104 P2: the farmer's calls with a batch in hand and nothing to do; kept in memory only, a restart waits the minute again. */
-    private int idleCalls;
+    private int idleCalls,oreCheck=-100;
     /** AD-104 P2 (balance/farmer.json): the items the farmer carries before he goes home; how far from the last plot he worked he still sows
      *  and reaps (a 9x9 module is 11.3 blocks corner to corner, and he stands up to 2.5 from a plot); the one-second calls he waits with a
      *  batch and nothing to do; the ticks before dusk he takes it home; the spare seeds the farm chest keeps — the rest stays in the soil. */
@@ -214,7 +214,7 @@ public final class ResourceWorkGoal extends Goal {
             }
         }
         if(shaftWalk(pos))return false;
-        boolean precise=miner&&state.getString("stage").equals("seal_place");
+        boolean precise=miner&&(state.getString("stage").equals("seal_place")||MineOreWork.active(state));
         double feetY=pos.getY();
         if(precise){var shape=worker.level().getBlockState(pos).getCollisionShape(worker.level(),pos);if(!shape.isEmpty())feetY+=shape.max(net.minecraft.core.Direction.Axis.Y);}
         double distance=worker.distanceToSqr(pos.getX()+.5,feetY+(precise?0:.5),pos.getZ()+.5);
@@ -237,6 +237,15 @@ public final class ResourceWorkGoal extends Goal {
         face|=miner&&base!=null&&worker.getY()-base.getY()<-.5;
         if(!withoutPlayers&&worker.tickCount%20!=0&&!face)return;
         ServerLevel level=(ServerLevel)worker.level();String stage=state.getString("stage");UUID id=state.getUUID("operation");
+        if(miner){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());var mine=e.settlement().workplace(worker.getUUID());
+            if(!MineOreWork.active(state)&&stage.equals("choose")&&worker.tickCount-oreCheck>=100){oreCheck=worker.tickCount;MineOreWork.begin(worker,e,mine,state);}
+            if(MineOreWork.active(state)){
+                if(WorldJournal.exists(level,state.getCompound("mineOre").getUUID("id"))){MineOreWork.tick(worker,state);save();return;}
+                if(!MineOreWork.approaching(worker,state)){save();return;}
+                if(near(MineOreWork.stand(state))&&worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(MineOreWork.target(state)))<=16)MineOreWork.tick(worker,state);
+                save();return;
+            }
+        }
         if(miner){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());if(MineClearance.tick(worker,e,e.settlement().workplace(worker.getUUID()),state)){save();return;}}
         if(miner&&!state.contains("stairStep")&&(stage.equals("choose")||MineSealing.active(state))){
             var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());int row=MineStairWork.repair(level,e,e.settlement().workplace(worker.getUUID()),state);
@@ -267,8 +276,11 @@ public final class ResourceWorkGoal extends Goal {
                     if(fitsTool(item)&&(!from.equals(stock)||HallReserve.free(level,stock,item)>0)){tool=WorldJournal.take(level,id,from,slot,item.copy());break;}
                 }
             }
+            if(tool.isEmpty()&&!miner&&!farmer&&handFellingNeeded(level)){
+                state.putBoolean("handFelling",true);state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());save();return;
+            }
             if(tool.isEmpty()){if(state.contains("toolSource")){state.remove("toolSource");save();return;}status("missing_tool");return;}
-            state.remove("toolSource");state.remove("requiredToolState");state.put("tool",tool.save(new CompoundTag()));state.putString("stage",state.getBoolean("resumeSupport")?"support_fetch":"choose");state.remove("resumeSupport");state.putUUID("operation",UUID.randomUUID());save();return;
+            state.remove("toolSource");state.remove("handFelling");state.remove("requiredToolState");state.put("tool",tool.save(new CompoundTag()));state.putString("stage",state.getBoolean("resumeSupport")?"support_fetch":"choose");state.remove("resumeSupport");state.putUUID("operation",UUID.randomUUID());save();return;
         }
         // AD-131: the forester's own round — wild trees round his hut, replanting, trips (ForestWork).
         if(!miner&&!farmer){forest(level,stage,id);return;}
@@ -324,7 +336,7 @@ public final class ResourceWorkGoal extends Goal {
         if(stage.equals("stair")){
             // AD-122 (owner): the stairs of the step just finished, cut from the stone he carries (one block a stair), each set under its own
             // journal id and paid from the batch in the same record write; a cell not open any more is passed by without paying.
-            var beforeRecovery=state.copy();MineStairWork.reconcile(level,state);MineStairWork.selectUnpaid(level,state);if(!state.equals(beforeRecovery))save();
+            var beforeRecovery=state.copy();MineStairWork.reconcile(level,state);MineStairWork.selectUnpaid(level,state,level.getBlockEntity(output) instanceof Container chest?chest:null);if(!state.equals(beforeRecovery))save();
             int step=state.getInt("stairStep"),placed=state.getInt("stairPlaced");var cells=MineDrive.stairs(step,MineWork.shape(state));
             Item stone=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation(state.getString("stairItem")));
             if(placed>=cells.size()){endStairs(level);return;}
@@ -450,7 +462,10 @@ public final class ResourceWorkGoal extends Goal {
                 var policies=org.villageastra.server.FarmPolicies.get(worker.getServer());
                 // AD-104 P2: with a batch in hand he only sows from it and reaps near the last plot he worked, until it goes home (batch()).
                 if(!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty()){target=batch(level,entry,plots,policies);if(target==null)return;}
-                else for(var pos:plots)if(level.getBlockState(pos).isAir()){
+                // A meal shortage comes before extending the field. The harvested
+                // plot still follows the usual immediate, paid replant stage.
+                else if(HandBread.open(level,entry))for(var pos:plots){var mature=FarmCrops.harvest(level,pos);if(mature!=null){target=mature;break;}}
+                if(target==null&&state.getList("cargo",Tag.TAG_COMPOUND).isEmpty())for(var pos:plots)if(level.getBlockState(pos).isAir()){
                     var crop=policies.at(entry,pos);var planting=crop.block.defaultBlockState();
                     boolean seedAvailable=(level.getBlockEntity(output) instanceof Container c&&c.countItem(crop.seed)>0)||(level.getBlockEntity(stock) instanceof Container seedStock&&seedStock.countItem(crop.seed)>0);
                     if(!seedAvailable){missingSeed=true;continue;}
@@ -608,9 +623,23 @@ public final class ResourceWorkGoal extends Goal {
         if(state.getInt("soilLabor")<20){save();return;}
         if(NurserySoil.prepare(level,state))worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);save();
     }
+    /** A lost last axe must not make the wood needed to craft its replacement unobtainable. */
+    private boolean handFellingNeeded(ServerLevel l){
+        var e=SettlementData.get(l.getServer()).entry(worker.settlementId());int wood=0,sticks=0;
+        for(var b:e.settlement().buildings()){
+            var c=LogisticsRoutes.chest(l,e,b);if(c!=null)for(int i=0;i<c.getContainerSize();i++){
+                var item=c.getItem(i);if(item.is(net.minecraft.tags.ItemTags.AXES)&&item.getDamageValue()<item.getMaxDamage())return false;
+                if(!b.type().equals("town_hall")&&!b.type().equals("warehouse")&&!b.type().equals("forester"))continue;
+                int free=Math.max(0,item.getCount()-LogisticsRoutes.reserve(b,item));
+                if(item.is(net.minecraft.tags.ItemTags.LOGS))wood+=4*free;else if(item.is(net.minecraft.tags.ItemTags.PLANKS))wood+=free;else if(item.is(Items.STICK))sticks+=free;
+            }
+            if(b.type().equals("forester")){var f=MineWork.path(l,b.id());if(Files.exists(f)){var axe=ItemStack.of(org.villageastra.persistence.NbtRecord.read(f).getCompound("tool"));if(axe.is(net.minecraft.tags.ItemTags.AXES)&&axe.getDamageValue()<axe.getMaxDamage())return false;}}
+        }
+        return wood<3+(sticks>=2?0:2);
+    }
     private void forestChoose(ServerLevel level,SettlementData.Entry e,org.villageastra.domain.Settlement.Building hut,int lv){
         boolean carrying=!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty();
-        if(ItemStack.of(state.getCompound("tool")).isEmpty()){if(carrying){forestDelivery();return;}state.putString("stage","tool");state.putUUID("operation",UUID.randomUUID());save();return;}
+        if(ItemStack.of(state.getCompound("tool")).isEmpty()&&!state.getBoolean("handFelling")){if(carrying){forestDelivery();return;}state.putString("stage","tool");state.putUUID("operation",UUID.randomUUID());save();return;}
         if(carrying&&tripDue(lv)){forestDelivery();return;}
         // II+: a bare foot is planted first, as soon as a sapling of its kind is at hand (his load, the hut chest, the hall).
         if(lv>=2&&!state.getList("bare",Tag.TAG_COMPOUND).isEmpty()){
@@ -650,7 +679,7 @@ public final class ResourceWorkGoal extends Goal {
             if(withoutPlayers||worker.tickCount%20==0){var path=worker.getNavigation().createPath(access,0);if(path!=null)worker.getNavigation().moveTo(path,ForestBalance.walkSpeed(lv));}
             status("needs_access");return;}
         ItemStack tool=ItemStack.of(state.getCompound("tool"));
-        int labor=state.getInt("labor")+fellingLabor(lv);state.putInt("labor",labor);int total=treeLabor(state.getLongArray("tree").length);
+        int labor=state.getInt("labor")+fellingLabor(lv);state.putInt("labor",labor);int total=treeLabor(state.getLongArray("tree").length)*(state.getBoolean("handFelling")?6:1);
         if(labor<total){status("felling");save();worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);var foot=level.getBlockState(target);cracking=target;MinerSpeed.progress(level,worker,target,foot,labor,total);return;}
         fellTree(level,e,hut,lv,id,tool);
     }
@@ -661,7 +690,7 @@ public final class ResourceWorkGoal extends Goal {
         var logs=state.getLongArray("tree");var befores=state.getList("treeBefore",Tag.TAG_COMPOUND);var leaves=state.getLongArray("treeLeaves");
         // AD-131: the tree he began comes down whole, and the axe breaks on the last log it can take (as a player's does) — a trunk left
         // half standing has no foot on soil and no crown left, so no forester would ever find it again.
-        int usable=tool.isEmpty()?0:tool.getMaxDamage()-tool.getDamageValue();var loot=new ArrayList<ItemStack>();int[] felled={0};
+        int usable=tool.isEmpty()?(state.getBoolean("handFelling")?Integer.MAX_VALUE:0):tool.getMaxDamage()-tool.getDamageValue();var loot=new ArrayList<ItemStack>();int[] felled={0};
         if(usable<=0){for(var k:List.of("tree","treeBefore","treeLeaves","labor","base"))state.remove(k);uncrack();
             if(!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty()){forestDelivery();return;}
             state.putString("stage","tool");state.putUUID("operation",UUID.randomUUID());save();status("missing_tool");return;}
@@ -694,7 +723,7 @@ public final class ResourceWorkGoal extends Goal {
         }
         afterTree(lv);
     }
-    private void afterTree(int lv){for(var k:List.of("base","plantCells","species","fromBare","felledKind"))state.remove(k);
+    private void afterTree(int lv){state.remove("handFelling");for(var k:List.of("base","plantCells","species","fromBare","felledKind"))state.remove(k);
         if(tripDue(lv)){forestDelivery();return;}state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());save();}
     /** Sets the saplings on the foot from his load under the tree's own ids (replant, replant/k); each set is paid from the load in the same
      *  record write, so a replay finds it by its id and pays once. */
@@ -788,9 +817,11 @@ public final class ResourceWorkGoal extends Goal {
     }
     private boolean carryingStone(){var cargo=state.getList("cargo",Tag.TAG_COMPOUND);return count(cargo,MineStairWork.carriedStone(cargo))>0;}
     private void retryTilling(){state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());state.putInt("labor",0);state.remove("before");state.remove("target");status("changed_target");save();}
-    /** Cut stairs from the most plentiful carried local stone; empty cargo requests cobblestone. */
+    /** Choose available local stone for a new row before any payment; paid rows keep their material. */
     private void beginStairs(ServerLevel level){
-        var cargo=state.getList("cargo",Tag.TAG_COMPOUND);Item stone=MineStairWork.carriedStone(cargo);
+        var cargo=state.getList("cargo",Tag.TAG_COMPOUND);var entry=SettlementData.get(worker.getServer()).entry(worker.settlementId());
+        var mine=entry.settlement().workplace(worker.getUUID());
+        Item stone=MineStairWork.newOrderStone(cargo,LogisticsRoutes.chest(level,entry,mine));
         state.putString("stairItem",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stone).toString());state.putInt("stairPlaced",0);state.remove("stairTaken");state.remove("stairTakeRound");
         state.putString("stage","stair");state.putUUID("operation",UUID.randomUUID());save();
     }
@@ -814,13 +845,14 @@ public final class ResourceWorkGoal extends Goal {
         ListTag cargo=state.getList("cargo",Tag.TAG_COMPOUND);long day=Math.floorMod(dayTime.getAsLong(),24000L);
         if(count(cargo,null)>=BATCH||ItemStack.of(state.getCompound("tool")).isEmpty()||day>=SleepGoal.DUSK-EVENING&&day<SleepGoal.DUSK){startDelivery();return null;}
         BlockPos from=state.contains("target")?BlockPos.of(state.getLong("target")):worker.blockPosition();double reach=(double)REACH*REACH;
+        // Deliver a real meal batch before optional sowing consumes the next round.
+        if(hungryHome(level,entry,cargo)){startDelivery();return null;}
         for(var pos:plots)if(pos.distSqr(from)<=reach&&level.getBlockState(pos).is(Blocks.AIR)){
             var crop=policies.at(entry,pos);
             if(crop.block instanceof CropBlock&&count(cargo,crop.seed)>0&&crop.block.defaultBlockState().canSurvive(level,pos)){
                 state.putString("crop",crop.id());state.putLong("target",pos.asLong());state.putString("stage","replant");state.putUUID("operation",UUID.randomUUID());save();return null;
             }
         }
-        if(hungryHome(level,entry,cargo)){startDelivery();return null;}
         boolean ripe=false;
         for(var pos:plots){var mature=FarmCrops.harvest(level,pos);if(mature==null)continue;if(mature.distSqr(from)<=reach)return mature;ripe=true;}
         if(ripe||++idleCalls>=WAIT_CALLS)startDelivery();else status("waiting_with_cargo");

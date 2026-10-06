@@ -104,9 +104,13 @@ public final class Resident {
     private boolean cadet;
     /** AD-152: ill — does not work until the village's medicine cures it (the hospital, a medic at home, medicine, or the clinic of VI). */
     private boolean sick;
+    private long recoveryRest;
+    public long recoveryRest() { return recoveryRest; }
+    public void restoreRecoveryRest(long ticks) { if(ticks<0)throw new IllegalArgumentException("Invalid recovery rest"); recoveryRest=sick?ticks:0; }
+    public void restForRecovery(long ticks) { if(sick&&ticks>0)recoveryRest+=ticks; }
     public boolean sick() { return sick; }
-    public boolean fallIll() { if (!alive() || sick) return false; sick = true; return true; }
-    public boolean cure() { if (!sick) return false; sick = false; return true; }
+    public boolean fallIll() { if (!alive() || sick) return false; sick = true; recoveryRest=0; return true; }
+    public boolean cure() { if (!sick) return false; sick = false; recoveryRest=0; return true; }
     public void restoreSick(boolean sick) { this.sick = sick; }
     public boolean cadet() { return cadet; }
     public void enlistCadet() { if (life == Life.CHILD && !educated) cadet = true; }

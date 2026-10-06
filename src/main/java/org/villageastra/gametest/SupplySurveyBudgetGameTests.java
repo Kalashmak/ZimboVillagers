@@ -22,9 +22,9 @@ public final class SupplySurveyBudgetGameTests {
   h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getInt("surveyCursor")==0&&!l.hasChunkAt(base),"Deferral skips no column and loads nothing beyond the budget");
   // Controlled NPC clock and renewed shared quota: isolate retry scheduling from physical walking.
   npc.tickCount=1;TouchLoad.resetTick();goal.canUse();
-  h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getInt("surveyCursor")>0,"Retry must use the renewed next-tick quota, not sleep another 100 ticks");
-  for(int tick=2;tick<100;tick++){npc.tickCount=tick;TouchLoad.resetTick();goal.canUse();}
-  h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getInt("surveyCursor")==128,"Retries share one allowance: at most 128 columns per 100 NPC ticks");
+  h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getInt("surveyCursor")>0,"Retry must use the renewed next-tick quota, not sleep another 20 ticks");
+  for(int tick=2;tick<20;tick++){npc.tickCount=tick;TouchLoad.resetTick();goal.canUse();}
+  h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getInt("surveyCursor")==1024,"Retries share one allowance: at most 1024 columns per 20 NPC ticks");
   h.assertTrue(chest.countItem(Items.SAND)==0,"Survey scheduling cannot create harvested goods");HallUpgradeGoal.drop(l,s.id());SettlementData.get(l.getServer()).remove(s.id());h.succeed();
  }
 }

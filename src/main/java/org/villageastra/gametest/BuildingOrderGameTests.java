@@ -67,7 +67,7 @@ public final class BuildingOrderGameTests {
   f.s.appointPlayerMayor(p.getUUID());h.assertTrue(MayorSurvey.mark(p,f.site,false),"Mayor marks the site");
   var view=new CompoundTag();MayorSurvey.addView(p,view);h.assertTrue(view.getBoolean("orderable")&&view.getBoolean("canOrder")&&view.getInt("orderItems")>0,"Palette shows an orderable estimate");var token=view.getUUID("id");
   h.assertTrue(!MayorSurvey.choose(p,UUID.randomUUID(),"home",0,3),"Forged token rejected");
-  h.assertTrue(!MayorSurvey.choose(p,token,"farm",0,3)&&!HallUpgradeGoal.exists(f.l,f.s.id()),"Preview-only design cannot be ordered");
+  h.assertTrue(!MayorSurvey.choose(p,token,"forester",0,3)&&!HallUpgradeGoal.exists(f.l,f.s.id()),"Preview-only design cannot be ordered");
   h.assertTrue(!MayorSurvey.choose(p,token,"nothing_like_this",0,3)&&!HallUpgradeGoal.exists(f.l,f.s.id()),"A design that does not exist is never queued");
   p.setPos(f.site.getX()+3,f.site.getY()+1,f.site.getZ()-20);h.assertTrue(!MayorSurvey.choose(p,token,"home",0,3)&&!HallUpgradeGoal.exists(f.l,f.s.id()),"Order requires standing at the site");
   p.setPos(f.site.getX()+3,f.site.getY()+1,f.site.getZ()-2);h.assertTrue(MayorSurvey.choose(p,token,"home",0,3)&&HallUpgradeGoal.pending(f.l,f.s.id()),"Live mayor queues the paid project");

@@ -48,7 +48,13 @@ public final class Automation {
   return worked;
  }
  /** One settlement's turn: every machine of it — the drive of AD-055 and the levels IV…VI of AD-073 (AD-076). */
- public static int tick(net.minecraft.server.level.ServerLevel level,SettlementData.Entry e,long now){var wants=Workshops.wants(level,e);
+ public static int tick(net.minecraft.server.level.ServerLevel level,SettlementData.Entry e,long now){
+  // Fields, digging and an idle early village do not use recipe demand. Calculate
+  // it only when a bench or saw actually asks, sharing one fresh list this turn.
+  java.util.function.Supplier<List<Workshops.Want>> wants=new java.util.function.Supplier<>(){
+   private List<Workshops.Want> value;
+   @Override public List<Workshops.Want> get(){if(value==null)value=Workshops.wants(level,e);return value;}
+  };
   // AD-131: the forester's saw (IV+) and courtyard grove (VI) are the hut's own, outside the mechanics of Machines.
   return Machines.tick(level,e,now,wants)+ForestryMachines.tick(level,e,now,wants);}
  private static boolean busy(net.minecraft.server.level.ServerLevel l,SettlementData.Entry e,org.villageastra.domain.Settlement.Building station){

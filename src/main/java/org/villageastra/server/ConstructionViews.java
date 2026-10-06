@@ -18,7 +18,7 @@ public final class ConstructionViews {
   return project(level,entry,viewer,state);
  }
  /** A field-ordered building is shown around its own site, a hall upgrade around the hall. */
- private static BlockPos anchor(ServerLevel level,SettlementData.Entry e){var state=HallUpgradeGoal.inspect(level,e.settlement().id());return BuildingOrders.isBuilding(state)?BlockPos.of(state.getLong("origin")):e.center();}
+ private static BlockPos anchor(ServerLevel level,SettlementData.Entry e){var state=HallUpgradeGoal.headerView(level,e.settlement().id());return BuildingOrders.isBuilding(state)?BlockPos.of(state.getLong("origin")):e.center();}
  public static CompoundTag project(ServerLevel level,SettlementData.Entry entry,BlockPos viewer,CompoundTag state){
   var result=new CompoundTag();result.putString("dimension",level.dimension().location().toString());
   var plan=HallConstructionPlan.read(state);var ops=state.getList("ops",Tag.TAG_COMPOUND);int index=state.getInt("index");
@@ -80,12 +80,12 @@ public final class ConstructionViews {
   for(int i=0;i<ops.size();i++){var k=kind(ops.getCompound(i),originY);total.merge(k,1,Integer::sum);if(i<index||ops.getCompound(i).getBoolean("done"))done.merge(k,1,Integer::sum);}
   var parts=new CompoundTag();for(var k:total.keySet()){var part=new CompoundTag();part.putInt("done",done.getOrDefault(k,0));part.putInt("total",total.get(k));parts.put(k,part);}
   result.put("parts",parts);
-  var g=entry.settlement().governance();var plan=HallConstructionPlan.read(state);
+  var g=entry.settlement().governance();var projectId=HallConstructionPlan.projectId(state);
   String current=index<ops.size()?kind(ops.getCompound(index),originY):"";
   // Blocked means the block the builder is about to work on is not what the plan expects; later operations wait for earlier ones by design.
   boolean blocked=false;
   if(index<ops.size()){var step=HallConstructionPlan.step(ops.getCompound(index));blocked=level.hasChunkAt(step.pos())&&!level.getBlockState(step.pos()).equals(step.before())&&!level.getBlockState(step.pos()).equals(step.after());}
-  String stage=state.getBoolean("draft")?"draft":state.getBoolean("complete")?"complete":g.paused(plan.id())?"pause":blocked?"blocked"
+  String stage=state.getBoolean("draft")?"draft":state.getBoolean("complete")?"complete":g.paused(projectId)?"pause":blocked?"blocked"
    :!state.getBoolean("funded")&&index==0?"ready":current.equals("clear")?"clearing":current.equals("foundation")?"foundation":"work";
   result.putString("stage",stage);
   int held=0;for(var raw:state.getList("cargo",Tag.TAG_COMPOUND))held+=ItemStack.of((CompoundTag)raw).getCount();

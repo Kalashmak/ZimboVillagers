@@ -61,7 +61,7 @@ public final class Population {
   // AD-121: a castle of V and VI lets its portcullis down in danger.
   CastleGate.tick(l,e);
   SmithyDelivery.tick(l,e);
-  if(now%ASSIGN_INTERVAL<20){changed|=FarmingRelief.tick(l,e);changed|=assign(e,ResearchKnobs.builders(l,e));changed|=toStore(l,e);}
+  if(now%ASSIGN_INTERVAL<20){changed|=FarmingRelief.tick(l,e);changed|=assign(l,e,ResearchKnobs.builders(l,e));changed|=toStore(l,e);}
   changed|=birth(l,e,now)!=null;
   if(changed)data.setDirty();
  }
@@ -74,6 +74,9 @@ public final class Population {
   boolean changed=false;var alive=new ArrayList<Resident>();
   for(var r:List.copyOf(e.settlement().residents()))if(r.alive()){if(r.lastMeal()<0)changed|=meal(l,e,r,now);else if(now>=r.lastMeal()+MEAL_INTERVAL)alive.add(r);}
   if(alive.isEmpty())return changed;
+  // Scarce meals go to those who have missed the most first. Registry order
+  // must not leave the same builder and porter without food at every due.
+  alive.sort(Comparator.comparingInt(Resident::missedMeals).reversed().thenComparingLong(Resident::lastMeal).thenComparing(Resident::id));
   var ps=pantryPositions(e);
   if(ps.isEmpty()||ps.stream().allMatch(l::hasChunkAt)){for(var r:alive)changed|=meal(l,e,r,now);return changed;}
   // A due meal whose intent is already written (a crash between a batch's flush and its commit) is finished through the touch, never skipped.
@@ -185,6 +188,7 @@ public final class Population {
   var s=e.settlement();if(s.lastBirth()>=0&&now-s.lastBirth()<HousingLadder.birthInterval(l,e))return null;
   long adults=s.residents().stream().filter(r->r.alive()&&r.life()==Resident.Life.ADULT&&r.home()!=null).count();if(adults<2)return null;
   if(s.residents().stream().anyMatch(r->r.alive()&&r.missedMeals()>=HUNGRY))return null;
+  if(s.governance().playerMayor()==null&&MayorPlanner.foodShortage(l,e))return null;
   long alive=s.residents().stream().filter(Resident::alive).count();if(storedNutrition(l,e)<BIRTH_FOOD*(alive+1))return null;
   var home=s.homes().stream().filter(h->free(s,h)>0).findFirst().orElse(null);if(home==null)return null;
   var building=s.buildings().stream().filter(b->b.id().equals(home.id())).findFirst().orElse(null);if(building==null)return null;
@@ -200,6 +204,8 @@ public final class Population {
  private record Opening(Profession role,Settlement.Building building){}
  /** Labor office: every unassigned adult takes the most needed implemented job (builder, porter, food, school, workshops). */
  public static boolean assign(SettlementData.Entry e){return assign(e,1);}
+ /** World-aware staffing entry point; legacy callers retain their ordinary labor-office pass. */
+ public static boolean assign(ServerLevel l,SettlementData.Entry e,int builders){boolean changed=assign(e,builders);return ResourceStaffing.tick(l,e)||changed;}
  /** AD-153: with the builders the hall posts by the construction research (ResearchKnobs.builders: 1, then 2/2/4/6/8/10). The first builder
   *  comes before any other post, the others after every workplace has its first worker; research is never unlearned, so none is let go. */
  public static boolean assign(SettlementData.Entry e,int builders){

@@ -108,6 +108,11 @@ public final class BuildingTiers {
   return cost(type,level,"");
  }
  public static Map<String,Integer> cost(String type,int level,String wood){
+  return new TreeMap<>(CATALOGUE_COSTS.computeIfAbsent(new CostKey(type,level,wood),key->Map.copyOf(catalogueCost(key.type(),key.level(),key.wood()))));
+ }
+ private record CostKey(String type,int level,String wood){}
+ private static final Map<CostKey,Map<String,Integer>> CATALOGUE_COSTS=new java.util.concurrent.ConcurrentHashMap<>();
+ private static Map<String,Integer> catalogueCost(String type,int level,String wood){
   var before=BuildingWood.apply(BuildingBlueprints.layout(layoutId(type,level-1),BlockPos.ZERO),wood);var after=BuildingWood.apply(BuildingBlueprints.layout(layoutId(type,level),BlockPos.ZERO),wood);
   var out=new TreeMap<String,Integer>();
   for(var cell:after.entrySet()){var now=cell.getValue();if(now.isAir())continue;var old=before.get(cell.getKey());

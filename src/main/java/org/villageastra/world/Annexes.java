@@ -65,7 +65,7 @@ public final class Annexes {
  }
  /** The crew's queued project is this annex of this building. */
  public static boolean queued(ServerLevel l,SettlementData.Entry e,Settlement.Building parent,Kind k){
-  if(!HallUpgradeGoal.pending(l,e.settlement().id()))return false;var t=HallUpgradeGoal.inspect(l,e.settlement().id());
+  if(!HallUpgradeGoal.pending(l,e.settlement().id()))return false;var t=HallUpgradeGoal.headerView(l,e.settlement().id());
   return t.hasUUID("annexOf")&&t.getUUID("annexOf").equals(parent.id())&&t.getString("annex").equals(k.type());}
  /** The office's line for each annex a building may take: built, queued, ready (its site is free and it may be ordered), or why not —
   *  "site" with the count of cells in the way when something stands on its site. */

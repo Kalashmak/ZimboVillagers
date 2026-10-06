@@ -24,6 +24,11 @@ public final class MineTimberGameTests {
  }
  private static ResourceWorkGoal resume(GameTestHelper h,Town t){var goal=new ResourceWorkGoal(t.npc,true,()->6000);h.assertTrue(goal.canUse(),"Saved support order resumes");goal.start();return goal;}
  private static int count(ListTag items,Item item){int n=0;for(var raw:items){var stack=ItemStack.of((CompoundTag)raw);if(stack.is(item))n+=stack.getCount();}return n;}
+ private static void requestClay(GameTestHelper h,Town t){
+  var demand=new CompoundTag();demand.putString("stage","idle");var needs=new ListTag();var need=new CompoundTag();need.putString("ingredient","{\"item\":\"minecraft:clay_ball\"}");need.putInt("count",1);needs.add(need);demand.put("needs",needs);
+  org.villageastra.persistence.NbtRecord.write(Workshops.path(t.l,Workshops.hall(t.e).id()),demand);
+  h.assertTrue(NaturalSupplyGoal.demand(t.l,t.e).contains(Items.CLAY_BALL),"A separate supply request exists");
+ }
  @GameTest(template="empty",batch="mine_timber",timeoutTicks=200)
  public static void mixedLocalTimberPaysActualBeamAndReplaysWithoutChangingSpecies(GameTestHelper h){
   var t=town(h);t.stock.setItem(0,new ItemStack(Items.BIRCH_LOG,2));t.stock.setItem(1,new ItemStack(Items.SPRUCE_LOG,2));
@@ -35,6 +40,8 @@ public final class MineTimberGameTests {
   h.assertTrue(count(MineTimber.stored(MineWork.read(t.l,t.mine)),Items.BIRCH_LOG)==1&&t.stock.countItem(Items.SPRUCE_LOG)==2,"Pending withdrawal recovers without taking another species");
   for(int i=0;i<3&&MineWork.read(t.l,t.mine).getString("stage").equals("support_fetch");i++)goal.tick();
   var paid=MineWork.read(t.l,t.mine);h.assertTrue(paid.getString("stage").equals("support_place")&&count(MineTimber.stored(paid),Items.SPRUCE_LOG)==2,"Mixed real logs fully fund the beam");
+  requestClay(h,t);
+  h.assertTrue(!new NaturalSupplyGoal(t.npc,true).canUse(),"A new raw-material trip cannot abandon paid beam placement");
   var cells=MineWork.beam(paid).cells();var stand=MineWork.at(t.e,t.mine,MineWork.beamStand(paid));t.npc.moveTo(stand.getX()+.5,stand.getY()+1,stand.getZ()+.5);goal.tick();
   h.assertTrue(t.l.getBlockState(MineWork.at(t.e,t.mine,cells.get(0))).is(Blocks.BIRCH_LOG),"The installed block is the actual paid birch");
   // A death snapshot while placement is ahead of the saved checkpoint must keep only spruce.
@@ -42,11 +49,26 @@ public final class MineTimberGameTests {
   h.assertTrue(count(custody.items(),Items.SPRUCE_LOG)==2&&count(custody.items(),Items.BIRCH_LOG)==0&&count(custody.items(),Items.OAK_LOG)==0,"Custody excludes the installed log and preserves the remaining species");
   goal=resume(h,t);for(int i=0;i<4&&MineWork.read(t.l,t.mine).getString("stage").equals("support_place");i++)goal.tick();
   h.assertTrue(t.l.getBlockState(MineWork.at(t.e,t.mine,cells.get(1))).is(Blocks.SPRUCE_LOG)&&t.l.getBlockState(MineWork.at(t.e,t.mine,cells.get(2))).is(Blocks.SPRUCE_LOG),"Replayed placement finishes with two paid spruce blocks");
-  h.assertTrue(t.stock.countItem(Items.BIRCH_LOG)==1&&t.stock.countItem(Items.SPRUCE_LOG)==0&&!MineWork.read(t.l,t.mine).contains("supportTimber"),"No duplicate withdrawal, conversion or forgotten beam cargo");h.succeed();
+  h.assertTrue(t.stock.countItem(Items.BIRCH_LOG)==1&&t.stock.countItem(Items.SPRUCE_LOG)==0&&!MineWork.read(t.l,t.mine).contains("supportTimber"),"No duplicate withdrawal, conversion or forgotten beam cargo");
+  h.assertTrue(!NaturalSupplyGoal.primaryResourcePending(t.l,t.e,t.npc),"Finished beam releases the miner for subsequent supply decisions");h.succeed();
  }
  @GameTest(template="empty",batch="mine_timber_demand",timeoutTicks=200)
  public static void supportDemandAcceptsLocalSpeciesInsteadOfRequiringOak(GameTestHelper h){
   var t=town(h);var wants=WorkerSupplies.wants(t.l,t.e,t.mine.id());
   h.assertTrue(wants.stream().anyMatch(w->w.count()==3&&w.matches(new ItemStack(Items.BIRCH_LOG))&&w.matches(new ItemStack(Items.SPRUCE_LOG))),"A three-log beam requests available local species");h.succeed();
+ }
+ @GameTest(template="empty",batch="mine_paid_delivery",timeoutTicks=200)
+ public static void harvestedCargoReachesMineStockBeforeAnotherSupplyTrip(GameTestHelper h){
+  var t=town(h);var target=BuildingPlacement.origin(t.e,t.mine).offset(20,2,20);var before=Blocks.STONE.defaultBlockState();t.l.setBlock(target,before,2);
+  var id=t.state.getUUID("operation");org.villageastra.persistence.WorldJournal.harvest(t.l,id,target,before,new ItemStack(Items.STONE_PICKAXE));
+  var receipt=org.villageastra.persistence.WorldJournal.recoverExisting(t.l,id);var loot=receipt.getList("loot",Tag.TAG_COMPOUND).copy();
+  h.assertTrue(t.l.getBlockState(target).isAir()&&count(loot,Items.COBBLESTONE)==1,"One actual stone block funds the carried cobblestone");
+  t.state.putString("stage","deliver");t.state.put("cargo",loot);MineWork.write(t.l,t.mine,t.state);requestClay(h,t);
+  h.assertTrue(!new NaturalSupplyGoal(t.npc,true).canUse(),"A new supply request waits for carried loot delivery");
+  var output=BuildingPlacement.at(t.e,t.mine,1,1,4);var chest=(net.minecraft.world.Container)t.l.getBlockEntity(output);int initial=chest.countItem(Items.COBBLESTONE);
+  t.npc.moveTo(output.getX()+1.5,output.getY(),output.getZ()+.5);var goal=resume(h,t);goal.tick();
+  h.assertTrue(chest.countItem(Items.COBBLESTONE)==initial+1&&!MineWork.read(t.l,t.mine).contains("cargo"),"The worker deposits its real harvested cargo");
+  MineWork.write(t.l,t.mine,t.state);goal=resume(h,t);goal.tick();
+  h.assertTrue(chest.countItem(Items.COBBLESTONE)==initial+1,"Replaying the old delivery checkpoint cannot duplicate loot");h.succeed();
  }
 }

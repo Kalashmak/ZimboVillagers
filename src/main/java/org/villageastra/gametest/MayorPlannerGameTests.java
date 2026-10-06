@@ -11,6 +11,42 @@ import org.villageastra.world.*;
 /** AD-032: NPC mayor needs, site search and approval only when standing at the site. */
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class MayorPlannerGameTests {
+ @GameTest(template="empty",batch="school_growth_priority",timeoutTicks=100)
+ public static void schoolDoesNotLoseItsPlaceWhenBirthsFillTheNewHouse(GameTestHelper h){
+  var s=Settlement.initial(UUID.randomUUID());
+  h.assertTrue("home".equals(MayorPlanner.need(s)),"The original six adults still need their first additional home");
+  var home=new Settlement.Home(UUID.randomUUID(),1,2,true);s.addHome(home);
+  var first=new Resident(UUID.randomUUID(),Resident.Life.CHILD,false,null,null,-1);s.admit(first,home.id());
+  h.assertTrue("school".equals(MayorPlanner.need(s)),"The first real child needs a school");
+  var second=new Resident(UUID.randomUUID(),Resident.Life.CHILD,false,null,null,-1);s.admit(second,home.id());
+  h.assertTrue("school".equals(MayorPlanner.need(s)),"Filling the last free bed must not discard the school in favor of another growth house");
+  first.growUp();second.growUp();
+  h.assertTrue("school".equals(MayorPlanner.need(s)),"Growing up before construction must not erase the community's education shortage");
+  s.addBuilding(new Settlement.Building(UUID.randomUUID(),"school",20,0,0));
+  h.assertTrue("home".equals(MayorPlanner.need(s)),"A completed school returns the full village to housing growth");h.succeed();
+ }
+ @GameTest(template="empty",batch="food_capacity",timeoutTicks=200)
+ public static void growingVillageOrdersFoodBeforeMoreHousingAndCountsOnlyExistingFields(GameTestHelper h){
+  var t=ResearchV2Town.town(h,"farm");
+  try{
+   var home=Settlement.childId(t.s.id(),"home");for(int i=0;i<8;i++)t.s.admit(new Resident(UUID.randomUUID(),Resident.Life.ADULT,false,null,null,-1),home);
+   ResearchV2Town.learn(t,ResearchGate.forDesign("farm").toArray(String[]::new));
+   h.assertTrue(MayorPlanner.foodShortage(t.l,t.e)&&MayorPlanner.need(t.l,t.e).equals("farm"),"Eight residents must receive another ordinary paid farm before the next house");
+   t.s.appointPlayerMayor(UUID.randomUUID());h.assertTrue(!MayorPlanner.need(t.l,t.e).equals("farm"),"A player mayor keeps project choice");t.s.appointNpcMayor();
+   ResearchV2Town.raise(t,2);h.assertTrue(MayorPlanner.foodShortage(t.l,t.e),"Upgrading only the farmhouse cannot count fields not registered as laid");
+   t.s.raiseFieldLevel(t.shop.id(),2);
+   h.assertTrue(!MayorPlanner.foodShortage(t.l,t.e)&&MayorPlanner.need(t.l,t.e).equals("home"),"The existing four fields can feed eight residents, so housing becomes the next shortage again");
+  }finally{ResearchV2Town.done(t);}h.succeed();
+ }
+ @GameTest(template="empty",batch="food_capacity_margin",timeoutTicks=200)
+ public static void starterFoodForecastKeepsTheExistingFarmRatingReserve(GameTestHelper h){
+  var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(6,3,6)));SettlementData.get(l.getServer()).add(e);
+  try{
+   var farm=s.buildings().stream().filter(b->b.type().equals("farm")).findFirst().orElseThrow();ResearchV2Town.lay(l,e,farm,"farm");h.assertTrue(s.residents().stream().filter(Resident::alive).count()==6&&s.homes().stream().noneMatch(home->s.occupancy(home.id())<home.capacity()),"Six residents with full original housing");
+   h.assertTrue(MayorPlanner.foodShortage(l,e),"Perfect uninterrupted growth barely feeds six; the existing quarter reserve must trigger a real additional field");
+   var second=new Settlement.Building(UUID.randomUUID(),"farm",35,0,35);s.addBuilding(second);ResearchV2Town.lay(l,e,second,"farm");h.assertTrue(!MayorPlanner.foodShortage(l,e),"Two existing ordinary farms cover six with the same reserve");
+  }finally{SettlementData.get(l.getServer()).remove(s.id());BuildingLevels.forgetBest(s.id());}h.succeed();
+ }
  @GameTest(template="empty",timeoutTicks=100) public static void needsFollowHousingChildrenAndIdleAdults(GameTestHelper h){
   var s=new Settlement(UUID.randomUUID());s.addBuilding(new Settlement.Building(UUID.randomUUID(),"town_hall",0,0,0));
   var home=new Settlement.Home(UUID.randomUUID(),1,2,true);s.addHome(home);

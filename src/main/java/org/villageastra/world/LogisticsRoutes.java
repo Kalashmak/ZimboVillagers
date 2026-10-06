@@ -14,7 +14,8 @@ public final class LogisticsRoutes {
  public static boolean fits(net.minecraft.world.Container c,List<ItemStack> stacks){
   var slots=new ItemStack[c.getContainerSize()];for(int i=0;i<slots.length;i++)slots[i]=c.getItem(i).copy();
   outer:for(var stack:stacks){if(stack.isEmpty())continue;
-   for(int i=0;i<slots.length;i++){var before=slots[i];
+   for(int pass=0;pass<2;pass++)for(int i=0;i<slots.length;i++){var before=slots[i];
+    if(pass==0&&before.isEmpty()||pass==1&&!before.isEmpty())continue;
     if(!before.isEmpty()&&!ItemStack.isSameItemSameTags(before,stack))continue;
     int count=before.getCount()+stack.getCount();if(count>Math.min(c.getMaxStackSize(),stack.getMaxStackSize()))continue;
     slots[i]=stack.copyWithCount(count);continue outer;}
@@ -80,6 +81,12 @@ public final class LogisticsRoutes {
  /** A producer's own product that goes to the stock. */
  public static boolean product(Settlement.Building b,ItemStack item){return !item.isEmpty()&&(b.type().equals("livestock")?LivestockPens.product(item):output(item)||b.type().equals(ForesterHut.TYPE)&&(item.is(net.minecraft.tags.ItemTags.PLANKS)||item.is(Items.APPLE))||b.type().equals("mine")&&mineral(item));}
  /** Excavated intermediates are usable stock too; sandstone need not be crafted again from sand. */
+ /** Generic bulk exports leave real slots for food, tools and paid outputs. Explicit wants still take precedence. */
+ private static boolean surplusFits(OwnedChestEntity stock,ItemStack item){
+  if(item.is(Items.WHEAT)||Population.nutrition(item)>0)return true;
+  int empty=0;for(int i=0;i<stock.getContainerSize();i++)if(stock.getItem(i).isEmpty())empty++;
+  return empty>=12;
+ }
  private static boolean mineral(ItemStack item){return Workshops.mined(item.getItem())||Set.of(Items.SANDSTONE,Items.RED_SANDSTONE,Items.SAND,Items.RED_SAND).contains(item.getItem());}
  /** AD-147: the next route of a warehouse's courier by need (see NEED_*): {@code from} the courier's place (null: sources by id), {@code load} the
   *  most one leg takes, {@code accept} what a cart leg must fit (null: anything). */
@@ -119,6 +126,7 @@ public final class LogisticsRoutes {
    for(int i=0;i<source.getContainerSize();i++){var item=source.getItem(i);if(!product(b,item))continue;
     // The stock takes a producer's surplus whatever it holds already (a stack more than it has and has coming), as long as it has room:
     // a cart takes several stacks of one harvest in one trip.
+    if(!surplusFits(c,item))continue;
     Predicate<ItemStack> same=s->ItemStack.isSameItemSameTags(s,item);
     var route=find(l,e,stock,new Demand("stock",same,count(c,same)+PorterWork.reserved(l,e,stock.id(),same,true)+item.getMaxStackSize()),load,x->x.id().equals(b.id()),from,accept);if(route!=null)return route;}}
   return null;
@@ -135,8 +143,11 @@ public final class LogisticsRoutes {
   {var b=ScienceWorks.lab(e);var c=b==null?null:chest(l,e,b);if(c!=null&&count(c,org.villageastra.server.BookResearch::work)<org.villageastra.domain.ScienceBalance.CARRY_TO_LAB)for(var demand:science()){var route=find(l,e,b,demand,load);if(route!=null)return route;}}
   var stock=e.settlement().buildings().stream().filter(b->b.type().equals("warehouse")).findFirst().orElseGet(()->e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null));if(stock==null)return null;var c=chest(l,e,stock);if(c==null)return null;
   var inputs=constructionInputs(l,e,Workshops.wants(l,e),from,load,null);if(inputs!=null)return inputs;
+  // A full producer must be able to finish delivery even when the hall already
+  // holds the ordinary one-stack target. All requested routes still come first.
+  var overflow=products(l,e,stock,from,load,null,true);if(overflow!=null)return overflow;
   // AD-138 (spec F6): a yard's products go to the stock too - and only those: its feed is not the farm's harvest.
-  for(var b:e.settlement().buildings())if(PRODUCERS.contains(b.type())){var source=chest(l,e,b);if(source==null)continue;for(int i=0;i<source.getContainerSize();i++){var item=source.getItem(i);if(product(b,item)){var route=find(l,e,stock,new Demand("stock",s->ItemStack.isSameItemSameTags(s,item),64),load);if(route!=null)return route;}}}return null;
+  for(var b:e.settlement().buildings())if(PRODUCERS.contains(b.type())){var source=chest(l,e,b);if(source==null)continue;for(int i=0;i<source.getContainerSize();i++){var item=source.getItem(i);if(product(b,item)&&surplusFits(c,item)){var route=find(l,e,stock,new Demand("stock",s->ItemStack.isSameItemSameTags(s,item),64),load);if(route!=null)return route;}}}return null;
  }
  /** AD-155: the next want met from this building's chest only (the smithy's courier and wolves), the wants in Workshops.wants order. */
  public static Route from(ServerLevel l,SettlementData.Entry e,Settlement.Building source,int load){

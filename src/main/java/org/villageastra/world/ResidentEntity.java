@@ -49,6 +49,7 @@ public final class ResidentEntity extends PathfinderMob {
     /** AD-135/AD-139 (merge probes 2026-09-24: a builder fell off the scaffold of the tower mill at step 218 and died, the site stood still
      *  without its cargo): a village's builder works roped to the scaffold and takes no fall damage; every other resident falls as usual. */
     @Override public boolean causeFallDamage(float distance,float multiplier,net.minecraft.world.damagesource.DamageSource source){
+        if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke")&&distance>3)com.mojang.logging.LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH fall id={} pos={} distance={} health={} goals={} builder={}",getUUID(),position(),distance,getHealth(),runningGoals(),builder());
         if(builder())return false;return super.causeFallDamage(distance,multiplier,source);}
     /** This resident is its village's builder (server side; false without a village). */
     public boolean builder(){
@@ -116,6 +117,16 @@ public final class ResidentEntity extends PathfinderMob {
         try{var nav=createNavigation(level());configure(nav);nav.setMaxVisitedNodesMultiplier(exploration);return nav.createPath(target,accuracy,range);}
         finally{reversibleRoute=previous;}
     }
+    /** Several verified work platforms share one bounded native expedition search. */
+    public net.minecraft.world.level.pathfinder.Path routeToAny(java.util.Set<net.minecraft.core.BlockPos> targets,int range){
+        boolean previous=reversibleRoute;reversibleRoute=true;
+        try{var nav=(ResidentNavigation)createNavigation(level());configure(nav);nav.setMaxVisitedNodesMultiplier(PATH_BUDGET*Math.max(1F,range/(float)Math.max(1D,getAttributeValue(Attributes.FOLLOW_RANGE))));return nav.toAny(targets,range);}
+        finally{reversibleRoute=previous;}
+    }
+    private class ResidentNavigation extends net.minecraft.world.entity.ai.navigation.GroundPathNavigation {
+        ResidentNavigation(Level level){super(ResidentEntity.this,level);}
+        net.minecraft.world.level.pathfinder.Path toAny(java.util.Set<net.minecraft.core.BlockPos> targets,int range){return createPath(targets,8,false,0,(float)range);}
+    }
     private boolean longStride;
     /** AD-079: walking its own mine shaft, a miner steps up a whole tread instead of hopping at it — vanilla routes plan such a step,
      *  but with the villager stride of 0.6 the worker stuck at the step itself. A tread and a half is the tallest step the shaft asks for:
@@ -126,11 +137,14 @@ public final class ResidentEntity extends PathfinderMob {
     /** AD-069: routes never cut the corner of a scaffold column diagonally — a corner cut carries the worker into the column cell, where it is
      *  stepped out again and the same cut is planned once more. Around a column the route takes straight steps. */
     @Override protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level level) {
-        return new net.minecraft.world.entity.ai.navigation.GroundPathNavigation(this, level) {
+        return new ResidentNavigation(level) {
+            private double requestedSpeed;
+            @Override public void tick(){speedModifier=ResidentTravel.speed(ResidentEntity.this,path,requestedSpeed);super.tick();}
             @Override public boolean moveTo(net.minecraft.world.level.pathfinder.Path incoming,double speed){
+                requestedSpeed=speed;
                 // Vanilla compares only nodes; an identical ordinary path must not erase the return policy (or keep it for another goal).
                 if((incoming instanceof ResourceReturnRoute.ReturnPath)!=(path instanceof ResourceReturnRoute.ReturnPath)){path=null;hasDelayedRecomputation=false;}
-                return super.moveTo(incoming,speed);
+                return super.moveTo(incoming,ResidentTravel.speed(ResidentEntity.this,incoming,speed));
             }
             @Override public net.minecraft.core.BlockPos getTargetPos(){return path instanceof ResourceReturnRoute.ReturnPath?path.getTarget():super.getTargetPos();}
             @Override public void recomputePath(){
@@ -142,6 +156,13 @@ public final class ResidentEntity extends PathfinderMob {
             @Override public void stop(){if(path instanceof ResourceReturnRoute.ReturnPath)hasDelayedRecomputation=false;super.stop();}
             @Override protected net.minecraft.world.level.pathfinder.PathFinder createPathFinder(int maxVisitedNodes) {
                 nodeEvaluator = new net.minecraft.world.level.pathfinder.WalkNodeEvaluator() {
+                    // Long expeditions can alias vanilla's packed int key, particularly at negative coordinates.
+                    private final it.unimi.dsi.fastutil.longs.Long2ObjectMap<net.minecraft.world.level.pathfinder.Node> coordinateNodes = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
+                    @Override protected net.minecraft.world.level.pathfinder.Node getNode(int x,int y,int z){
+                        return coordinateNodes.computeIfAbsent(net.minecraft.core.BlockPos.asLong(x,y,z),key -> new net.minecraft.world.level.pathfinder.Node(x,y,z));
+                    }
+                    @Override public void prepare(net.minecraft.world.level.PathNavigationRegion region,net.minecraft.world.entity.Mob mob){coordinateNodes.clear();super.prepare(region,mob);}
+                    @Override public void done(){super.done();coordinateNodes.clear();}
                     @Override public int getNeighbors(net.minecraft.world.level.pathfinder.Node[] neighbors,net.minecraft.world.level.pathfinder.Node from){
                         int count=super.getNeighbors(neighbors,from);if(!reversibleRoute)return count;int kept=0;
                         // The vanilla step-up recursion can still emit a two-block descent under an overhang.
@@ -182,6 +203,7 @@ public final class ResidentEntity extends PathfinderMob {
         goalSelector.addGoal(2, new SleepGoal(this));
         goalSelector.addGoal(1, new BedExitGoal(this));
         goalSelector.addGoal(1, new SafeDescentGoal(this));
+        goalSelector.addGoal(0, new SolidEscapeGoal(this));
         // Verified shallow-pit recovery may interrupt floating; submerged water still uses FloatGoal.
         goalSelector.addGoal(0, new PitEscapeGoal(this));
         goalSelector.addGoal(0, new FoliageEscapeGoal(this));
@@ -220,6 +242,7 @@ public final class ResidentEntity extends PathfinderMob {
         goalSelector.addGoal(2, new SoldierGoal(this));
         // AD-143: an idle resident rests on a chair of its home now and then (before the stroll of the same priority).
         goalSelector.addGoal(7, new HomeRestGoal(this));
+        goalSelector.addGoal(5, new HomeNeighborhood(this));
         goalSelector.addGoal(7, new WaterAvoidingRandomStrollGoal(this, 0.65));
         goalSelector.addGoal(8, new LookAtPlayerGoal(this, Player.class, 8));
         goalSelector.addGoal(9, new RandomLookAroundGoal(this));
@@ -329,6 +352,7 @@ public final class ResidentEntity extends PathfinderMob {
         }
     }
     @Override public void aiStep(){
+        if(!level().isClientSide&&tickCount%100==0)HomeNeighborhood.restrict(this);
         super.aiStep();
         if(!level().isClientSide&&(tickCount+getId())%40==0)org.villageastra.server.Gifts.mirror(this);
         if(!level().isClientSide&&isSleeping()&&(!SleepGoal.night(level())||getSleepingPos().isEmpty()||!(level().getBlockState(getSleepingPos().get()).getBlock() instanceof net.minecraft.world.level.block.BedBlock))){stopSleeping();setPose(net.minecraft.world.entity.Pose.STANDING);}

@@ -36,10 +36,11 @@ public final class HallUpgradeGoal extends Goal {
  private double reachSq=BuildingOrders.REACH_SQ;private int bag=1;private boolean helper;
  /** AD-153: the builders of a village share one copy of the project in memory, so what one of them does the others see at once; a copy is
   *  read again when the file changed behind their back (a test, a probe, the mayor's orders, cargo custody). */
- private record Shared(CompoundTag state,java.nio.file.attribute.FileTime time){}
+ private record Stamp(long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record Shared(CompoundTag state,Stamp stamp){}
  private static final Map<Path,Shared> SHARED=new java.util.concurrent.ConcurrentHashMap<>();
- private static java.nio.file.attribute.FileTime time(Path p){try{return Files.getLastModifiedTime(p);}catch(IOException e){return null;}}
- private static CompoundTag shared(Path p){var t=time(p);var s=SHARED.get(p);if(s!=null&&t!=null&&t.equals(s.time()))return s.state();var state=read(p);SHARED.put(p,new Shared(state,t));return state;}
+ private static Stamp stamp(Path p){try{var a=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);return new Stamp(AtomicRecord.revision(p),a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());}catch(IOException e){throw new IllegalStateException(e);}}
+ private static CompoundTag shared(Path p){var t=stamp(p);var s=SHARED.get(p);if(s!=null&&t.equals(s.stamp()))return s.state();var state=read(p);SHARED.put(p,new Shared(state,t));return state;}
  /** AD-153: which builder works which operation now — an operation one of them has in hand is not taken by another (claims last two seconds
   *  and are renewed every tick of work, so a builder who stops lets his go). In memory, by project and operation. */
  private record Claim(UUID worker,long until){}
@@ -77,19 +78,53 @@ public final class HallUpgradeGoal extends Goal {
    state.putInt("index",i+1);applied++;}
   NbtRecord.write(file,state);return applied;
  }
- public static boolean pending(ServerLevel level,UUID village){var file=path(level,village);return Files.exists(file)&&!read(file).getBoolean("complete");}
- public static CompoundTag inspect(ServerLevel level,UUID village){return read(path(level,village)).copy();}
+ public static boolean pending(ServerLevel level,UUID village){var file=path(level,village);return Files.exists(file)&&(!shared(file).getBoolean("complete")||shared(file).contains("waitingProject",Tag.TAG_COMPOUND));}
+ public static CompoundTag inspect(ServerLevel level,UUID village){return shared(path(level,village)).copy();}
+ /** Identity, location and flags for decisions that do not read the bill, cargo
+  * or block operations. The record revision is checked as for a full inspect. */
+ public static CompoundTag headerView(ServerLevel level,UUID village){
+  var source=shared(path(level,village));var result=new CompoundTag();
+  for(var key:source.getAllKeys())if(!Set.of("ops","cost","cargo","waitingProject").contains(key))result.put(key,source.get(key).copy());
+  if(source.contains("waitingProject",Tag.TAG_COMPOUND))result.putBoolean("foodRescue",true);
+  return result;
+ }
+ /** A quote may change only before construction and while its held funding
+  * view is current. Its receipt identity and real cargo must remain intact. */
+ static boolean reviseUnstarted(ServerLevel level,UUID village,CompoundTag expected,CompoundTag replacement){
+  var file=path(level,village);
+  if(!shared(file).equals(expected)||expected.getBoolean("funded")||expected.getBoolean("complete")||expected.getInt("index")!=0)return false;
+  if(!expected.getUUID("id").equals(replacement.getUUID("id"))||!HallConstructionPlan.projectId(expected).equals(HallConstructionPlan.projectId(replacement))
+     ||expected.getInt("withdrawals")!=replacement.getInt("withdrawals")||!expected.getList("cargo",Tag.TAG_COMPOUND).equals(replacement.getList("cargo",Tag.TAG_COMPOUND)))throw new IllegalArgumentException("Quote cannot change funded custody");
+  write(file,replacement.copy());return true;
+ }
+ /** Atomic handover: old cargo and receipt ids stay inside the same durable record. */
+ static boolean suspendForFood(ServerLevel l,SettlementData.Entry e,CompoundTag expected,CompoundTag farm){
+  var file=path(l,e.settlement().id());if(!FoodConstruction.maySuspend(l,e)||!shared(file).equals(expected)||!farm.getString("design").equals("farm")||farm.contains("waitingProject"))return false;
+  var replacement=farm.copy();replacement.put("waitingProject",expected.copy());write(file,replacement);return true;
+ }
+ static boolean resumeAfterFood(ServerLevel l,SettlementData.Entry e){
+  var file=path(l,e.settlement().id());if(!Files.exists(file))return false;var current=shared(file);
+  if(!current.getBoolean("complete")||!current.contains("waitingProject",Tag.TAG_COMPOUND))return false;
+  if(e.settlement().buildings().stream().noneMatch(b->b.id().equals(BuildingOrders.buildingId(current))))return false;
+  write(file,current.getCompound("waitingProject").copy());return true;
+ }
+ /** Recipe demand needs the bill and booked cargo, not a deep copy of hundreds of block operations. */
+ public static CompoundTag fundingView(ServerLevel level,UUID village){
+  var source=shared(path(level,village));var result=new CompoundTag();
+  for(var key:List.of("id","project","complete","funded","cost","cargo"))if(source.contains(key))result.put(key,source.get(key).copy());
+  return result;
+ }
  /** AD-078: the crew's own housekeeping gives way — a repair nobody has started and nothing has been fetched for
   *  yields the settlement's single construction slot to what the mayor orders. */
  public static boolean yields(ServerLevel level,UUID village){
-  if(!pending(level,village))return false;var t=inspect(level,village);
+  if(!pending(level,village))return false;var t=shared(path(level,village));
   return t.getBoolean("repair")&&t.getInt("index")==0&&t.getList("cargo",Tag.TAG_COMPOUND).isEmpty();
  }
  /** Why the queued project cannot be called off now, or empty. Only a project nobody has started can be: what is built stays built. */
  public static String cancellable(ServerLevel level,UUID village,UUID project){
   if(!pending(level,village))return "none";var t=inspect(level,village);
   if(!HallConstructionPlan.projectId(t).equals(project))return "project";
-  if(t.getInt("index")>0||!t.getList("cargo",Tag.TAG_COMPOUND).isEmpty())return "started";
+  if(t.contains("waitingProject",Tag.TAG_COMPOUND)||t.getInt("index")>0||!t.getList("cargo",Tag.TAG_COMPOUND).isEmpty())return "started";
   return "";
  }
  /** Drops the queued project: no block changes, nothing is paid back, the crew simply has nothing queued again. */
@@ -151,7 +186,7 @@ public final class HallUpgradeGoal extends Goal {
  public static boolean waiting(ServerLevel l,SettlementData.Entry e){
   var id=e.settlement().id();long now=l.getGameTime();var seen=WAITING.get(id);if(seen!=null&&now-seen[0]>=0&&now-seen[0]<20)return seen[1]==1;
   var file=path(l,id);boolean waits=false;
-  if(Files.exists(file)){var state=read(file);waits=!state.getBoolean("complete")&&!state.getBoolean("funded")&&fundingBlocked(l,e,state);}
+  if(Files.exists(file)){var state=shared(file);waits=!state.getBoolean("complete")&&!state.getBoolean("funded")&&fundingBlocked(l,e,state);}
   WAITING.put(id,new long[]{now,waits?1:0});return waits;
  }
  /** Yield only when no unpaid material can be collected; a committed withdrawal is always recovered first. */
@@ -159,7 +194,12 @@ public final class HallUpgradeGoal extends Goal {
   if(!(l.getBlockEntity(HallSite.stock(e)) instanceof Container chest))return false;
   if(!WorldJournal.recoverAmount(l,Settlement.childId(state.getUUID("id"),"fund/"+state.getInt("withdrawals"))).isEmpty())return false;
   var missing=ConstructionFunding.missing(state);
-  return !missing.isEmpty()&&ConstructionFunding.slot(chest,missing)<0;
+  return !missing.isEmpty()&&ConstructionFunding.slot(HallReserve.buildView(l,e,chest),missing)<0;
+ }
+ private static boolean leadReady(ServerLevel l,SettlementData.Entry e,Resident resident){
+  if(resident==null||!resident.alive()||resident.profession()!=Profession.BUILDER||!Population.mayWork(resident)
+     ||CargoCustody.pending(l.getServer(),resident.id())||Trails.onTrail(l,e,resident.id()))return false;
+  var body=l.getEntity(resident.id());return !(body instanceof ResidentEntity npc)||npc.isAlive()&&npc.escortPlayer()==null;
  }
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public boolean canUse(){
@@ -173,13 +213,15 @@ public final class HallUpgradeGoal extends Goal {
   if(Sieges.besieged(l.getServer(),e.settlement().id())){worker.workStatus("besieged");return false;}
   file=path(l,e.settlement().id());if(!Files.exists(file))return false;state=shared(file);base=HallSite.base(e);hallStock=HallSite.stock(e);if(e.settlement().governance().paused(HallConstructionPlan.projectId(state))){worker.workStatus("paused_by_mayor");return false;}
   reachSq=BuildingOrders.workReachSq(ResearchKnobs.reach(l,e));bag=Math.max(1,ResearchKnobs.bag(l,e));helper=false;
+  if(!state.getBoolean("complete")&&state.hasUUID("worker")&&!state.getUUID("worker").equals(worker.getUUID())
+     &&!leadReady(l,e,e.settlement().resident(state.getUUID("worker")))){state.remove("worker");save();}
   if(state.hasUUID("worker")){if(!state.getUUID("worker").equals(worker.getUUID())){
    // AD-153: another builder leads the project; one of the hall's crew helps with its blocks once it is paid for. The lead alone funds it,
    // carries the leftovers back and registers the building; a move (AD-125) and the hall's own upgrade stay one builder's work.
    if(!BuildingOrders.isBuilding(state)||!state.getBoolean("funded")||state.getBoolean("complete")||state.getBoolean("relocate")
      ||state.getInt("index")>=state.getList("ops",Tag.TAG_COMPOUND).size()||!crew(l,e).contains(worker.getUUID()))return false;
    helper=true;return true;}}
-  else {var first=e.settlement().residents().stream().filter(x->x.alive()&&x.profession()==Profession.BUILDER&&!Trails.onTrail(l,e,x.id())).map(Resident::id).sorted().findFirst();if(first.isEmpty()||!first.get().equals(worker.getUUID()))return false;state.putUUID("worker",worker.getUUID());save();}
+  else {var first=e.settlement().residents().stream().filter(x->leadReady(l,e,x)).map(Resident::id).sorted().findFirst();if(first.isEmpty()||!first.get().equals(worker.getUUID()))return false;state.putUUID("worker",worker.getUUID());save();}
   if(!state.getBoolean("complete")&&!state.getBoolean("funded")&&fundingBlocked(l,e,state)){worker.workStatus("missing_building_materials");return false;}
   if(state.getBoolean("complete")){if(!BuildingOrders.isBuilding(state)&&e.settlement().civilization().level()==state.getInt("level")-1){e.settlement().civilization().completedHallUpgrade(state.getInt("level"));data.setDirty();}return false;}
   return true;
@@ -188,12 +230,17 @@ public final class HallUpgradeGoal extends Goal {
   // A project the mayor called off (AD-078), or that gave way to another, is let go at once: nobody works on from a stale copy of it.
   // The goal selector looks at a resident only every other tick, on its own parity, so the check takes a window of two ticks
   // (wall-client-05: with %20==0 it never came up for a builder of the other parity).
-  if(worker.tickCount%20<2&&!current())return false;
+  if(worker.tickCount%20<2){
+   if(!current())return false;
+   var queued=shared(file);if(!helper&&queued.hasUUID("worker")&&!queued.getUUID("worker").equals(worker.getUUID()))return false;
+   if(helper&&worker.level() instanceof ServerLevel l){var e=SettlementData.get(l.getServer()).entry(worker.settlementId());if(e!=null&&queued.hasUUID("worker")&&!leadReady(l,e,e.settlement().resident(queued.getUUID("worker"))))return false;}
+  }
   if(helper&&(!state.getBoolean("funded")||state.getInt("index")>=state.getList("ops",Tag.TAG_COMPOUND).size()))return false;
   if(!worker.isAlive()||worker.escortPlayer()!=null||state.getBoolean("complete")||!headless&&worker.getServer().getPlayerCount()==0||CargoCustody.pending(worker.getServer(),worker.getUUID()))return false;
   // AD-043: a siege stops the work already under way too, not only its start.
   if(Sieges.besieged(worker.getServer(),worker.settlementId())){worker.workStatus("besieged");return false;}
   var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());if(!(e!=null&&!e.settlement().governance().paused(HallConstructionPlan.projectId(state))&&e.dimension().equals(worker.level().dimension().location().toString())&&e.settlement().resident(worker.getUUID())!=null&&e.settlement().resident(worker.getUUID()).profession()==Profession.BUILDER))return false;
+  if(!Population.mayWork(e.settlement().resident(worker.getUUID())))return false;
   // AD-094: funding stuck on an item the hall chest lacks lets the builder go, as canUse would, so RoadWorkGoal (it asks waiting) takes him meanwhile.
   if(worker.tickCount%20<2&&!state.getBoolean("funded")&&worker.level() instanceof ServerLevel l&&fundingBlocked(l,e,state)){worker.workStatus("missing_building_materials");return false;}
   return true;
@@ -202,12 +249,13 @@ public final class HallUpgradeGoal extends Goal {
  /** Whether the project this builder holds is still the one queued. */
  private boolean current(){return file!=null&&state!=null&&Files.exists(file)&&HallConstructionPlan.projectId(shared(file)).equals(HallConstructionPlan.projectId(state));}
  /** Writes the held project back — never over a project that was called off or replaced meanwhile. The shared copy (AD-153) is this one. */
- private void save(){if(current()){write(file,state);SHARED.put(file,new Shared(state,time(file)));}}
+ private void save(){if(current()){write(file,state);SHARED.put(file,new Shared(state,stamp(file)));}}
  private int held(String key){int count=0;for(Tag t:state.getList("cargo",Tag.TAG_COMPOUND)){var item=ItemStack.of((CompoundTag)t);if(BuiltInRegistries.ITEM.getKey(item.getItem()).toString().equals(key))count+=item.getCount();}return count;}
  private void consume(String key){var cargo=state.getList("cargo",Tag.TAG_COMPOUND);for(int i=0;i<cargo.size();i++){var stack=ItemStack.of(cargo.getCompound(i));if(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString().equals(key)&&!stack.isEmpty()){stack.shrink(1);cargo.set(i,stack.save(new CompoundTag()));return;}}throw new IllegalStateException("Missing funded material");}
  @Override public void tick(){
   // AD-153: the copy every builder of the project works on — a file changed behind the crew is read again once, for all of them.
   if(file!=null&&Files.exists(file)){var now=shared(file);if(now!=state&&HallConstructionPlan.projectId(now).equals(HallConstructionPlan.projectId(state)))state=now;}
+  if(!helper&&state.hasUUID("worker")&&!state.getUUID("worker").equals(worker.getUUID()))return;
   var l=(ServerLevel)worker.level();var id=state.getUUID("id");
   // Funding and returns use the same walking recovery as construction. Keep its progress window fresh
   // during those walks too; otherwise a previous project's idle state can keep pushing against navigation forever.
@@ -236,7 +284,7 @@ public final class HallUpgradeGoal extends Goal {
     var missing=ConstructionFunding.missing(state);
     if(missing.isEmpty()){state.putBoolean("funded",true);save();return;}
     UUID take=Settlement.childId(id,"fund/"+state.getInt("withdrawals"));ItemStack material=WorldJournal.recoverAmount(l,take);
-    if(material.isEmpty()&&!WorldJournal.exists(l,take)&&l.getBlockEntity(source) instanceof Container c){int slot=ConstructionFunding.slot(c,missing);if(slot>=0){var stack=c.getItem(slot);material=WorldJournal.takeAmount(l,take,source,slot,stack.copy(),Math.min(stack.getCount(),missing.get(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString())));}}
+    if(material.isEmpty()&&!WorldJournal.exists(l,take)&&l.getBlockEntity(source) instanceof Container c){var e=SettlementData.get(l.getServer()).entry(worker.settlementId());int slot=ConstructionFunding.slot(HallReserve.buildView(l,e,c),missing);if(slot>=0){var stack=c.getItem(slot);material=WorldJournal.takeAmount(l,take,source,slot,stack.copy(),Math.min(stack.getCount(),missing.get(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString())));}}
     if(material.isEmpty()){if(load==0)worker.workStatus("missing_building_materials");return;}
     state.getList("cargo",Tag.TAG_COMPOUND).add(material.save(new CompoundTag()));state.putInt("withdrawals",state.getInt("withdrawals")+1);save();
    }
@@ -857,7 +905,11 @@ public final class HallUpgradeGoal extends Goal {
   // Inside the column footprint the worker is aligned to its axis so the hitbox cannot rest on neighbouring beds or walls.
   if(cx*cx+cz*cz<.5&&worker.getY()>=standBase-.5&&worker.level().getBlockState(BlockPos.containing(feet.getX()+.5,worker.getY(),feet.getZ()+.5)).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())){worker.setPos(feet.getX()+.5,worker.getY(),feet.getZ()+.5);cx=0;cz=0;}
   boolean near=cx*cx+cz*cz<.12;
-  if(!(near&&(worker.onClimbable()||worker.level().getBlockState(worker.blockPosition()).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())))){
+  // Standing on the top platform leaves the feet in air. It is still the same
+  // planned column: descend through its real top instead of repeatedly approaching it.
+  var scaffold=org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get();
+  if(!(near&&(worker.onClimbable()||worker.level().getBlockState(worker.blockPosition()).is(scaffold)
+      ||worker.level().getBlockState(worker.blockPosition().below()).is(scaffold)))){
    if(atticColumn&&!up&&!(near&&worker.getY()>=attic-1)){
     var hatch=BlockPos.of(state.getLong("hatch"));var origin=BlockPos.of(state.getLong("origin"));
     if(hx*hx+hz*hz>4&&!worker.onClimbable())worker.getNavigation().moveTo(hatch.getX()+.5,origin.getY()+1,hatch.getZ()+.5,.8);

@@ -10,7 +10,7 @@ public final class SafeDescentGoal extends Goal {
  private record Route(BlockPos anchor,BlockPos edge,BlockPos landing){}
  public SafeDescentGoal(ResidentEntity r){resident=r;setFlags(EnumSet.of(Flag.MOVE,Flag.JUMP));}
  private static boolean open(ResidentEntity r,BlockPos p){var l=r.level();return l.hasChunkAt(p)&&l.getFluidState(p).isEmpty()&&l.getBlockState(p).getCollisionShape(l,p).isEmpty();}
- private static boolean stand(ResidentEntity r,BlockPos p){var l=r.level();return open(r,p)&&open(r,p.above())&&l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP)&&!l.getBlockState(p.below()).is(Blocks.MAGMA_BLOCK)&&!l.getBlockState(p.below()).is(Blocks.CAMPFIRE)&&!l.getBlockState(p.below()).is(Blocks.SOUL_CAMPFIRE);}
+ private static boolean stand(ResidentEntity r,BlockPos p){var l=r.level();return open(r,p)&&open(r,p.above())&&(l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP)||l.getBlockState(p.below()).getBlock() instanceof net.minecraft.world.level.block.ChestBlock&&l.getFluidState(p.below()).isEmpty())&&!l.getBlockState(p.below()).is(Blocks.MAGMA_BLOCK)&&!l.getBlockState(p.below()).is(Blocks.CAMPFIRE)&&!l.getBlockState(p.below()).is(Blocks.SOUL_CAMPFIRE);}
  private static Route find(ResidentEntity r,BlockPos destination){
   if(!r.onGround()||r.isInWaterOrBubble()||r.isPassenger()||r.isSleeping()||r.child()||destination.getY()>r.getY()-2)return null;
   var foot=r.blockPosition();Route best=null;double score=Double.MAX_VALUE;
@@ -31,7 +31,7 @@ public final class SafeDescentGoal extends Goal {
  static BlockPos destination(ResidentEntity r){
   var path=r.getNavigation().getPath();if(path!=null)return path.getTarget();
   if(!r.builder()||!r.workStatus().equals("needs_access")||r.settlementId()==null||!(r.level() instanceof net.minecraft.server.level.ServerLevel l)||!HallUpgradeGoal.exists(l,r.settlementId()))return null;
-  var project=HallUpgradeGoal.inspect(l,r.settlementId());
+  var project=HallUpgradeGoal.headerView(l,r.settlementId());
   return BuildingOrders.isBuilding(project)&&project.getBoolean("funded")&&!project.getBoolean("complete")?BlockPos.of(project.getLong("origin")).above():null;
  }
  @Override public boolean canUse(){

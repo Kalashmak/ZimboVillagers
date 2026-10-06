@@ -18,15 +18,23 @@ import org.villageastra.server.SettlementData;
  *  journal id (project id / fund/&lt;withdrawals&gt;). Nothing new is saved. */
 public final class HallReserve {
  private HallReserve(){}
- private record Snapshot(int hash,int size,UUID project,UUID target,Map<Item,Integer> reserved,UUID builderTake){}
+ private record Stamp(Path path,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long length,Object key){}
+ private record Snapshot(Stamp stamp,UUID project,UUID target,Map<Item,Integer> reserved,UUID builderTake){}
  private static final Map<UUID,Snapshot> CACHE=new HashMap<>();
- private static final Snapshot NONE=new Snapshot(0,-1,null,null,Map.of(),null);
+ private static final Snapshot NONE=new Snapshot(null,null,null,Map.of(),null);
  private static Path file(ServerLevel l,UUID village){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-upgrades/"+village+".bin");}
  private static Snapshot snapshot(ServerLevel l,UUID village){
-  // Keyed on the record's bytes: a project replaced within the same millisecond is still read anew; the NBT is parsed only on a change.
-  var f=file(l,village);byte[] bytes;
-  try{if(!Files.exists(f)){CACHE.remove(village);return NONE;}bytes=org.villageastra.persistence.AtomicRecord.read(f);}catch(java.io.IOException ex){throw new IllegalStateException(ex);}
-  int hash=Arrays.hashCode(bytes);var old=CACHE.get(village);if(old!=null&&old.hash==hash&&old.size==bytes.length)return old;
+  // Full timestamps, replacement identity and the writer revision invalidate even
+  // two internal payments in one filesystem timestamp. Unchanged plans are not
+  // repeatedly read/checksummed/hashed for each individual stock item.
+  var f=file(l,village).toAbsolutePath().normalize();byte[] bytes;Stamp stamp;
+  try{if(!Files.exists(f)){CACHE.remove(village);return NONE;}
+   long revision=org.villageastra.persistence.AtomicRecord.revision(f);
+   var a=Files.readAttributes(f,java.nio.file.attribute.BasicFileAttributes.class);
+   stamp=new Stamp(f,revision,a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());
+   var old=CACHE.get(village);if(old!=null&&stamp.equals(old.stamp()))return old;
+   bytes=org.villageastra.persistence.AtomicRecord.read(f);
+  }catch(java.io.IOException ex){throw new IllegalStateException(ex);}
   CompoundTag state;try{state=NbtIo.read(new java.io.DataInputStream(new java.io.ByteArrayInputStream(bytes)));}catch(java.io.IOException ex){throw new IllegalStateException(ex);}var reserved=new LinkedHashMap<Item,Integer>();UUID take=null;
   if(!state.getBoolean("complete")&&!state.getBoolean("funded")&&state.hasUUID("id")){
    var held=new HashMap<Item,Integer>();for(var raw:state.getList("cargo",Tag.TAG_COMPOUND)){var s=ItemStack.of((CompoundTag)raw);if(!s.isEmpty())held.merge(s.getItem(),s.getCount(),Integer::sum);}
@@ -36,7 +44,7 @@ public final class HallReserve {
   }
   // The building the project works on: its own id, a field order's or the hall (null) for a hall upgrade.
   UUID target=state.hasUUID("building")?state.getUUID("building"):BuildingOrders.isBuilding(state)&&state.hasUUID("id")?BuildingOrders.buildingId(state):null;
-  var snap=new Snapshot(hash,bytes.length,state.hasUUID("id")?HallConstructionPlan.projectId(state):null,target,Map.copyOf(reserved),take);CACHE.put(village,snap);return snap;
+  var snap=new Snapshot(stamp,state.hasUUID("id")?HallConstructionPlan.projectId(state):null,target,Map.copyOf(reserved),take);CACHE.put(village,snap);return snap;
  }
  private static Snapshot active(ServerLevel l,SettlementData.Entry e){
   var s=snapshot(l,e.settlement().id());if(s.reserved().isEmpty())return NONE;
@@ -68,9 +76,21 @@ public final class HallReserve {
  private static int plain(Container c,Predicate<ItemStack> m){int n=0;for(int i=0;i<c.getContainerSize();i++)if(m.test(c.getItem(i)))n+=c.getItem(i).getCount();return n;}
  /** The hall chest as other consumers see it for planning: the reserve is hidden from the last slots of each item. Read only;
   *  a withdrawal still names the real slot and its real stack (WorldJournal checks it), at most the count this view shows. */
- public static Container view(ServerLevel l,SettlementData.Entry e,Container hall){
+ public static Container view(ServerLevel l,SettlementData.Entry e,Container hall){return view(l,e,hall,false);}
+ /** The funding selector and its journal guard agree on the small maintenance buffer. */
+ public static Container buildView(ServerLevel l,SettlementData.Entry e,Container hall){
+  if(!ToolSupplyReserve.needed(l,e))return hall;
+  var result=new net.minecraft.world.SimpleContainer(hall.getContainerSize());var left=new HashMap<Item,Integer>();
+  for(int i=hall.getContainerSize()-1;i>=0;i--){var stack=hall.getItem(i).copy();int keep=left.computeIfAbsent(stack.getItem(),ToolSupplyReserve::quantity);
+   int cut=Math.min(keep,stack.getCount());stack.shrink(cut);left.put(hall.getItem(i).getItem(),keep-cut);result.setItem(i,stack);}
+  return result;
+ }
+ public static Container repairView(ServerLevel l,SettlementData.Entry e,Container hall){return view(l,e,hall,true);}
+ private static Container view(ServerLevel l,SettlementData.Entry e,Container hall,boolean repair){
   if(hall==null)return null;var reserved=reserved(l,e);if(reserved.isEmpty())return hall;
-  var left=new HashMap<>(reserved);var stacks=new ItemStack[hall.getContainerSize()];
+  var left=new HashMap<>(reserved);
+  if(repair&&ToolSupplyReserve.needed(l,e))for(var item:reserved.keySet())left.put(item,Math.min(reserved.get(item),Math.max(0,plain(hall,s->s.is(item))-ToolSupplyReserve.quantity(item))));
+  var stacks=new ItemStack[hall.getContainerSize()];
   for(int i=stacks.length-1;i>=0;i--){var s=hall.getItem(i).copy();int r=left.getOrDefault(s.getItem(),0);if(r>0&&!s.isEmpty()){int cut=Math.min(r,s.getCount());s.shrink(cut);left.put(s.getItem(),r-cut);}stacks[i]=s.isEmpty()?ItemStack.EMPTY:s;}
   return new Container(){
    public int getContainerSize(){return stacks.length;}
@@ -102,7 +122,11 @@ public final class HallReserve {
  /** WorldJournal's guard of a new withdrawal: the amount it may take now (0 refuses it). */
  public static int allow(ServerLevel l,UUID take,BlockPos pos,ItemStack before,int amount){
   if(before.isEmpty())return amount;var e=owner(l,pos);if(e==null)return amount;var snap=active(l,e);
-  int r=snap.reserved().getOrDefault(before.getItem(),0);if(r==0||take.equals(snap.builderTake()))return amount;
-  return Math.max(0,Math.min(amount,available(l,e,before.getItem())));
+  int r=snap.reserved().getOrDefault(before.getItem(),0);
+  if(take.equals(snap.builderTake())){var chest=chest(l,e);int total=chest==null?0:plain(chest,s->s.is(before.getItem()));return Math.max(0,Math.min(amount,total-ToolSupplyReserve.quantity(l,e,before.getItem())));}
+  if(r==0)return amount;
+  int free=available(l,e,before.getItem());
+  if(ToolSupplyReserve.payment(l,e,take))free+=ToolSupplyReserve.quantity(before.getItem());
+  return Math.max(0,Math.min(amount,free));
  }
 }

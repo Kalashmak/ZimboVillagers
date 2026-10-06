@@ -32,8 +32,9 @@ public final class BedExitGoal extends Goal {
   }return best;
  }
  private static boolean raised(net.minecraft.world.level.block.Block b){return b instanceof BedBlock||b instanceof ChestBlock;}
- @Override public boolean canUse(){exit=landing(resident);return exit!=null;}
- @Override public boolean canContinueToUse(){return exit!=null&&ticks<80&&!resident.isSleeping()&&resident.position().distanceToSqr(Vec3.atBottomCenterOf(exit))>.04;}
+ private boolean bedtime(){return resident.goalSelector.getAvailableGoals().stream().anyMatch(g->g.getGoal() instanceof SleepGoal sleep&&sleep.readyToSleep());}
+ @Override public boolean canUse(){if(bedtime())return false;exit=landing(resident);return exit!=null;}
+ @Override public boolean canContinueToUse(){return exit!=null&&ticks<80&&!bedtime()&&!resident.isSleeping()&&resident.position().distanceToSqr(Vec3.atBottomCenterOf(exit))>.04;}
  @Override public void start(){ticks=0;resident.getNavigation().stop();}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){ticks++;resident.getNavigation().stop();resident.getMoveControl().setWantedPosition(exit.getX()+.5,exit.getY(),exit.getZ()+.5,.8);resident.workStatus("walking");}

@@ -31,6 +31,33 @@ public final class PopulationGameTests {
   var e=new SettlementData.Entry(s,l.dimension().location().toString(),center);SettlementData.get(l.getServer()).add(e);
   return new Village(l,s,e,hall,home);
  }
+ @GameTest(template="empty",batch="food_birth",timeoutTicks=100)
+ public static void npcBirthWaitsForSustainableFieldsDespiteAFullFoodReserve(GameTestHelper h){
+  var v=village(h,8,6);try{building(h,v.s,v.e.center(),"farm",0,18);v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD,32));
+   h.assertTrue(MayorPlanner.foodShortage(v.l,v.e),"One starter field cannot sustainably feed the next resident through hand bread");
+   h.assertTrue(Population.birth(v.l,v.e,5000)==null&&v.s.residents().size()==6&&v.chest(v.hall).countItem(Items.BREAD)==32,"A temporary reserve does not permit an NPC village to outgrow food production");
+   building(h,v.s,v.e.center(),"farm",25,18);h.assertTrue(!MayorPlanner.foodShortage(v.l,v.e),"A second existing ordinary farm supplies the actual production capacity");
+   var child=Population.birth(v.l,v.e,5000);h.assertTrue(child!=null&&v.l.getEntity(child.id()) instanceof ResidentEntity,"Growth resumes as a real birth after sustainable capacity exists");((ResidentEntity)v.l.getEntity(child.id())).discard();
+  }finally{SettlementData.get(v.l.getServer()).remove(v.s.id());}h.succeed();
+ }
+ @GameTest(template="empty",batch="food_birth",timeoutTicks=100)
+ public static void playerMayorRetainsBirthPolicyWithTheOriginalReserveAndHousingRules(GameTestHelper h){
+  var v=village(h,8,6);try{building(h,v.s,v.e.center(),"farm",0,18);v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD,32));v.s.appointPlayerMayor(UUID.randomUUID());h.assertTrue(MayorPlanner.foodShortage(v.l,v.e),"The prepared field capacity is still below the next population");var child=Population.birth(v.l,v.e,5000);h.assertTrue(child!=null,"The player's village retains the existing food-reserve and housing policy");((ResidentEntity)v.l.getEntity(child.id())).discard();}finally{SettlementData.get(v.l.getServer()).remove(v.s.id());}h.succeed();
+ }
+ @GameTest(template="empty",batch="scarce_meals",timeoutTicks=100) public static void scarceRealMealsReachHungryResidentsBeforeRegistryOrder(GameTestHelper h){
+  var v=village(h,3,3);var people=new ArrayList<>(v.s.residents());var last=people.get(2);long start=1000;
+  for(var r:people)r.ate(start);
+  for(int i=1;i<=3;i++)last.missedMeal(start+i*Population.MEAL_INTERVAL);
+  long previous=start+3*Population.MEAL_INTERVAL;people.get(0).ate(previous);people.get(1).ate(previous);
+  v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD,2));long now=previous+Population.MEAL_INTERVAL;Population.serve(v.l,v.e,now);
+  h.assertTrue(last.missedMeals()==0&&v.chest(v.hall).countItem(Items.BREAD)==0,"The resident last in registry receives a real scarce meal before three misses become four");
+  var unfed=people.stream().filter(r->r.missedMeals()==1).findFirst().orElseThrow();
+  h.assertTrue(people.stream().filter(r->r.missedMeals()==1).count()==1,"Exactly two residents ate exactly the two existing bread");
+  Population.serve(v.l,v.e,now);h.assertTrue(unfed.missedMeals()==1,"Repeating the same due neither eats nor misses twice");
+  v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD));Population.serve(v.l,v.e,now+Population.MEAL_INTERVAL);
+  h.assertTrue(unfed.missedMeals()==0&&v.chest(v.hall).countItem(Items.BREAD)==0,"The previous missed resident gets the next single real meal instead of starving repeatedly");
+  SettlementData.get(v.l.getServer()).remove(v.s.id());h.succeed();
+ }
  @GameTest(template="empty",timeoutTicks=100) public static void mealsUseRealStockAndHungerStopsOrdinaryWork(GameTestHelper h){
   var v=village(h,2,1);var r=v.s.residents().iterator().next();v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD,2));
   long t=1000;Population.meal(v.l,v.e,r,t);h.assertTrue(r.lastMeal()==t,"First tick starts the meal clock");
@@ -59,7 +86,11 @@ public final class PopulationGameTests {
   h.succeed();
  }
  @GameTest(template="empty",timeoutTicks=100) public static void childrenGrowUpAndOnlySchoolEducates(GameTestHelper h){
-  var v=village(h,4,2);v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD,40));long t=9000;
+  var v=village(h,4,2);var owner=UUID.randomUUID();var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();
+  var ticket=net.minecraft.server.level.TicketType.<UUID>create("zimbovillagers_school_growth_fixture",Comparator.<UUID>naturalOrder());
+  for(int x=v.e.center().getX()>>4;x<=(v.e.center().getX()+32)>>4;x++)for(int z=v.e.center().getZ()>>4;z<=(v.e.center().getZ()+20)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);v.l.getChunkSource().addRegionTicket(ticket,cp,3,owner);chunks.add(cp);v.l.getChunk(x,z);}
+  for(int x=(v.e.center().getX()>>4)-2;x<=((v.e.center().getX()+32)>>4)+2;x++)for(int z=(v.e.center().getZ()>>4)-2;z<=((v.e.center().getZ()+20)>>4)+2;z++)v.l.getChunk(x,z);
+  v.chest(v.hall).setItem(0,new ItemStack(Items.BREAD,40));long t=9000;
   var first=Population.birth(v.l,v.e,t);var second=Population.birth(v.l,v.e,t+Population.BIRTH_INTERVAL);
   h.assertTrue(first!=null&&second!=null,"Two children");
   var school=building(h,v.s,v.e.center(),"school",0,14);var teacher=new Resident(Settlement.childId(v.s.id(),"teacher"),Resident.Life.ADULT,false,null,null,-1);v.s.addHome(new Settlement.Home(Settlement.childId(v.s.id(),"teacher-home"),1,1,true));v.s.admit(teacher,Settlement.childId(v.s.id(),"teacher-home"));v.s.assign(teacher.id(),Profession.TEACHER,school.id());
@@ -70,9 +101,10 @@ public final class PopulationGameTests {
   Population.grow(v.l,v.e,t+10);h.assertTrue(second.schoolTicks()==20&&first.schoolTicks()==0,"Only the child at school attends");
   second.attendSchool(Population.SCHOOL_REQUIRED);
   Population.grow(v.l,v.e,t+Population.BIRTH_INTERVAL+Population.GROW);
-  h.assertTrue(first.life()==Resident.Life.ADULT&&!first.educated()&&!truant.child(),"Truant grows up uneducated");
+  h.assertTrue(first.life()==Resident.Life.ADULT&&!first.educated()&&!truant.child(),"Truant grows up uneducated: life="+first.life()+" educated="+first.educated()+" childBody="+truant.child()+" registered="+(v.l.getEntity(first.id())==truant)+" ticking="+v.l.isPositionEntityTicking(truant.blockPosition()));
   h.assertTrue(second.life()==Resident.Life.ADULT&&second.educated()&&!pupil.child(),"Pupil grows up educated");
   h.assertTrue(!second.educate(),"An adult can never be educated later");
+  npc.discard();pupil.discard();truant.discard();for(var cp:chunks)v.l.getChunkSource().removeRegionTicket(ticket,cp,3,owner);SettlementData.get(v.l.getServer()).remove(v.s.id());
   h.succeed();
  }
  @GameTest(template="empty",timeoutTicks=100) public static void laborOfficeFillsImplementedJobsByPriority(GameTestHelper h){

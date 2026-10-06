@@ -27,7 +27,7 @@ public final class ForestRenewal {
   return true;
  }
  public static boolean plan(ServerLevel l,SettlementData.Entry e,Settlement.Building hut,ResidentEntity worker,CompoundTag t,Set<Item> available){
-  var project=HallUpgradeGoal.exists(l,e.settlement().id())?HallUpgradeGoal.inspect(l,e.settlement().id()):new CompoundTag();String wood=project.getString("wood");String preferred=wood.isEmpty()?t.getString("felledKind"):"minecraft:"+wood+"_sapling";
+  var project=HallUpgradeGoal.exists(l,e.settlement().id())?HallUpgradeGoal.headerView(l,e.settlement().id()):new CompoundTag();String wood=project.getString("wood");String preferred=wood.isEmpty()?t.getString("felledKind"):"minecraft:"+wood+"_sapling";
   // A single dark-oak sapling cannot grow; its four-cell planting remains the normal level-II replanting job.
   var kinds=available.stream().filter(i->i instanceof BlockItem&&i!=Items.DARK_OAK_SAPLING&&ForestWork.PLANTED.contains(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(i).toString())).sorted(Comparator.<Item>comparingInt(i->net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(i).toString().equals(preferred)?0:1).thenComparing(i->net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(i).toString())).toList();
   if(kinds.isEmpty())return false;var kind=kinds.get(0);var door=ForesterHut.door(e,hut);int cursor=t.getInt("renewalScan");boolean wrapped=false;

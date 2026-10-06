@@ -20,6 +20,33 @@ public final class ForestWorkGameTests {
  private static boolean down(ForestFixture t,List<BlockPos> cells){return cells.stream().allMatch(p->t.l.getBlockState(p).isAir());}
  /** Felled: every log gone, and on the foot the air of a hut of level I or the sapling a hut of II and up plants there at once. */
  private static boolean felled(ForestFixture t,List<BlockPos> tree){return tree.stream().allMatch(p->t.l.getBlockState(p).isAir()||p.equals(tree.get(0))&&t.l.getBlockState(p).getBlock() instanceof SaplingBlock);}
+ @GameTest(template="empty",batch="forest_bootstrap",timeoutTicks=400)
+ public static void foresterRecoversLostToolsBySlowlyFellingARealWholeTreeByHand(GameTestHelper h){
+  var t=ForestFixture.create(h,1);try{
+   var hall=(net.minecraft.world.Container)t.l.getBlockEntity(t.hall());hall.clearContent();t.chestBlock().clearContent();var tree=ForestWork.wildOak(t.l,t.wood(4,1),5);var goal=new ResourceWorkGoal(t.forester,true,()->6000L);h.assertTrue(goal.canUse(),"Actual tool-less forester starts");
+   var digging=t.drive(goal,500,r->r.getString("stage").equals("dig"));h.assertTrue(digging.getBoolean("handFelling")&&ItemStack.of(digging.getCompound("tool")).isEmpty(),"Emergency felling invents no axe");
+   t.drive(goal,ResourceWorkGoal.treeLabor(tree.size())/ResourceWorkGoal.fellingLabor(1)+1,r->r.getString("stage").equals("deliver"));h.assertTrue(tree.stream().anyMatch(p->t.l.getBlockState(p).is(net.minecraft.tags.BlockTags.LOGS)),"Bare hands take longer than an axe");
+   var harvested=t.drive(goal,1000,r->r.getString("stage").equals("deliver"));h.assertTrue(felled(t,tree)&&ForestFixture.count(harvested.getList("cargo",Tag.TAG_COMPOUND),Items.OAK_LOG)==tree.size(),"Real whole tree and crown fund the durable cargo");
+   t.drive(goal,600,r->r.getString("stage").equals("tool"));h.assertTrue(t.chestBlock().countItem(Items.OAK_LOG)==tree.size(),"All real logs physically reach the forester's chest");h.assertTrue(ItemStack.of(t.record().getCompound("tool")).isEmpty(),"Recovery gathers wood without manufacturing a free tool");
+  }finally{t.done();}h.succeed();
+ }
+ @GameTest(template="empty",batch="forestry_priority",timeoutTicks=400)
+ public static void paidTimberReachesStockBeforeAnotherNaturalTrip(GameTestHelper h){
+  var t=ForestFixture.create(h,1);
+  try{
+   var tree=ForestWork.wildOak(t.l,t.wood(4,1),5);int before=t.chestBlock().countItem(Items.OAK_LOG);
+   var goal=new ResourceWorkGoal(t.forester,true,()->6000L);h.assertTrue(goal.canUse(),"Forester starts real work");
+   var gathered=t.drive(goal,600,r->r.getString("stage").equals("deliver"));
+   h.assertTrue(ForestFixture.count(gathered.getList("cargo",Tag.TAG_COMPOUND),Items.OAK_LOG)==tree.size(),"Real felling has paid timber in custody");
+   var hall=Workshops.hall(t.e);var job=new CompoundTag();job.putInt("schema",1);job.putString("stage","idle");
+   var needs=new ListTag();var need=new CompoundTag();need.putString("ingredient","{\"item\":\"minecraft:clay_ball\"}");need.putInt("count",1);needs.add(need);job.put("needs",needs);NbtRecord.write(Workshops.path(t.l,hall.id()),job);
+   h.assertTrue(NaturalSupplyGoal.demand(t.l,t.e).contains(Items.CLAY_BALL),"An unrelated real raw-material shortage exists");
+   var gatherer=new NaturalSupplyGoal(t.forester,true);
+   h.assertTrue(!gatherer.canUse(),"Unrelated material gathering cannot preempt paid timber delivery");
+   t.drive(goal,600,r->r.getString("stage").equals("choose"));
+   h.assertTrue(t.chestBlock().countItem(Items.OAK_LOG)==before+tree.size(),"Whole batch reaches the real chest first");
+  }finally{t.done();}h.succeed();
+ }
  @GameTest(template="empty",batch="fw_aleveloneforesterfellsthenearestnaturaltree",timeoutTicks=400) public static void aLevelOneForesterFellsTheNearestNaturalTree(GameTestHelper h){
   var t=ForestFixture.create(h,1);
   try{

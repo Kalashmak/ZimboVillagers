@@ -48,6 +48,12 @@ public final class FarmStaffGameTests {
   h.assertTrue(farmers(s,farm)==0&&s.residents().stream().noneMatch(r->r.profession()==Profession.FARMER),"A VI farm has no farmer");
   h.succeed();
  }
+ @GameTest(template="empty",batch="farm_illness_coverage",timeoutTicks=100)
+ public static void healthyFarmersCoverTheirSickColleaguesFields(GameTestHelper h){
+  var s=new Settlement(UUID.randomUUID());s.lotLayout(OrganicLots.BARN_LOTS);var farm=add(s,"farm",20,0);for(int level=2;level<=5;level++)s.raiseBuildingLevel(farm.id(),level);adults(s,3);for(var r:s.residents())s.assign(r.id(),Profession.FARMER,farm.id());var crew=List.copyOf(s.residents());
+  h.assertTrue(FarmField.farmers(s,farm).size()==3,"Three healthy farmers initially cover all floors");crew.get(0).fallIll();var active=FarmField.farmers(s,farm);h.assertTrue(active.size()==2&&!active.contains(crew.get(0).id()),"The resting farmer leaves no unworked share assigned to himself");var seen=new HashSet<String>();for(int rank=0;rank<active.size();rank++)for(var m:FarmField.share(FarmField.modules(5),rank,active.size()))h.assertTrue(seen.add(key(m)),"Healthy workers have disjoint fields");h.assertTrue(seen.size()==18,"Healthy workers cover every one of the eighteen fields");
+  crew.get(0).cure();h.assertTrue(FarmField.farmers(s,farm).equals(crew.stream().map(Resident::id).toList()),"Recovery restores the original staffing order and normal division");crew.get(1).die();h.assertTrue(FarmField.farmers(s,farm).size()==2,"A dead resident does not retain a field share");for(var r:crew)r.fallIll();h.assertTrue(FarmField.farmers(s,farm).isEmpty(),"All sick: no working crew is invented");h.succeed();
+ }
  private static String key(int[] m){return m[0]+","+m[1]+","+FarmField.floor(m);}
  private static Set<String> keys(List<int[]> ms){var out=new HashSet<String>();for(var m:ms)out.add(key(m));return out;}
  /** The core's "machine_fields" (0 below VI, 18 at VI): at V a layout-6 farm's machine does nothing, at VI it sows one plot on every floor in

@@ -41,6 +41,13 @@ public final class SleepGoal extends Goal {
   var e=SettlementData.get(l.getServer()).entry(resident.settlementId());
   return e==null||!e.dimension().equals(l.dimension().location().toString())?null:e;
  }
+ /** Raised bedroom furniture must not interrupt the final step into this resident's own bed. */
+ public boolean readyToSleep(){
+  if(!night()||resident.isSleeping()||resident.escortPlayer()!=null)return false;
+  var e=entry();if(e==null)return false;var r=e.settlement().resident(resident.getUUID());if(r==null||!r.alive()||keepsWatch(r))return false;
+  var own=bed!=null?bed:bed((ServerLevel)resident.level(),e,r);if(own==null)return false;var block=resident.level().getBlockState(own);
+  return block.getBlock() instanceof BedBlock&&!block.getValue(BedBlock.OCCUPIED)&&resident.position().distanceToSqr(own.getX()+.5,own.getY()+.5,own.getZ()+.5)<=4;
+ }
  @Override public boolean canUse(){
   // AD-072: goals start (and slow goals tick) only every other tick, on a parity fixed per entity — a window of two ticks is never missed.
   if(!night()||resident.escortPlayer()!=null||resident.tickCount%20>1&&!withoutPlayers)return false;

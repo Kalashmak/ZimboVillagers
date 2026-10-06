@@ -34,6 +34,9 @@ public final class Machines {
  }
  /** One turn of every machine of a settlement; returns how many did real work. */
  public static int tick(ServerLevel l,SettlementData.Entry e,long now,List<Workshops.Want> wants){
+  return tick(l,e,now,()->wants);
+ }
+ public static int tick(ServerLevel l,SettlementData.Entry e,long now,java.util.function.Supplier<List<Workshops.Want>> wants){
   int worked=0;
   for(var b:List.copyOf(e.settlement().buildings())){
    int level=BuildingLevels.level(l,e,b);
@@ -51,7 +54,7 @@ public final class Machines {
    var job=Workshops.inspect(l,b.id());
    // AD-136: a bench turns by its own ladder's machinery (bench) or by the wheel's drive.
    if(Workshops.spec(b.type())!=null&&(grant.bench()||drive)&&!(job.getBoolean("physicalSmelt")&&job.hasUUID("worker")&&!job.getString("stage").equals("idle"))){
-    var result=Workshops.advance(l,e,b,now,wants);
+    var result=Workshops.advance(l,e,b,now,wants.get());
     if(result.equals("workshop_working")||result.equals("workshop_funding")||result.equals("workshop_complete"))worked++;
    }
    // AD-130: the farm of a layout-6 village runs its field at VI (every floor), an older village's at V as before.

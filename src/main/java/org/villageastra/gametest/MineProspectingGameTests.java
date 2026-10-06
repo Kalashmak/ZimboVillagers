@@ -13,14 +13,111 @@ import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class MineProspectingGameTests {
  private record Town(ResearchV2Town.Town town,ResidentEntity npc,CompoundTag state){}
- private static Town town(GameTestHelper h){
-  var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX(),64,old.e.center().getZ()));data.add(e);
+ private static Town town(GameTestHelper h){return town(h,false);}
+ private static Town town(GameTestHelper h,boolean isolated){
+  var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*(isolated?4:1),64,old.e.center().getZ()*(isolated?4:1)));data.add(e);
   var t=new ResearchV2Town.Town(old.l,e,old.s,old.shop);ResearchV2Town.lay(t.l,e,t.shop,"mine");t.l.setBlock(e.center().offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
   var npc=VillageAstra.RESIDENT.get().create(t.l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));npc.setNoAi(true);
   var state=MineWork.read(t.l,t.shop);int floor=MineWork.floorStep(t.l,e,t.shop,state);state.putInt("floorStep",floor);state.putInt("extentStep",floor);state.putInt("stairAudit",floor+1);state.putInt("step",floor+1);state.putInt("side",MineDrive.DONE);state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));t.s.noteMine(t.shop.id(),floor,3,5,7);MineWork.write(t.l,t.shop,state);
   var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:lantern",3);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);
   var hall=LogisticsRoutes.chest(t.l,e,Workshops.hall(e));hall.clearContent();hall.setItem(0,new ItemStack(Items.COAL,8));hall.setItem(1,new ItemStack(Items.STICK,8));
   return new Town(t,npc,state);
+ }
+ private static String oreDiagnostic(Town f){var t=f.town;var p=BuildingPlacement.at(t.e,t.shop,6,-5,8);var stand=BuildingPlacement.at(t.e,t.shop,6,-7,7);return " needed="+MineProspecting.needed(t.l,t.e,t.shop)+" chest="+LogisticsRoutes.chest(t.l,t.e,Workshops.hall(t.e))+" ore="+t.l.getBlockState(p)+" stand="+t.l.getBlockState(stand)+" floor="+t.l.getBlockState(stand.below())+" protectedOther="+OwnershipEvents.protectedBlock(t.l,p,b->!b.id().equals(t.shop.id()))+" chunk="+t.l.hasChunkAt(p)+" standChunk="+t.l.hasChunkAt(stand)+" eye="+f.npc.getEyeHeight()+" child="+f.npc.child()+" tag="+t.l.getBlockState(p).is(net.minecraft.tags.BlockTags.IRON_ORES)+" above="+t.l.getBlockState(p.above())+" fluids="+java.util.Arrays.stream(Direction.values()).map(d->d+":"+t.l.getFluidState(p.relative(d))).toList()+" stage="+f.state.getString("stage")+" tool="+f.state.getCompound("tool");}
+ private static final Map<UUID,List<net.minecraft.world.level.ChunkPos>> ORE_CHUNKS=new HashMap<>();
+ private static void doneOre(Town f){for(var cp:ORE_CHUNKS.getOrDefault(f.town.s.id(),List.of()))f.town.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,f.town.s.id());ORE_CHUNKS.remove(f.town.s.id());f.npc.discard();ResearchV2Town.done(f.town);}
+ private static void oreGallery(Town f){var t=f.town;
+  var base=BuildingPlacement.origin(t.e,t.shop);var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();
+  for(int x=(base.getX()-12)>>4;x<=(base.getX()+16)>>4;x++)for(int z=base.getZ()>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,t.s.id());chunks.add(cp);t.l.getChunk(x,z);}ORE_CHUNKS.put(t.s.id(),chunks);
+  for(int x=((base.getX()-12)>>4)-2;x<=((base.getX()+16)>>4)+2;x++)for(int z=(base.getZ()>>4)-2;z<=((base.getZ()+10)>>4)+2;z++)t.l.getChunk(x,z);
+
+  // This elevated fixture shares a server world with earlier batches; remove their neighbouring fluid residue before laying its sealed dry gallery.
+  for(int x=0;x<=16;x++)for(int z=5;z<=10;z++)for(int y=-9;y<=0;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
+  for(int x=2;x<=9;x++)for(int z=6;z<=8;z++)for(int y=-8;y<=-2;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,z),(y==-8||z!=7?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
+  t.s.noteMine(t.shop.id(),new MineArea.Gallery(0,MineDrive.EAST,4));f.state.putString("stage","choose");var stand=BuildingPlacement.at(t.e,t.shop,5,-7,7);f.npc.moveTo(stand.getX()+.5,stand.getY(),stand.getZ()+.5);f.npc.setOnGround(true);
+ }
+ private static final net.minecraft.server.level.TicketType<UUID> ORE_TICKET=net.minecraft.server.level.TicketType.create("zimbovillagers_ore_fixture",Comparator.<UUID>naturalOrder());
+ @GameTest(template="empty",batch="zz_exposed_ore_physical",timeoutTicks=1200)
+ public static void minerPhysicallyWalksToTheRecordedWallOreBeforeBreakingIt(GameTestHelper h){
+  physicalWallResource(h,false);
+ }
+ @GameTest(template="empty",batch="zz_exposed_stone_physical",timeoutTicks=1200)
+ public static void minerPhysicallyHarvestsNeededAndesiteFromTheGalleryWall(GameTestHelper h){
+  physicalWallResource(h,true);
+ }
+ private static void physicalWallResource(GameTestHelper h,boolean andesite){
+  var f=town(h,true);var t=f.town;oreGallery(f);var owned=UUID.randomUUID();var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();var base=BuildingPlacement.origin(t.e,t.shop);
+  if(andesite){var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:polished_andesite",3);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);}
+  for(int x=(base.getX()-3)>>4;x<=(base.getX()+16)>>4;x++)for(int z=(base.getZ()+4)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,owned);chunks.add(cp);}
+  for(int x=((base.getX()-3)>>4)-2;x<=((base.getX()+16)>>4)+2;x++)for(int z=((base.getZ()+4)>>4)-2;z<=((base.getZ()+10)>>4)+2;z++)t.l.getChunk(x,z);
+  for(int x=9;x<=14;x++)for(int y=-8;y<=-3;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,7),(y==-8?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
+  var rock=andesite?Blocks.ANDESITE:Blocks.IRON_ORE;var loot=andesite?Items.ANDESITE:Items.RAW_IRON;
+  var ore=BuildingPlacement.at(t.e,t.shop,6,-5,8);t.l.setBlock(ore,rock.defaultBlockState(),2);var start=BuildingPlacement.at(t.e,t.shop,14,-7,7);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);
+  h.assertTrue(MineOreWork.begin(f.npc,t.e,t.shop,f.state),"A known visible wall face is recorded before its physical trip"+oreDiagnostic(f));f.state.putUUID("worker",f.npc.getUUID());MineWork.write(t.l,t.shop,f.state);
+  f.npc.setNoAi(false);f.npc.goalSelector.removeAllGoals(g->true);f.npc.targetSelector.removeAllGoals(g->true);f.npc.goalSelector.addGoal(6,new ResourceWorkGoal(f.npc,true,()->6000));h.assertTrue(t.l.addFreshEntity(f.npc),"Physical ore worker registers: removed="+f.npc.isRemoved()+" existing="+t.l.getEntity(f.npc.getUUID())+" villageExists="+(SettlementData.get(t.l.getServer()).entry(t.s.id())!=null));
+  h.onEachTick(()->{t.l.resetEmptyTime();if(t.l.getBlockState(ore).isAir()){
+   var after=MineWork.read(t.l,t.shop);h.assertTrue(f.npc.tickCount>0&&f.npc.distanceToSqr(start.getX()+.5,start.getY(),start.getZ()+.5)>16,"The worker really ticked and walked over four blocks before mining");h.assertTrue(ForestFixture.count(after.getList("cargo",Tag.TAG_COMPOUND),loot)==1,"Physical excavation retains its real cargo");h.assertTrue(ItemStack.of(after.getCompound("tool")).getDamageValue()==1,"The actual wall harvest wears the paid pick once");h.assertTrue(t.l.getBlockState(MineOreWork.stand(f.state).below()).is(Blocks.STONE),"Mining the wall retains the supporting gallery floor");f.npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,owned);doneOre(f);h.succeed();
+  }});
+  h.runAtTickTime(1100,()->{var diagnostic=MineWork.read(t.l,t.shop);var details="Ore trip stalled: pos="+f.npc.position()+" ownTicks="+f.npc.tickCount+" status="+f.npc.workStatus()+" ticking="+t.l.isPositionEntityTicking(f.npc.blockPosition())+" goals="+f.npc.runningGoals()+" failure="+diagnostic.getString("oreFailure")+" job="+diagnostic.getCompound("mineOre")+" path="+(f.npc.getNavigation().getPath()==null?null:f.npc.getNavigation().getPath().getTarget());f.npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,owned);doneOre(f);h.assertTrue(false,details);});
+ }
+ @GameTest(template="empty",batch="exposed_ore",timeoutTicks=100)
+ public static void minerTakesVisibleWallOreAndResumesTheSameDriveAfterReload(GameTestHelper h){
+  var f=town(h,true);var t=f.town;oreGallery(f);h.runAfterDelay(5,()->{try{var ore=BuildingPlacement.at(t.e,t.shop,6,-5,8);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);var old=MineWork.drive(f.state);var original=f.state.getUUID("operation");
+   h.assertTrue(MineOreWork.begin(f.npc,t.e,t.shop,f.state),"Actual unmet iron demand selects its exposed gallery wall"+oreDiagnostic(f));h.assertTrue(MineOreWork.target(f.state).equals(ore),"Only the visible actual ore is selected");MineWork.write(t.l,t.shop,f.state);var state=MineWork.read(t.l,t.shop);var stand=MineOreWork.stand(state);f.npc.moveTo(stand.getX()+.5,stand.getY(),stand.getZ()+.5);
+   for(int i=0;i<90&&MineOreWork.active(state);i++)MineOreWork.tick(f.npc,state);
+   h.assertTrue(!MineOreWork.active(state)&&t.l.getBlockState(ore).isAir(),"The real ore is excavated using ordinary break time");h.assertTrue(ForestFixture.count(state.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON)==1&&ItemStack.of(state.getCompound("tool")).getDamageValue()==1,"One mined raw iron and one tool wear");h.assertTrue(MineWork.drive(state).equals(old)&&state.getUUID("operation").equals(original),"The primary drive and its operation have not advanced");
+  }finally{doneOre(f);}h.succeed();});
+ }
+ @GameTest(template="empty",batch="exposed_ore",timeoutTicks=100)
+ public static void wallOreReceiptRecoversCargoOnceIncludingDeathCustody(GameTestHelper h){
+  var f=town(h,true);var t=f.town;oreGallery(f);h.runAfterDelay(5,()->{try{var ore=BuildingPlacement.at(t.e,t.shop,6,-5,8);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);h.assertTrue(MineOreWork.begin(f.npc,t.e,t.shop,f.state),"Actual exposed ore starts a durable job"+oreDiagnostic(f));f.state.putUUID("worker",f.npc.getUUID());MineWork.write(t.l,t.shop,f.state);var job=f.state.getCompound("mineOre");
+   h.assertTrue(org.villageastra.persistence.WorldJournal.harvest(t.l,job.getUUID("id"),ore,Blocks.IRON_ORE.defaultBlockState(),ItemStack.of(job.getCompound("tool")))!=null,"Prepared fixture commits the actual harvest before its job checkpoint");
+   var custody=JobCargo.snapshot(f.npc,true);h.assertTrue(ForestFixture.count(custody.items(),Items.RAW_IRON)==1,"Death custody recovers the single real journal-ahead ore");MineOreWork.reconcile(t.l,f.state);MineOreWork.reconcile(t.l,f.state);h.assertTrue(ForestFixture.count(f.state.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON)==1&&ItemStack.of(f.state.getCompound("tool")).getDamageValue()==1,"Replaying the receipt never repeats cargo or tool wear");
+  }finally{doneOre(f);}h.succeed();});
+ }
+ @GameTest(template="empty",batch="exposed_ore",timeoutTicks=100)
+ public static void exposedOreLeavesFloorsWetBoundariesUnseenRockAndWrongToolsAlone(GameTestHelper h){
+  var f=town(h,true);var t=f.town;oreGallery(f);h.runAfterDelay(5,()->{try{var floor=BuildingPlacement.at(t.e,t.shop,6,-8,7);var ore=BuildingPlacement.at(t.e,t.shop,6,-5,8);t.l.setBlock(floor,Blocks.IRON_ORE.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(f.npc,t.e,t.shop,f.state),"The gallery floor cannot be excavated for ore");t.l.setBlock(ore,Blocks.DIAMOND_ORE.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(f.npc,t.e,t.shop,f.state),"Unneeded ore and insufficient stone tool cannot be selected");t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);t.l.setBlock(ore.south(),Blocks.WATER.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(f.npc,t.e,t.shop,f.state),"Water boundaries stay sealed");t.l.setBlock(ore.south(),Blocks.STONE.defaultBlockState(),2);t.l.setBlock(ore.north(),Blocks.STONE.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(f.npc,t.e,t.shop,f.state),"Hidden ore behind an intact wall is unknown");t.l.setBlock(ore.north(),Blocks.AIR.defaultBlockState(),2);h.assertTrue(MineOreWork.begin(f.npc,t.e,t.shop,f.state),"A newly exposed dry ore face becomes available");t.l.setBlock(ore.south(),Blocks.WATER.defaultBlockState(),2);var stand=MineOreWork.stand(f.state);f.npc.moveTo(stand.getX()+.5,stand.getY(),stand.getZ()+.5);MineOreWork.tick(f.npc,f.state);h.assertTrue(!MineOreWork.active(f.state)&&t.l.getBlockState(ore).is(Blocks.IRON_ORE),"Moving water cancels the uncommitted job without cutting the ore");
+  }finally{doneOre(f);}h.succeed();});
+ }
+ @GameTest(template="empty",batch="mine_priority",timeoutTicks=100)
+ public static void unmetOreKeepsUsableMinerOnUnsurveyedDriveWithoutChangingRecord(GameTestHelper h){
+  var f=town(h);var t=f.town;try{
+   f.state.putString("stage","choose");MineWork.write(t.l,t.shop,f.state);var before=MineWork.read(t.l,t.shop);
+   h.assertTrue(NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"Unsurveyed existing landings and actual iron demand take priority over a new surface trip");
+   h.assertTrue(before.equals(MineWork.read(t.l,t.shop)),"Priority observation does not alter excavation or allocate ore");
+   h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,f.state),"The ordinary planner can start the remaining real branch");MineWork.write(t.l,t.shop,f.state);
+   h.assertTrue(NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"A runnable branch keeps the ore priority");
+   f.state.putString("stage","dig");f.state.put("before",NbtUtils.writeBlockState(Blocks.IRON_ORE.defaultBlockState()));MineWork.write(t.l,t.shop,f.state);
+   h.assertTrue(NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"An actual iron face is runnable with its stone pick");
+   f.state.put("before",NbtUtils.writeBlockState(Blocks.DIAMOND_ORE.defaultBlockState()));MineWork.write(t.l,t.shop,f.state);
+   h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"A tool tier obstacle leaves surface supply available");
+  }finally{f.npc.discard();ResearchV2Town.done(t);}h.succeed();
+ }
+ @GameTest(template="empty",batch="mine_priority",timeoutTicks=100)
+ public static void miningPriorityYieldsForStoredOreMissingToolsUnsafeOrExhaustedRows(GameTestHelper h){
+  var f=town(h);var t=f.town;try{
+   f.state.putString("stage","choose");MineWork.write(t.l,t.shop,f.state);
+   var own=LogisticsRoutes.chest(t.l,t.e,t.shop);own.setItem(0,new ItemStack(Items.RAW_IRON,8));
+   h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"Ore awaiting the porter is not an unmet mining demand");own.clearContent();
+   f.state.remove("tool");MineWork.write(t.l,t.shop,f.state);h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"A missing pick must not pin mining");
+   var worn=new ItemStack(Items.STONE_PICKAXE);worn.setDamageValue(worn.getMaxDamage());f.state.put("tool",worn.save(new CompoundTag()));MineWork.write(t.l,t.shop,f.state);h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"A worn pick must not pin mining");
+   f.state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));f.state.putString("status","unsafe_ground");MineWork.write(t.l,t.shop,f.state);h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"Safety obstacles leave another supply source available");
+   f.state.remove("status");f.state.putString("stage","upgrade_tool");MineWork.write(t.l,t.shop,f.state);h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"Tool replacement can require surface materials");
+   f.state.putString("stage","choose");f.state.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,f.state.getInt("floorStep")).toArray());MineWork.write(t.l,t.shop,f.state);
+   h.assertTrue(!NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"All exhausted unlocked rows yield to surface supply");
+  }finally{f.npc.discard();ResearchV2Town.done(t);}h.succeed();
+ }
+ @GameTest(template="empty",batch="mine_priority",timeoutTicks=100)
+ public static void anExistingNaturalTripFinishesBeforeMiningPriority(GameTestHelper h){
+  var f=town(h);var t=f.town;try{
+   f.state.putString("stage","choose");MineWork.write(t.l,t.shop,f.state);
+   var trip=new CompoundTag();trip.putUUID("id",UUID.randomUUID());trip.putString("stage","dig");trip.putLong("target",t.e.center().asLong());trip.put("before",NbtUtils.writeBlockState(Blocks.SAND.defaultBlockState()));
+   org.villageastra.persistence.NbtRecord.write(NaturalSupplyGoal.path(t.l,f.npc.getUUID()),trip);
+   h.assertTrue(NaturalSupplyGoal.miningPriority(t.l,t.e,f.npc),"Fixture has an actual mining priority");
+   h.assertTrue(new NaturalSupplyGoal(f.npc,true).canUse(),"The already recorded surface trip resumes instead of abandoning its custody");
+   h.assertTrue(trip.equals(NaturalSupplyGoal.inspect(t.l,f.npc.getUUID())),"Checking the priority cannot drop or replace the existing trip");
+  }finally{f.npc.discard();ResearchV2Town.done(t);}h.succeed();
  }
  @GameTest(template="empty",batch="mine_prospect",timeoutTicks=200)
  public static void missingOreStartsShallowerBranchAndActuallyMinesItAfterReload(GameTestHelper h){

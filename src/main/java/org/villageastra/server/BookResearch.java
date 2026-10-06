@@ -142,18 +142,18 @@ public final class BookResearch {
  public static List<Settlement.Building> stock(SettlementData.Entry e){var out=new ArrayList<Settlement.Building>();var hall=Workshops.hall(e);if(hall!=null)out.add(hall);for(var b:e.settlement().buildings())if(b.type().equals("warehouse"))out.add(b);return out;}
  private record Take(BlockPos pos,int slot,ItemStack before,int amount){}
  /** How many of this line the stock holds, not counting what an approved construction project keeps (CF3). */
- public static int have(ServerLevel l,SettlementData.Entry e,ResearchCatalog.Cost cost){int n=0;
+ public static int have(ServerLevel l,SettlementData.Entry e,ResearchCatalog.Cost cost){int n=0;var maintenance=new HashMap<Item,Integer>();
   for(var b:stock(e)){var c=LogisticsRoutes.chest(l,e,b);if(c==null)continue;var kept=new HashMap<Item,Integer>();
-   for(int slot=0;slot<c.getContainerSize();slot++){var s=c.getItem(slot);if(!matches(cost,s))continue;int reserve=kept.computeIfAbsent(s.getItem(),i->LogisticsRoutes.constructionReserve(l,e,b,s));int use=Math.max(0,s.getCount()-reserve);kept.put(s.getItem(),Math.max(0,reserve-s.getCount()));n+=use;}}
+   for(int slot=0;slot<c.getContainerSize();slot++){var s=c.getItem(slot);if(!matches(cost,s))continue;int reserve=kept.computeIfAbsent(s.getItem(),i->LogisticsRoutes.constructionReserve(l,e,b,s));int use=Math.max(0,s.getCount()-reserve);kept.put(s.getItem(),Math.max(0,reserve-s.getCount()));int buffer=maintenance.computeIfAbsent(s.getItem(),i->ToolSupplyReserve.researchQuantity(l,e,i));int cut=Math.min(use,buffer);maintenance.put(s.getItem(),buffer-cut);n+=use-cut;}}
   return n;}
  /** The exact withdrawals that pay a level-I price now, or null when the stock does not hold all of it (no partial payment). */
  private static List<Take> plan(ServerLevel l,SettlementData.Entry e,ResearchCatalog.Node node){
   var out=new ArrayList<Take>();var used=new HashSet<Long>();
-  for(var cost:node.resources()){int need=cost.count();
+  for(var cost:node.resources()){int need=cost.count();var maintenance=new HashMap<Item,Integer>();
    for(var b:stock(e)){if(need<=0)break;var c=LogisticsRoutes.chest(l,e,b);if(c==null)continue;var kept=new HashMap<Item,Integer>();
     for(int slot=0;slot<c.getContainerSize()&&need>0;slot++){var s=c.getItem(slot);if(!matches(cost,s)||!used.add(c.getBlockPos().asLong()*64+slot))continue;
      int reserve=kept.computeIfAbsent(s.getItem(),i->LogisticsRoutes.constructionReserve(l,e,b,s));int free=Math.max(0,s.getCount()-reserve);kept.put(s.getItem(),Math.max(0,reserve-s.getCount()));
-     int take=Math.min(need,free);if(take<=0)continue;out.add(new Take(c.getBlockPos(),slot,s.copy(),take));need-=take;}}
+     int buffer=maintenance.computeIfAbsent(s.getItem(),i->ToolSupplyReserve.researchQuantity(l,e,i));int cut=Math.min(free,buffer);maintenance.put(s.getItem(),buffer-cut);free-=cut;int take=Math.min(need,free);if(take<=0)continue;out.add(new Take(c.getBlockPos(),slot,s.copy(),take));need-=take;}}
    if(need>0)return null;}
   return out;}
  /** AD-136 (§1.3): pays a level-I node from the stock in one journal batch (ids research/&lt;node&gt;/pay/i) and records it done; false when the

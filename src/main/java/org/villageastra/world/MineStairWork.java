@@ -18,6 +18,13 @@ public final class MineStairWork {
   for(var item:MATERIALS){int n=ResourceWorkGoal.count(cargo,item);if(n>most){best=item;most=n;}}
   return best;
  }
+ /** Choose before paying a new row, using both carried rock and the mine's own stock. */
+ public static Item newOrderStone(ListTag cargo,net.minecraft.world.Container stock){
+  Item best=Items.COBBLESTONE;int most=0;
+  for(var item:MATERIALS){int n=ResourceWorkGoal.count(cargo,item)+(stock==null?0:stock.countItem(item));
+   if(n>most){best=item;most=n;}}
+  return best;
+ }
  public static net.minecraft.world.level.block.Block stairs(Item item){
   if(item==Items.COBBLED_DEEPSLATE)return Blocks.COBBLED_DEEPSLATE_STAIRS;
   if(item==Items.SANDSTONE)return Blocks.SANDSTONE_STAIRS;
@@ -28,9 +35,10 @@ public final class MineStairWork {
   return Blocks.COBBLESTONE_STAIRS;
  }
  /** Old unpaid orders may use freshly excavated stone. Never reinterpret a paid receipt. */
- public static void selectUnpaid(ServerLevel l,CompoundTag t){
+ public static void selectUnpaid(ServerLevel l,CompoundTag t){selectUnpaid(l,t,null);}
+ public static void selectUnpaid(ServerLevel l,CompoundTag t,net.minecraft.world.Container stock){
   if(t.getInt("stairPlaced")!=0||t.getBoolean("stairTaken")||t.getInt("stairTakeRound")!=0||WorldJournal.exists(l,takeId(t)))return;
-  var cargo=t.getList("cargo",Tag.TAG_COMPOUND);if(ResourceWorkGoal.count(cargo,stone(t))>0)return;
+  var cargo=t.getList("cargo",Tag.TAG_COMPOUND);if(ResourceWorkGoal.count(cargo,stone(t))>0||stock!=null&&stock.countItem(stone(t))>0)return;
   var chosen=carriedStone(cargo);if(ResourceWorkGoal.count(cargo,chosen)==0)return;
   t.putString("stairItem",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(chosen).toString());
  }

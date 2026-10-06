@@ -44,6 +44,6 @@ public final class BuilderDescentGameTests {
    h.assertTrue(npc.getHealth()==npc.getMaxHealth(),"Both controlled descents preserve health");h.assertTrue(l.getBlockState(base.offset(0,4,0)).is(Blocks.STONE)&&l.getBlockState(base.offset(-2,4,2)).isAir(),"Recovery does not dig or add blocks");
    npc.discard();HallUpgradeGoal.drop(l,settlement.id());SettlementData.get(l.getServer()).remove(settlement.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();
   });
-  h.runAtTickTime(3000,()->h.assertTrue(false,"Worker remained on its wall or intermediate floor: "+npc.position()+" goals="+npc.runningGoals()));
+  h.runAtTickTime(3000,()->h.assertTrue(false,"Worker remained on its wall or intermediate floor: "+npc.position()+" goals="+npc.runningGoals()+" ticks="+npc.tickCount+" alive="+npc.isAlive()+" removed="+npc.isRemoved()+" noAi="+npc.isNoAi()+" entityTicking="+l.isPositionEntityTicking(npc.blockPosition())+" registered="+(l.getEntity(npc.getUUID())==npc)));
  }
 }

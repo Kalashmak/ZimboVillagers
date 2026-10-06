@@ -5,6 +5,15 @@ import java.nio.file.*;
 import static org.junit.jupiter.api.Assertions.*;
 class AtomicRecordTest {
     @TempDir Path directory;
+    @Test void watchedReplacementInvalidatesEvenWithTheSameTimestampAndSize() throws Exception {
+        Path file=directory.resolve("plan.bin");AtomicRecord.write(file,new byte[]{1,2,3});
+        long first=AtomicRecord.revision(file);var timestamp=Files.getLastModifiedTime(file);long size=Files.size(file);
+        AtomicRecord.write(directory.resolve(".").resolve("plan.bin"),new byte[]{4,5,6});
+        Files.setLastModifiedTime(file,timestamp);
+        assertEquals(size,Files.size(file));assertEquals(timestamp,Files.getLastModifiedTime(file));
+        assertEquals(first+1,AtomicRecord.revision(file));
+        assertArrayEquals(new byte[]{4,5,6},AtomicRecord.read(file));
+    }
     @Test void pendingWriteCannotReplaceCommittedRecord() throws Exception {
         Path file=directory.resolve("op.bin");AtomicRecord.write(file,new byte[]{1,2,3});
         Files.write(file.resolveSibling("op.bin.pending"),new byte[]{9});

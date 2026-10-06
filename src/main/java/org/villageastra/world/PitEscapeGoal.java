@@ -3,7 +3,7 @@ import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.phys.Vec3;
-/** An adult stuck in a small dry pit can reach its wall and climb to a safe ledge, without changing terrain. */
+/** A resident stuck in a small dry pit can reach its wall and climb to a safe ledge, without changing terrain. */
 public final class PitEscapeGoal extends Goal {
  private final ResidentEntity resident;private BlockPos exit,anchor;private Vec3 last;private int still,checks,escapeTicks,escapeLimit;
  private boolean atAnchor;
@@ -15,8 +15,18 @@ public final class PitEscapeGoal extends Goal {
   return r.getY()-p.getY()<1.5&&l.getFluidState(p).is(net.minecraft.tags.FluidTags.WATER)&&l.getFluidState(p.above()).isEmpty()&&l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP)&&!r.isEyeInFluid(net.minecraft.tags.FluidTags.WATER);
  }
  public static BlockPos escape(ResidentEntity r){var route=route(r);return route==null?null:route.exit();}
+ /** Finished architectural floors use their doors, stairs and controlled descent.
+  * They are not natural pits: climbing their walls strands residents on the roof. */
+ private static boolean buildingFloor(ResidentEntity r){
+  if(r.settlementId()==null||!(r.level() instanceof net.minecraft.server.level.ServerLevel l))return false;
+  var e=org.villageastra.server.SettlementData.get(l.getServer()).entry(r.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;
+  var foot=r.blockPosition();for(var b:e.settlement().buildings()){
+   if(b.type().equals("mine"))continue;var origin=BuildingPlacement.origin(e,b);var size=BuildingPlacement.size(b.type(),b.rotation());
+   if(foot.getY()>origin.getY()&&foot.getX()>=origin.getX()&&foot.getX()<origin.getX()+size[0]&&foot.getZ()>=origin.getZ()&&foot.getZ()<origin.getZ()+size[1])return true;
+  }return false;
+ }
  private static Route route(ResidentEntity r){
-  if(r.isInWaterOrBubble()&&!shallow(r)||r.isPassenger()||r.isSleeping()||r.child())return null;var l=r.level();var foot=r.blockPosition();
+  if(r.isInWaterOrBubble()&&!shallow(r)||r.isPassenger()||r.isSleeping()||buildingFloor(r))return null;var l=r.level();var foot=r.blockPosition();
   // Goal checks can always coincide with the airborne phase of futile repeated jumps.
   // Recognise the same dry floor under a normal jump, never a fall from a high cliff.
   if(!r.onGround()){
@@ -67,12 +77,28 @@ public final class PitEscapeGoal extends Goal {
   // anchor until the resident actually leaves it; small collision nudges must not reset the timer.
   if(last!=null&&now.multiply(1,0,1).distanceToSqr(last.multiply(1,0,1))<.5625)still+=20;else{still=0;last=now;}
   if(still<200)return false;var route=route(resident);if(route==null)return false;anchor=route.anchor();exit=route.exit();return true;}
- @Override public boolean canContinueToUse(){return exit!=null&&escapeTicks<escapeLimit&&resident.distanceToSqr(Vec3.atBottomCenterOf(exit))>.04&&(!resident.isInWaterOrBubble()||shallow(resident));}
+ @Override public boolean canContinueToUse(){
+  if(exit==null||escapeTicks>=escapeLimit||resident.isInWaterOrBubble()&&!shallow(resident))return false;
+  if(resident.distanceToSqr(Vec3.atBottomCenterOf(exit))>.04)return true;
+  // A low shelf under an overhang may still be inside the hollow. Releasing MOVE
+  // here lets the same failed bed/work path send the body straight back down.
+  // Continue only to another verified, strictly higher ledge; ordinary corridors,
+  // architectural floors and all the existing fluid/headroom rules still refuse it.
+  var next=route(resident);if(next==null||next.exit().getY()<=exit.getY())return false;
+  anchor=next.anchor();exit=next.exit();atAnchor=false;escapeLimit=Math.min(2400,escapeLimit+160);return true;
+ }
  @Override public void start(){escapeTicks=0;atAnchor=false;escapeLimit=resident.distanceToSqr(Vec3.atBottomCenterOf(anchor))>16?1200:160;resident.getNavigation().stop();resident.workStatus("escaping_pit");}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){escapeTicks++;
   double horizontal=resident.position().multiply(1,0,1).distanceToSqr(Vec3.atBottomCenterOf(anchor).multiply(1,0,1));
-  if(!atAnchor&&(horizontal>.01||Math.abs(resident.getY()-anchor.getY())>1.5)){
+  // Flow can hold a wading body against the edge of this otherwise clear column.
+  // It need not defeat the current to hit the exact centre: ascent is safe once
+  // its whole width fits the already verified column. Dry alignment stays exact.
+  double margin=(1D-resident.getBbWidth())/2D;
+  boolean wadingAligned=shallow(resident)
+   &&Math.abs(resident.getX()-(anchor.getX()+.5))<=margin+1E-7
+   &&Math.abs(resident.getZ()-(anchor.getZ()+.5))<=margin+1E-7;
+  if(!atAnchor&&(horizontal>.01&&!wadingAligned||Math.abs(resident.getY()-anchor.getY())>1.5)){
    // Navigation considers a waypoint reached before the body is at its centre. Finish the
    // last stride explicitly so the upward motion starts under the verified clear column.
    if(horizontal<2.25){resident.getNavigation().stop();resident.getMoveControl().setWantedPosition(anchor.getX()+.5,anchor.getY(),anchor.getZ()+.5,.8);}

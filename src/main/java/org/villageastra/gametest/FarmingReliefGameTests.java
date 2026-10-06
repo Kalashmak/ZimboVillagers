@@ -13,6 +13,47 @@ import org.villageastra.persistence.*;
 
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class FarmingReliefGameTests {
+ @GameTest(template="empty",batch="farming_relief_emergency",timeoutTicks=200)
+ public static void porterWithPaidParcelReplacesFarmerWhenAllRawWorkersAreIll(GameTestHelper h){
+  var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  try{
+   for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Relief body registered");}
+   var farmer=s.residents().stream().filter(r->r.profession()==Profession.FARMER).findFirst().orElseThrow();var donor=s.residents().stream().filter(r->r.profession()==Profession.PORTER).findFirst().orElseThrow();var builder=s.residents().stream().filter(r->r.profession()==Profession.BUILDER).findFirst().orElseThrow();var farm=s.workplace(farmer.id());var mine=s.buildings().stream().filter(b->b.type().equals("mine")).findFirst().orElseThrow();var hall=Workshops.hall(e);
+   for(var b:List.of(hall,mine))l.setBlock(LogisticsRoutes.position(e,b),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var source=LogisticsRoutes.chest(l,e,mine);source.setItem(0,new ItemStack(Items.COBBLESTONE,2));var stock=LogisticsRoutes.chest(l,e,hall);stock.clearContent();
+   var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());project.putUUID("project",project.getUUID("id"));var cost=new CompoundTag();cost.putInt("minecraft:cobblestone",2);project.put("cost",cost);HallUpgradeGoal.enqueue(l,e,project);var route=LogisticsRoutes.workerRoute(l,e,mine);h.assertTrue(route!=null,"A real parcel is requested");var body=(ResidentEntity)l.getEntity(donor.id());var at=LogisticsRoutes.position(e,mine);body.moveTo(at.getX()+1.5,at.getY(),at.getZ()+.5);PorterWork.step(body,route,false);PorterWork.step(body,route,false);h.assertTrue(source.isEmpty()&&PorterWork.cargo(l,PorterWork.inspect(l,donor.id())).getCount()==2,"Actual two-block parcel paid before reassignment");
+   for(var r:s.residents())if(Set.of(Profession.FARMER,Profession.FORESTER,Profession.MINER).contains(r.profession()))r.fallIll();
+   h.assertTrue(FarmingRelief.tick(l,e),"Healthy porter takes food work while all three raw workers are ill");h.assertTrue(donor.profession()==Profession.FARMER&&farm.equals(s.workplace(donor.id()))&&builder.profession()==Profession.BUILDER,"Construction keeps its sole worker when the porter can help");h.assertTrue(farmer.sick()&&farmer.profession()==null,"Illness was not cured by reassignment");var held=CargoCustody.inspect(l.getServer(),donor.id()).getList("items",Tag.TAG_COMPOUND);h.assertTrue(held.stream().map(t->ItemStack.of((CompoundTag)t)).filter(i->i.is(Items.COBBLESTONE)).mapToInt(ItemStack::getCount).sum()==2,"Both already paid blocks remain in custody");
+   at=LogisticsRoutes.position(e,hall);body.moveTo(at.getX()+1.5,at.getY(),at.getZ()+.5);for(int i=0;i<5;i++)CargoCustody.returnStep(body,true);h.assertTrue(!CargoCustody.pending(l.getServer(),donor.id())&&stock.countItem(Items.COBBLESTONE)==2,"Parcel returns exactly once before farming");var goal=new ResourceWorkGoal(body,true);h.assertTrue(goal.canUse(),"Former porter can begin ordinary farming");goal.stop();
+  }finally{HallUpgradeGoal.drop(l,s.id());for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+ }
+ @GameTest(template="empty",batch="farming_relief_emergency",timeoutTicks=200)
+ public static void soleBuilderHelpsOnlyInFoodEmergencyAndReturnsPaidProjectCargo(GameTestHelper h){
+  var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  try{
+   for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Emergency body registered");}
+   var builder=s.residents().stream().filter(r->r.profession()==Profession.BUILDER).findFirst().orElseThrow();var body=(ResidentEntity)l.getEntity(builder.id());var hall=Workshops.hall(e);var at=LogisticsRoutes.position(e,hall);l.setBlock(at,VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var stock=LogisticsRoutes.chest(l,e,hall);stock.setItem(0,new ItemStack(Items.COBBLESTONE,2));
+   var id=UUID.randomUUID();var paid=WorldJournal.takeAmount(l,id,at,0,stock.getItem(0).copy(),2);h.assertTrue(paid.getCount()==2&&stock.isEmpty(),"Construction cargo withdrawn from the real chest");
+   var ops=new ListTag();var done=new CompoundTag();done.putString("item","minecraft:oak_planks");done.putBoolean("done",true);ops.add(done);for(int i=0;i<2;i++){var op=new CompoundTag();op.putString("item","minecraft:cobblestone");ops.add(op);}var project=new CompoundTag();project.putUUID("id",id);project.putUUID("project",id);project.putUUID("worker",builder.id());project.putBoolean("funded",true);project.putInt("index",1);project.put("ops",ops);project.put("cost",new CompoundTag());var cargo=new ListTag();cargo.add(paid.save(new CompoundTag()));project.put("cargo",cargo);HallUpgradeGoal.enqueue(l,e,project);
+   for(var r:s.residents())if(Set.of(Profession.FARMER,Profession.FORESTER,Profession.MINER,Profession.PORTER).contains(r.profession()))r.fallIll();
+   stock.setItem(1,new ItemStack(Items.BREAD,64));h.assertTrue(!FarmingRelief.tick(l,e)&&builder.profession()==Profession.BUILDER,"A stocked village retains its sole busy builder");stock.setItem(1,ItemStack.EMPTY);
+   h.assertTrue(FarmingRelief.tick(l,e)&&builder.profession()==Profession.FARMER,"Only remaining healthy eligible worker covers the empty food supply");var held=CargoCustody.inspect(l.getServer(),builder.id()).getList("items",Tag.TAG_COMPOUND);h.assertTrue(held.stream().map(t->ItemStack.of((CompoundTag)t)).filter(i->i.is(Items.COBBLESTONE)).mapToInt(ItemStack::getCount).sum()==2,"Paid construction blocks survive the emergency handover");
+   body.moveTo(at.getX()+1.5,at.getY(),at.getZ()+.5);for(int i=0;i<5;i++)CargoCustody.returnStep(body,true);h.assertTrue(!CargoCustody.pending(l.getServer(),builder.id())&&stock.countItem(Items.COBBLESTONE)==2,"Both paid blocks return exactly once before farming");
+   var reset=HallUpgradeGoal.inspect(l,s.id());h.assertTrue(HallConstructionPlan.projectId(reset).equals(id)&&!reset.getBoolean("complete")&&!reset.getBoolean("funded")&&!reset.hasUUID("worker")&&reset.getInt("index")==1&&reset.getList("ops",Tag.TAG_COMPOUND).equals(ops)&&reset.getCompound("cost").getInt("minecraft:cobblestone")==2,"Same unfinished project retains completed operations and its outstanding two-block bill");
+  }finally{HallUpgradeGoal.drop(l,s.id());for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+ }
+ @GameTest(template="empty",batch="farm_expansion_staff",timeoutTicks=100)
+ public static void newlyCompletedFarmUsesSpareBuilderAndKeepsTimberAndOreWorkers(GameTestHelper h){
+  var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  var home=UUID.randomUUID();s.addHome(new Settlement.Home(home,1,2,true));var extra=new Resident(UUID.randomUUID(),Resident.Life.ADULT,false,null,null,-1);s.admit(extra,home);s.assign(extra.id(),Profession.BUILDER,Workshops.hall(e).id());
+  var farm=new Settlement.Building(UUID.randomUUID(),"farm",30,0,0);s.addBuilding(farm);
+  try{
+   for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Staffing fixture body registered");}
+   h.assertTrue(FarmingRelief.tick(l,e),"The completed extra farm receives a real spare worker");
+   h.assertTrue(s.residents().stream().filter(r->r.profession()==Profession.BUILDER).count()==1,"One construction worker remains");
+   h.assertTrue(s.residents().stream().filter(r->r.profession()==Profession.FORESTER).count()==1&&s.residents().stream().filter(r->r.profession()==Profession.MINER).count()==1,"Timber and ore supply continue");
+   h.assertTrue(s.residents().stream().anyMatch(r->r.profession()==Profession.FARMER&&farm.equals(s.workplace(r.id()))),"The new farm is staffed rather than only increasing a forecast");
+  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+ }
  @GameTest(template="empty",batch="farming_relief",timeoutTicks=100)
  public static void healthyWorkerReplacesSickFarmerWithoutCuring(GameTestHelper h){
   var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());

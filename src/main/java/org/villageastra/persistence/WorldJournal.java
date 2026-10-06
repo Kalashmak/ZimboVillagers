@@ -121,8 +121,9 @@ public final class WorldJournal {
         try {
             if(Files.exists(path(level,id)))return execute(level,id,read(path(level,id)))!=null;
             if(!(level.getBlockEntity(pos) instanceof Container container))return false;
-            for(int slot=0;slot<container.getContainerSize();slot++) {
+            for(int pass=0;pass<2;pass++)for(int slot=0;slot<container.getContainerSize();slot++) {
                 ItemStack before=container.getItem(slot);
+                if(pass==0&&before.isEmpty()||pass==1&&!before.isEmpty())continue;
                 if(!before.isEmpty() && !ItemStack.isSameItemSameTags(before,stack))continue;
                 int count=before.getCount()+stack.getCount();
                 if(count>Math.min(container.getMaxStackSize(),stack.getMaxStackSize()))continue;

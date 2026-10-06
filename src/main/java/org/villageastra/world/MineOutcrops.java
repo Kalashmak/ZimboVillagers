@@ -10,7 +10,7 @@ import org.villageastra.server.SettlementData;
 /** An ore face visible from a claimed, open gallery is a reason to survey its adjacent row. */
 public final class MineOutcrops {
  private MineOutcrops(){}
- private static boolean wanted(BlockState s,Set<Item> demand){
+ public static boolean wanted(BlockState s,Set<Item> demand){
   if(demand.contains(s.getBlock().asItem()))return true;
   return s.is(BlockTags.IRON_ORES)&&demand.contains(Items.RAW_IRON)
    ||s.is(BlockTags.COPPER_ORES)&&demand.contains(Items.RAW_COPPER)

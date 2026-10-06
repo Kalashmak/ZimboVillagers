@@ -51,8 +51,18 @@ public final class HandBread {
  public static boolean chainStaffed(ServerLevel l,SettlementData.Entry e){return staffed(l,e,"mill")&&staffed(l,e,"restaurant");}
  /** Rations of RESERVE_DAYS days of meals for everybody alive, children too (they eat): 60 for six residents. */
  public static int reserveRations(SettlementData.Entry e){long alive=e.settlement().residents().stream().filter(Resident::alive).count();return (int)(alive*Population.MEAL_NUTRITION*24000L*RESERVE_DAYS/Population.MEAL_INTERVAL);}
- /** The pantries (warehouses and the hall) hold less than the reserve, counted in rations as the meals count them. */
- public static boolean lowOnFood(ServerLevel l,SettlementData.Entry e){return Population.storedNutrition(l,e)<reserveRations(e);}
+ /** An NPC village with usable spare housing saves the real food needed for its
+  * next child as well as its ordinary meal reserve. A full village keeps the
+  * original daily target; a player's village keeps the player's food policy. */
+ public static int foodTarget(SettlementData.Entry e){
+  var s=e.settlement();int daily=reserveRations(e);
+  if(s.governance().playerMayor()!=null||s.homes().stream().noneMatch(h->h.usable()&&s.occupancy(h.id())<h.capacity())
+     ||s.residents().stream().filter(r->r.alive()&&r.life()==Resident.Life.ADULT&&r.home()!=null).count()<2)return daily;
+  long alive=s.residents().stream().filter(Resident::alive).count();
+  return Math.max(daily,Math.toIntExact((alive+1)*Population.BIRTH_FOOD));
+ }
+ /** The pantries hold less than their meal and available-housing target. */
+ public static boolean lowOnFood(ServerLevel l,SettlementData.Entry e){return Population.storedNutrition(l,e)<foodTarget(e);}
  /** Somebody alive went without a meal: the emergency in which bread is baked by hand whatever the staffing — a driven chain without coal must not starve the village. */
  public static boolean missedMeal(SettlementData.Entry e){return e.settlement().residents().stream().anyMatch(r->r.alive()&&r.missedMeals()>0);}
  /** A new job may start (override 10): the hall chest is at hand, and the chain does not work while the pantries run low, or a meal was missed. */
@@ -72,7 +82,7 @@ public final class HandBread {
   if(!b.type().equals("town_hall")||missedMeal(e)||!HallUpgradeGoal.pending(l,e.settlement().id()))return 0;
   long meal=e.settlement().residents().stream().filter(Resident::alive).count()*Population.MEAL_NUTRITION;
   if(meal==0||Population.storedNutrition(l,e)<meal)return 0;
-  var project=HallUpgradeGoal.inspect(l,e.settlement().id());if(project.getBoolean("funded")||e.settlement().governance().paused(HallConstructionPlan.projectId(project)))return 0;
+  var project=HallUpgradeGoal.headerView(l,e.settlement().id());if(project.getBoolean("funded")||e.settlement().governance().paused(HallConstructionPlan.projectId(project)))return 0;
   var chest=hallChest(l,e);if(chest==null)return 0;var free=HallReserve.view(l,e,chest);
   // A detached planning view answers whether grain alone would enable the product.
   // It never enters a job, journal or real inventory.
@@ -169,6 +179,8 @@ public final class HandBread {
  /** In memory only: after a restart any idle adult may take the job over, which is durable on its own. */
  private record Claim(UUID baker,long time){}
  private static final Map<MinecraftServer,Map<UUID,Claim>> CLAIMS=new WeakHashMap<>();
+ private static final Map<MinecraftServer,Map<UUID,Long>> RETRY=new WeakHashMap<>();
+ private static Map<UUID,Long> retries(ServerLevel l){return RETRY.computeIfAbsent(l.getServer(),k->new HashMap<>());}
  private static Map<UUID,Claim> claims(ServerLevel l){return CLAIMS.computeIfAbsent(l.getServer(),k->new HashMap<>());}
  /** Override 18: only a loaded, living resident of this very village, in its world, bakes — nobody walking out with a player or still rowing ashore
   *  after being let go, and no guest (no village, or not one of its residents). */
@@ -179,9 +191,14 @@ public final class HandBread {
  /** Nobody refreshed it for LOCK_TICKS, or its holder may not bake any more: dead, not loaded in this level, walking out with a player, let go in a boat. */
  private static boolean stale(ServerLevel l,UUID settlement,Claim c,long now){return now-c.time()>LOCK_TICKS||!mayBake(l,settlement,c.baker());}
  /** This baker may take the village's hand bread: it may bake at all, and nobody holds it, it holds it itself, or the claim went stale. Times are game ticks. */
- public static boolean mayClaim(ServerLevel l,UUID settlement,UUID baker,long now){var c=claims(l).get(settlement);return mayBake(l,settlement,baker)&&(c==null||c.baker().equals(baker)||stale(l,settlement,c,now));}
+ public static boolean mayClaim(ServerLevel l,UUID settlement,UUID baker,long now){var c=claims(l).get(settlement);return now>=retries(l).getOrDefault(baker,Long.MIN_VALUE)&&mayBake(l,settlement,baker)&&(c==null||c.baker().equals(baker)||stale(l,settlement,c,now));}
  /** Takes or refreshes the claim; false while another baker holds it, or when this one may not bake. */
  public static boolean claim(ServerLevel l,UUID settlement,UUID baker,long now){if(!mayClaim(l,settlement,baker,now))return false;claims(l).put(settlement,new Claim(baker,now));return true;}
  public static boolean holds(ServerLevel l,UUID settlement,UUID baker,long now){var c=claims(l).get(settlement);return c!=null&&c.baker().equals(baker)&&!stale(l,settlement,c,now);}
+ /** An unreachable baker releases only its temporary claim; all paid work remains the village's. */
+ public static UUID claimedBaker(ServerLevel l,UUID settlement){var all=CLAIMS.get(l.getServer());var claim=all==null?null:all.get(settlement);return claim==null?null:claim.baker();}
+ public static void defer(ServerLevel l,UUID settlement,UUID baker,long now,int ticks){
+  release(l,settlement,baker);var retry=retries(l);retry.entrySet().removeIf(entry->entry.getValue()<=now);retry.put(baker,now+ticks);
+ }
  public static void release(ServerLevel l,UUID settlement,UUID baker){var m=claims(l);var c=m.get(settlement);if(c!=null&&c.baker().equals(baker))m.remove(settlement);}
 }

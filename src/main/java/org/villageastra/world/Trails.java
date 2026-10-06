@@ -71,7 +71,7 @@ public final class Trails {
  /** A builder for the crew: one not holding the hall project if the village has another. */
  static UUID crew(ServerLevel l,SettlementData.Entry e){
   var builders=e.settlement().residents().stream().filter(r->r.alive()&&r.profession()==Profession.BUILDER).map(Resident::id).sorted().toList();
-  if(builders.isEmpty())return null;var hall=HallUpgradeGoal.pending(l,e.settlement().id())?HallUpgradeGoal.inspect(l,e.settlement().id()):null;
+  if(builders.isEmpty())return null;var hall=HallUpgradeGoal.pending(l,e.settlement().id())?HallUpgradeGoal.headerView(l,e.settlement().id()):null;
   UUID busy=hall!=null&&hall.hasUUID("worker")?hall.getUUID("worker"):builders.get(0);
   for(int i=builders.size()-1;i>=0;i--)if(!builders.get(i).equals(busy))return builders.get(i);
   return builders.get(0);
