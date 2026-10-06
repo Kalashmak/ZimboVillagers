@@ -105,6 +105,7 @@ final class AutonomyGrowthProbe {
    var route=npc.getNavigation().getPath();var nodes=new ArrayList<Object>();
    if(route!=null)for(int i=route.getNextNodeIndex();i<Math.min(route.getNodeCount(),route.getNextNodeIndex()+4);i++)nodes.add(route.getNodePos(i));
    LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH trip id={} ticks={} goals={} pos={} sleeping={} ground={} collision={} stage={} target={} stand={} navigation={} reached={} next={} bedExit={}",r.id(),npc.tickCount,npc.runningGoals(),npc.position(),npc.isSleeping(),npc.onGround(),npc.horizontalCollision,trip.getString("stage"),net.minecraft.core.BlockPos.of(trip.getLong("target")),net.minecraft.core.BlockPos.of(trip.getLong("stand")),route==null?null:route.getTarget(),route!=null&&route.canReach(),nodes,BedExitGoal.landing(npc));
+   LogUtils.getLogger().info("ZIMBOVILLAGERS_RESOURCE_LEASE actor={} bodyTicks={} {}",r.id(),npc.tickCount,ResourceExpedition.status(npc));
    if(npc.runningGoals().contains("BedExitGoal"))LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH furniture id={} motion={} speed={} attribute={} pose={} control={} wanted={},{},{}",r.id(),npc.getDeltaMovement(),npc.getSpeed(),npc.getAttributeValue(net.minecraft.world.entity.ai.attributes.Attributes.MOVEMENT_SPEED),npc.getPose(),npc.getMoveControl().hasWanted(),npc.getMoveControl().getWantedX(),npc.getMoveControl().getWantedY(),npc.getMoveControl().getWantedZ());
   }
   // Existing buildings alone are insufficient: a hall at VI with missing services is not completion.

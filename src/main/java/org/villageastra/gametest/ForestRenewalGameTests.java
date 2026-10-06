@@ -9,6 +9,38 @@ import org.villageastra.VillageAstra;
 import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class ForestRenewalGameTests {
+ @GameTest(template="empty",batch="forest_renewal_budget",timeoutTicks=1800)
+ public static void renewalCapsNativeQueriesAndKeepsUnfinishedCandidate(GameTestHelper h){var f=ForestFixture.create(h,1,192);
+  try{
+   var cells=new ArrayList<net.minecraft.core.BlockPos>();int radius=ForestBalance.radius(1);
+   for(int x=-radius;x<=radius;x++)for(int z=-radius;z<=radius;z++)if(x*x+z*z<=radius*radius)cells.add(new net.minecraft.core.BlockPos(x,0,z));
+   cells.sort(Comparator.comparingDouble(p->p.distSqr(net.minecraft.core.BlockPos.ZERO)));
+   net.minecraft.core.BlockPos foot=null;
+   for(int x=-4;x<=20&&foot==null;x++)for(int z=3;z<=6&&foot==null;z++){var p=f.wood(x,z);if(cells.contains(p.subtract(f.door()))&&ForestRenewal.safe(f.l,p))foot=p;}
+   h.assertTrue(foot!=null,"The candidate is ordinary unprotected fertile soil");
+   var t=new CompoundTag();int first=cells.indexOf(foot.subtract(f.door()));t.putInt("renewalScan",first);
+   var cage=f.wood(10,0);f.forester.moveTo(cage.getX()+.5,cage.getY(),cage.getZ()+.5,0,0);f.forester.setOnGround(true);
+   for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)for(int y=0;y<=2;y++)if(x!=0||z!=0||y==2)f.l.setBlock(cage.offset(x,y,z),Blocks.STONE.defaultBlockState(),2);
+   long before=HarvestRouteCache.stats(f.forester).plans();
+   try(var survey=HarvestRouteCache.survey(f.forester)){ForestRenewal.plan(f.l,f.e,f.hut(),f.forester,t,Set.of(Items.BIRCH_SAPLING));}
+   long plans=HarvestRouteCache.stats(f.forester).plans()-before;
+   h.assertTrue(plans<=4,"A renewal turn must cap native path queries at four, actual="+plans);
+   h.assertTrue(t.getBoolean("renewalPending"),"An unfinished reachable-platform search remains pending");
+   h.assertTrue(t.getInt("renewalScan")==first,"The candidate is retained rather than skipped");
+   h.assertTrue(t.contains("renewalPlatform"),"The next platform survives in the work record");
+   for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)for(int y=0;y<=2;y++)if(x!=0||z!=0||y==2)f.l.setBlock(cage.offset(x,y,z),Blocks.AIR.defaultBlockState(),2);
+   var saved=t.copy();
+   h.runAfterDelay(21,new Runnable(){int attempts;CompoundTag current=saved;
+    public void run(){try{
+     current=current.copy();long start=HarvestRouteCache.stats(f.forester).plans();
+     boolean found=ForestRenewal.plan(f.l,f.e,f.hut(),f.forester,current,Set.of(Items.BIRCH_SAPLING));
+     h.assertTrue(HarvestRouteCache.stats(f.forester).plans()-start<=4,"Every resumed turn retains the native-query cap");
+     if(found){h.assertTrue(current.getString("stage").equals("sapling"),"Finding soil still requires a paid sapling");h.assertTrue(ForestRenewal.safe(f.l,net.minecraft.core.BlockPos.of(current.getLong("target"))),"The resumed candidate remains physically safe");f.done();h.succeed();return;}
+     h.assertTrue(++attempts<75,"Resuming serialized platform progress must eventually find the opened route");h.runAfterDelay(20,this);
+    }catch(Throwable ex){f.done();throw ex;}}
+   });return;
+  }catch(Throwable ex){f.done();throw ex;}
+ }
  @GameTest(template="empty",batch="forest_renewal_grass",timeoutTicks=100)
  public static void naturalGroundCoverDoesNotPreventPaidPlanting(GameTestHelper h){var f=ForestFixture.create(h,1,192);
   try{

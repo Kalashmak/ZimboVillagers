@@ -659,7 +659,7 @@ public final class ResourceWorkGoal extends Goal {
         var tree=ForestWork.next(level,e,hut,lv,onTrip?BlockPos.of(state.getLong("lastFoot")):ForesterHut.door(e,hut),onTrip?ForestBalance.NEXT_TREE_REACH:0,now);
         if(tree==null){
             if(carrying){forestDelivery();return;}
-            if(lv==1&&ForestWork.searched(hut.id())){boolean renewal=ForestRenewal.plan(level,e,hut,worker,state,atHand(level));save();if(renewal){status("replanting");return;}}
+            if(lv==1&&ForestWork.searched(hut.id())){boolean renewal=ForestRenewal.plan(level,e,hut,worker,state,atHand(level));save();if(renewal){status("replanting");return;}if(state.getBoolean("renewalPending")){status("seeking_trees");return;}}
             if(ForestWork.searched(hut.id())){forestWait=now+600;status("no_trees_in_reach");}else status("seeking_trees");return;}
         if(!carrying&&tree.sapling()!=null&&!forestRoom(level,output,new ItemStack(tree.sapling()))){status("output_full");return;}
         state.putLongArray("base",tree.base().stream().mapToLong(BlockPos::asLong).toArray());
