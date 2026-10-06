@@ -97,6 +97,7 @@ final class AutonomyGrowthProbe {
    var blocks=new ArrayList<String>();for(var d:net.minecraft.core.Direction.Plane.HORIZONTAL){var p=npc.blockPosition().relative(d);blocks.add(d+"="+l.getBlockState(p)+"/"+l.getBlockState(p.above()));}
    LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH miner local={} turn={} ground={} collision={} neighbors={}",local,b.rotation(),npc.onGround(),npc.horizontalCollision,blocks);
    var mining=MineWork.read(l,b);
+   var knowledge=QuarryKnowledge.stats(l.getServer());LogUtils.getLogger().info("ZIMBOVILLAGERS_QUARRY_KNOWLEDGE read={} sites={} complete={}",knowledge.read(),knowledge.sites(),knowledge.complete());
    var sensing=HarvestRouteCache.stats(npc);LogUtils.getLogger().info("ZIMBOVILLAGERS_HARVEST_SENSING actor={} plans={} reusedMisses={} entries={}",npc.getUUID(),sensing.plans(),sensing.hits(),sensing.entries());
    LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH mineSupply stage={} status={} needed={} priority={} floor={} tool={}",mining.getString("stage"),mining.getString("status"),MineProspecting.needed(l,e,b),NaturalSupplyGoal.miningPriority(l,e,npc),mining.getInt("floorStep"),mining.getCompound("tool"));
   }

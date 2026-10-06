@@ -44,6 +44,9 @@ public final class QuarryKnowledge {
    if(old.dimension().equals(site.dimension())&&old.material().getBlock()==material.getBlock()&&old.pos().distSqr(site.pos())<=64){sites.set(i,site);return;}}
   if(sites.size()==CAPACITY)sites.remove(0);sites.add(site);
  }
+ /** Continue only an already requested recovery while workers sleep or finish another task.
+  * poll retains the same shared time/file quota, including calls from worker goals. */
+ public static void tick(MinecraftServer server){if(INDEXES.containsKey(server))poll(server.overworld());}
  public static List<Site> sites(ServerLevel level){return index(level.getServer()).sites.stream().filter(s->s.dimension().equals(level.dimension().location().toString())).toList();}
  public static Stats stats(MinecraftServer server){var i=index(server);return new Stats(i.sites.size(),i.read,i.complete);}
  public static void clear(MinecraftServer server){var i=INDEXES.remove(server);if(i!=null&&i.directory!=null)try{i.directory.close();}catch(IOException e){throw new IllegalStateException(e);}}

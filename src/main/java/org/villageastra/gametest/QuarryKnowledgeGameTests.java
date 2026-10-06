@@ -12,6 +12,15 @@ import org.villageastra.world.QuarryKnowledge;
 /** Discovery is derived from committed harvests; no stock or terrain is replayed by rebuilding it. */
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class QuarryKnowledgeGameTests {
+ @GameTest(template="empty",batch="quarry_knowledge_maintenance",timeoutTicks=400)
+ public static void requestedRecoveryContinuesWithoutAWorkerGoal(GameTestHelper h){
+  var l=h.getLevel();var p=h.absolutePos(new BlockPos(5,2,5)).offset(1048576,0,0);l.setBlock(p,Blocks.ANDESITE.defaultBlockState(),2);var id=UUID.randomUUID();
+  WorldJournal.harvest(l,id,p,Blocks.ANDESITE.defaultBlockState(),new ItemStack(Items.STONE_PICKAXE));
+  QuarryKnowledge.clear(l.getServer());QuarryKnowledge.stats(l.getServer());
+  // No worker and no poll/tick calls in this fixture: the actual server event owns recovery.
+  h.startSequence().thenWaitUntil(()->h.assertTrue(QuarryKnowledge.sites(l).stream().anyMatch(site->site.receipt().equals(id)),"Requested knowledge recovers while no worker searches"))
+   .thenExecute(()->{h.assertTrue(l.getBlockState(p).isAir(),"Passive knowledge maintenance never changes old terrain");QuarryKnowledge.clear(l.getServer());}).thenSucceed();
+ }
  @GameTest(template="empty",batch="quarry_knowledge_index",timeoutTicks=2400)
  public static void rebuildConsumesBoundedJournalWindowsWithoutReplayingHarvest(GameTestHelper h){
   var l=h.getLevel();var p=h.absolutePos(new BlockPos(5,2,5));l.setBlock(p,Blocks.ANDESITE.defaultBlockState(),2);var id=UUID.randomUUID();
@@ -20,7 +29,7 @@ public final class QuarryKnowledgeGameTests {
   h.startSequence().thenWaitUntil(()->{
    var before=QuarryKnowledge.stats(l.getServer());QuarryKnowledge.poll(l);var after=QuarryKnowledge.stats(l.getServer());
    h.assertTrue(after.read()-before.read()<=QuarryKnowledge.READS_PER_WINDOW,"One window reads at most its bounded file allowance");
-   QuarryKnowledge.poll(l);h.assertTrue(QuarryKnowledge.stats(l.getServer()).read()==after.read(),"A second call in the same server tick cannot reset the allowance");
+   QuarryKnowledge.tick(l.getServer());QuarryKnowledge.poll(l);h.assertTrue(QuarryKnowledge.stats(l.getServer()).read()==after.read(),"Server maintenance and worker calls share the same window allowance");
    observed[0]|=QuarryKnowledge.sites(l).stream().anyMatch(s->s.receipt().equals(id));
    h.assertTrue(observed[0],"Incremental recovery must discover the actual committed mineral receipt");
   }).thenExecute(()->{

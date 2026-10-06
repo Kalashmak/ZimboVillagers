@@ -49,6 +49,7 @@ public final class ServerEvents {
         var server = ServerLifecycleHooks.getCurrentServer();
         if (server != null) {
             org.villageastra.world.ResourceExpedition.tick(server);
+            org.villageastra.world.QuarryKnowledge.tick(server);
             var data = SettlementData.get(server);
             data.activeTick(server.getPlayerCount() > 0);
             if(server.getPlayerCount()>0&&data.clock().ticks()%20==0){
@@ -105,7 +106,7 @@ public final class ServerEvents {
         // AD-138 V: a pen beast, loaded again, takes up its grazing life.
         if(event.getLevel() instanceof net.minecraft.server.level.ServerLevel&&event.getEntity() instanceof net.minecraft.world.entity.animal.Animal beast)org.villageastra.world.LivestockGrazing.attach(beast);
     }
-    /** AD-138 V (spec В§6): a village's beast out grazing never tramples a field's soil. */
+    /** AD-138 V (spec Р’В§6): a village's beast out grazing never tramples a field's soil. */
     @SubscribeEvent public static void trample(net.minecraftforge.event.level.BlockEvent.FarmlandTrampleEvent event){
         if(event.getEntity()!=null&&event.getEntity().getPersistentData().hasUUID(org.villageastra.world.LivestockGoal.OWNER))event.setCanceled(true);
     }
