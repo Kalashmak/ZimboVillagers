@@ -15,8 +15,11 @@ public final class SchoolGoal extends Goal {
   var e=SettlementData.get(l.getServer()).entry(resident.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return null;
   var r=e.settlement().resident(resident.getUUID());if(r==null||!r.alive())return null;
   if(r.profession()==Profession.TEACHER){var b=e.settlement().workplace(r.id());return b!=null&&b.type().equals("school")&&Population.mayWork(r)?LogisticsRoutes.position(e,b):null;}
-  if(r.life()!=Resident.Life.CHILD||r.educated()||l.getDayTime()%24000>=12000)return null;
-  return Population.schoolStation(l,e);
+  return childStation(l,e,r);
+ }
+ /** A daytime journey to a physically present teacher is a child's duty, including outside its home neighborhood. */
+ public static net.minecraft.core.BlockPos childStation(ServerLevel l,SettlementData.Entry e,Resident r){
+  return r.life()==Resident.Life.CHILD&&!r.educated()&&l.getDayTime()%24000<12000?Population.schoolStation(l,e):null;
  }
  @Override public boolean canUse(){var s=station();return s!=null&&resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)>9;}
  @Override public boolean canContinueToUse(){var s=station();return s!=null&&resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)>4;}

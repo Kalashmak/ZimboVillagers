@@ -23,7 +23,9 @@ public final class HomeNeighborhood extends Goal {
  private static boolean onDuty(ResidentEntity npc){
   if(!(npc.level() instanceof ServerLevel l)||npc.settlementId()==null)return false;
   var e=SettlementData.get(l.getServer()).entry(npc.settlementId());var r=e==null?null:e.settlement().resident(npc.getUUID());
-  if(r==null||r.life()!=org.villageastra.domain.Resident.Life.ADULT||!Population.mayWork(r))return false;
+  if(r==null)return false;
+  if(r.life()==org.villageastra.domain.Resident.Life.CHILD)return SchoolGoal.childStation(l,e,r)!=null;
+  if(r.life()!=org.villageastra.domain.Resident.Life.ADULT||!Population.mayWork(r))return false;
   if(NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))||npc.getUUID().equals(HandBread.claimedBaker(l,e.settlement().id())))return true;
   var hall=Workshops.hall(e);if(hall==null||!Workshops.eligible(r,hall))return false;
   var job=Workshops.inspect(l,hall.id());
