@@ -9,6 +9,29 @@ import org.villageastra.VillageAstra;
 import org.villageastra.world.Workshops;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class RecipeCycleGameTests {
+ @GameTest(template="empty",batch="recipe_conversion_reserve") public static void accumulatedNuggetsWaitForTheirMissingTorchInsteadOfBeingRecompressed(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.IRON_NUGGET,10),new ItemStack(Items.COAL),new ItemStack(Items.STICK));var wants=List.of(new Workshops.Want(Ingredient.of(Items.IRON_BARS),16,UUID.randomUUID()),new Workshops.Want(Ingredient.of(Items.LANTERN),1,UUID.randomUUID()));
+  var job=Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,wants);h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.TORCH)),"Accumulated final-product nuggets need their missing torch before reversible recompression: "+(job==null?null:job.recipe()));h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_conversion_reserve") public static void excessNuggetsStillCompleteTheBarsWithoutTakingTheLanternIngredient(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.IRON_INGOT,5),new ItemStack(Items.IRON_NUGGET,17),new ItemStack(Items.COAL),new ItemStack(Items.STICK));var wants=List.of(new Workshops.Want(Ingredient.of(Items.IRON_BARS),16,UUID.randomUUID()),new Workshops.Want(Ingredient.of(Items.LANTERN),1,UUID.randomUUID()));
+  var job=Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,wants);h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.IRON_INGOT))&&job.inputs().stream().anyMatch(in->in.matches(new ItemStack(Items.IRON_NUGGET))&&in.count()==9),"Seventeen nuggets can pay nine toward bars and leave eight for the lantern");h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_conversion_reserve") public static void missingTorchMaterialsDoNotLicenseReversibleWorkWithoutFinalProgress(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.IRON_NUGGET,9));var wants=List.of(new Workshops.Want(Ingredient.of(Items.IRON_BARS),16,UUID.randomUUID()),new Workshops.Want(Ingredient.of(Items.LANTERN),1,UUID.randomUUID()));
+  h.assertTrue(Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,wants)==null,"Missing real torch supplies leave accumulated nuggets intact");h.assertTrue(stock.countItem(Items.IRON_NUGGET)==9,"Planning never reserves by consuming stock");h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_conversion_reserve") public static void ordinaryWoodConversionStillMakesAnotherRequestsMissingTool(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.BIRCH_LOG),new ItemStack(Items.COBBLESTONE,3));var job=Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,List.of(new Workshops.Want(Ingredient.of(Items.STRIPPED_BIRCH_LOG),1,UUID.randomUUID()),new Workshops.Want(Ingredient.of(Items.STONE_PICKAXE),1,UUID.randomUUID())));
+  h.assertTrue(job!=null&&job.inputs().stream().anyMatch(in->in.matches(new ItemStack(Items.BIRCH_LOG)))&&job.outputs().stream().anyMatch(s->s.is(Items.BIRCH_PLANKS)||s.is(Items.STICK)),"Ordinary irreversible wood conversion may use a log held for stripping to prepare another missing tool: "+(job==null?null:job.recipe()));h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_conversion_reserve") public static void anExistingRealIronBlockCanStillSupplyARequestedPick(GameTestHelper h){
+  var job=plan(h,Items.IRON_PICKAXE,new ItemStack(Items.IRON_BLOCK),new ItemStack(Items.STICK,2));h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.IRON_INGOT)&&s.getCount()==9),"A real block is a legitimate nine-ingot source for the requested tool");h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_conversion_reserve") public static void aLowerDemandClassDoesNotHoldNuggetsAgainstHigherClassBars(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.IRON_NUGGET,10),new ItemStack(Items.COAL),new ItemStack(Items.STICK));var wants=List.of(new Workshops.Want(Ingredient.of(Items.IRON_BARS),16,UUID.randomUUID(),org.villageastra.world.LogisticsRoutes.NEED_SUPPLY),new Workshops.Want(Ingredient.of(Items.LANTERN),1,UUID.randomUUID(),org.villageastra.world.LogisticsRoutes.NEED_FOOD));
+  var job=Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,wants);h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.IRON_INGOT)),"Protect only the current demand class, retaining published class priority");h.succeed();
+ }
  @GameTest(template="empty",batch="recipe_cycle") public static void fundedLanternWinsOverUndoingItsNuggetsForUnfundedBars(GameTestHelper h){
   var stock=new net.minecraft.world.SimpleContainer(9);stock.setItem(0,new ItemStack(Items.IRON_NUGGET,9));stock.setItem(1,new ItemStack(Items.TORCH));
   var wants=List.of(new Workshops.Want(Ingredient.of(Items.IRON_BARS),16,UUID.randomUUID()),new Workshops.Want(Ingredient.of(Items.LANTERN),2,UUID.randomUUID()));

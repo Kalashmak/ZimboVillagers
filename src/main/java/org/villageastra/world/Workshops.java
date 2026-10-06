@@ -228,6 +228,7 @@ public final class Workshops {
  /** One synchronous planning pass reads each real slot once, then counts only occupied stacks. */
  private static final class PlanInventory extends net.minecraft.world.SimpleContainer {
   private final List<ItemStack> occupied=new ArrayList<>();private final Map<Ingredient,Integer> counts=new IdentityHashMap<>();private int burn;
+  private Map<Item,Integer> conversionKeep=Map.of();private final Map<String,Boolean> reversible=new HashMap<>();
   PlanInventory(Container source){super(source.getContainerSize());for(int i=0;i<source.getContainerSize();i++){var item=source.getItem(i).copy();setItem(i,item);if(!item.isEmpty()){occupied.add(item);burn+=WorkshopFuel.ticks(item)*item.getCount();}}}
   int available(Input in){return counts.computeIfAbsent(in.ingredient(),k->{int count=0;for(var item:occupied)if(in.matches(item))count+=item.getCount();return count;});}
  }
@@ -295,23 +296,39 @@ public final class Workshops {
  /** Next job for this workshop without a fuel bank. */
  public static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants){return plan(l,spec,chest,wants,0);}
  private static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants,int bank){
-  var stock=chest instanceof PlanInventory?chest:new PlanInventory(chest);var memo=new HashMap<PlanKey,Job>();
+  var stock=chest instanceof PlanInventory planned?planned:new PlanInventory(chest);var memo=new HashMap<PlanKey,Job>();
   // Finish an affordable requested product before reworking its material into
   // an intermediate for another unpaid bill. Preserve the demand-class order.
   for(int from=0;from<wants.size();){int end=groupEnd(wants,from);
    for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems())for(var job:candidates(l,spec,option.getItem(),want.count())){
-    if(recyclesNeededMaterial(job,Set.of(option.getItem())))continue;var ready=funded(l,stock,job,bank);if(ready!=null)return ready;
+    if(recyclesNeededMaterial(job,Set.of(option.getItem())))continue;var ready=funded(l,spec,stock,job,bank,false);if(ready!=null)return ready;
    }
+   stock.conversionKeep=conversionKeep(l,spec,stock,wants.subList(from,end));memo.clear();
    for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems()){var job=plan(l,spec,stock,option.getItem(),want.count(),0,bank,memo);if(job!=null)return job;}
    from=end;
   }
   return null;
  }
  private static int groupEnd(List<Want> wants,int from){int end=from+1;while(end<wants.size()&&wants.get(end).need()==wants.get(from).need())end++;return end;}
- private static Job funded(ServerLevel l,Container chest,Job job,int bank){
-  if(supplied(chest,job,bank))return job;
-  if(job.units()>1&&(job.recipe().startsWith("custom:")||NaturalFurnace.recipe(l,job))){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)return scale(unit,Math.min(job.units(),fit));}
-  return null;
+ private static Job funded(ServerLevel l,Spec spec,Container chest,Job job,int bank,boolean protect){
+  Job ready=supplied(chest,job,bank)?job:null;
+  if(ready==null&&job.units()>1&&(job.recipe().startsWith("custom:")||NaturalFurnace.recipe(l,job))){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)ready=scale(unit,Math.min(job.units(),fit));}
+  if(ready!=null&&protect&&chest instanceof PlanInventory stock&&reversible(l,spec,unit(ready),stock))for(var in:ready.inputs())for(var option:in.ingredient().getItems())if(available(stock,in)-in.count()<stock.conversionKeep.getOrDefault(option.getItem(),0))return null;
+  return ready;
+ }
+ /** Hold one fully accumulated ingredient for a final product against only
+  * lossless reverse conversions. Ordinary woodwork, fuel and tool dependencies
+  * can still spend their inputs; this is planning, not a paid reservation. */
+ private static Map<Item,Integer> conversionKeep(ServerLevel l,Spec spec,PlanInventory stock,List<Want> wants){
+  var keep=new HashMap<Item,Integer>();for(var want:wants)for(var option:want.ingredient().getItems())for(var job:candidates(l,spec,option.getItem(),want.count()))for(var in:unit(job).inputs())if(in.ingredient().getItems().length==1&&available(stock,in)>=in.count())keep.merge(in.ingredient().getItems()[0].getItem(),in.count(),Math::max);return keep;
+ }
+ private static boolean reversible(ServerLevel l,Spec spec,Job job,PlanInventory stock){
+  if(job.tool()!=null||job.fuelTicks()!=0||job.inputs().size()!=1||job.outputs().size()!=1||job.inputs().get(0).ingredient().getItems().length!=1)return false;
+  return stock.reversible.computeIfAbsent(job.recipe(),key->{var in=job.inputs().get(0);var item=in.ingredient().getItems()[0].getItem();var out=job.outputs().get(0);
+   for(var reverse:candidates(l,spec,item,1)){reverse=unit(reverse);if(reverse.tool()!=null||reverse.fuelTicks()!=0||reverse.inputs().size()!=1||reverse.outputs().size()!=1||reverse.inputs().get(0).ingredient().getItems().length!=1)continue;
+    var back=reverse.inputs().get(0);var result=reverse.outputs().get(0);if(back.matches(out)&&result.is(item)&&out.getCount()*result.getCount()==in.count()*back.count())return true;
+   }return false;
+  });
  }
  private record PlanKey(Item item,int count,int depth,Set<Item> ancestors){}
  private static Job plan(ServerLevel l,Spec spec,Container chest,Item target,int wanted,int depth,int bank){return plan(l,spec,chest,target,wanted,depth,bank,new HashMap<>());}
@@ -331,7 +348,7 @@ public final class Workshops {
  private static Job seek(ServerLevel l,Spec spec,Container chest,Item target,int wanted,int depth,int bank,Map<PlanKey,Job> memo,Set<Item> visiting){
   for(var job:candidates(l,spec,target,wanted)){
    if(recyclesNeededMaterial(job,visiting))continue;
-   var ready=funded(l,chest,job,bank);if(ready!=null)return ready;
+   var ready=funded(l,spec,chest,job,bank,true);if(ready!=null)return ready;
    // Start whole affordable units of custom work or vanilla smelting rather
    // than strand three paid inputs while waiting for a fourth. Unit costs,
    // fuel, labor and the maximum batch remain unchanged.
