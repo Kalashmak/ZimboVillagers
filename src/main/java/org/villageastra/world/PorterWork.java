@@ -49,6 +49,7 @@ public final class PorterWork {
   if(!active(t)){var route=selfSupply?selected:LogisticsRoutes.choose(l,e,assignment,w.blockPosition());if(route==null){w.displayWorkItem(ItemStack.EMPTY);w.workStatus("logistics_idle");return;}t=new CompoundTag();t.putInt("schema",1);t.putUUID("id",UUID.randomUUID());t.putUUID("worker",w.getUUID());t.putUUID("settlement",e.settlement().id());t.putUUID("assignment",assignment.id());t.putUUID("source",route.source().id());t.putUUID("destination",route.destination().id());t.put("item",route.item().save(new CompoundTag()));t.putString("stage","fetch");if(selfSupply)t.putBoolean("selfSupply",true);NbtRecord.write(path(l,w.getUUID()),t);return;}
   if(!t.getUUID("assignment").equals(assignment.id())||!t.getUUID("settlement").equals(e.settlement().id()))return;
   if(WorldJournal.exists(l,operation(t,"put"))){WorldJournal.recoverExisting(l,operation(t,"put"));release(l,w.getUUID());w.displayWorkItem(ItemStack.EMPTY);return;}
+  if(t.getBoolean("returnOverflow")){CargoCustody.beginReturn(w);w.workStatus("returning_cargo");return;}
   if(WorldJournal.exists(l,operation(t,"take"))){var taken=WorldJournal.recoverAmount(l,operation(t,"take"));if(!ItemStack.matches(taken,ItemStack.of(t.getCompound("item"))))throw new IllegalStateException("Mismatched porter input");if(t.getString("stage").equals("fetch")){t.putString("stage","deliver");NbtRecord.write(path(l,w.getUUID()),t);}}
   else if(t.getString("stage").equals("deliver"))throw new IllegalStateException("Unpaid porter parcel");
   var target=t.getUUID(t.getString("stage").equals("fetch")?"source":"destination");var b=e.settlement().buildings().stream().filter(x->x.id().equals(target)).findFirst();
@@ -57,6 +58,17 @@ public final class PorterWork {
    var destination=t.getUUID("destination");var dest=e.settlement().buildings().stream().filter(x->x.id().equals(destination)).findFirst().orElse(null);
    if(dest!=null&&l.hasChunkAt(LogisticsRoutes.position(e,dest))){var receiving=LogisticsRoutes.chest(l,e,dest);
     if(receiving!=null&&!LogisticsRoutes.fits(receiving,java.util.List.of(item))){release(l,w.getUUID());w.workStatus("logistics_supply_changed");return;}
+   }
+  }
+  if(t.getString("stage").equals("deliver")&&!WorldJournal.exists(l,operation(t,"put"))&&item.is(net.minecraft.world.item.Items.WHEAT)&&b.get().type().equals("farm")){
+   var sourceId=t.getUUID("source");var source=e.settlement().buildings().stream().filter(x->x.id().equals(sourceId)).findFirst().orElse(null);
+   if(source!=null&&source.type().equals("town_hall")&&!LogisticsRoutes.fits(c,List.of(item))){
+    // A farm can fill after surplus left the hall. Mark the paid parcel before
+    // opening normal custody, then physically return it rather than pinning
+    // the only courier at a full farm forever. Existing deposit intents retain
+    // their recorded destination and are never redirected.
+    t.putBoolean("returnOverflow",true);NbtRecord.write(path(l,w.getUUID()),t);
+    CargoCustody.beginReturn(w);w.workStatus("returning_cargo");return;
    }
   }
   if(!near(w,pos)){w.workStatus(t.getString("stage").equals("fetch")?"logistics_fetching":"logistics_delivering");w.displayWorkItem(t.getString("stage").equals("deliver")?item:ItemStack.EMPTY);approach(w,pos);return;}w.getNavigation().stop();

@@ -26,7 +26,7 @@ public final class JobCargo {
   var resident=entry.settlement().resident(worker.getUUID());var assigned=entry.settlement().workplace(worker.getUUID());
   var natural=NaturalSupplyGoal.inspect(jobLevel,worker.getUUID());if(NaturalSupplyGoal.active(natural)&&(death||!NaturalSupplyGoal.eligible(resident))){for(var raw:NaturalSupplyGoal.cargo(jobLevel,natural))items.add(raw.copy());job(jobs,"natural",worker.getUUID(),new CompoundTag());}
   var parcel=PorterWork.inspect(jobLevel,worker.getUUID());
-  if(PorterWork.active(parcel)&&(death||(parcel.getBoolean("selfSupply")?!WorkerSupplies.eligible(resident,assigned):resident==null||!resident.alive()||resident.profession()!=Profession.PORTER)||assigned==null||!assigned.id().equals(parcel.getUUID("assignment")))){add(items,PorterWork.cargo(jobLevel,parcel));job(jobs,"porter",worker.getUUID(),new CompoundTag());}
+  if(PorterWork.active(parcel)&&(death||parcel.getBoolean("returnOverflow")||(parcel.getBoolean("selfSupply")?!WorkerSupplies.eligible(resident,assigned):resident==null||!resident.alive()||resident.profession()!=Profession.PORTER)||assigned==null||!assigned.id().equals(parcel.getUUID("assignment")))){add(items,PorterWork.cargo(jobLevel,parcel));job(jobs,"porter",worker.getUUID(),new CompoundTag());}
   // AD-147 (CF-G): a warehouse courier's trip with a cart - all it has taken and not delivered, in the same one drop.
   if(WarehouseTrips.leaves(jobLevel,worker.getUUID(),resident,assigned,death)){for(var s:WarehouseTrips.custody(jobLevel,WarehouseTrips.inspect(jobLevel,worker.getUUID())))add(items,s);job(jobs,"haul",worker.getUUID(),new CompoundTag());}
   for(var building:entry.settlement().buildings()){
