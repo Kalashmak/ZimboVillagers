@@ -20,7 +20,7 @@ public final class ForestOverflowGameTests {
  @GameTest(template="empty",batch="forest_overflow_full",timeoutTicks=6000)
  public static void bothFullChestsRetainPaidCargoUntilHallHasRoom(GameTestHelper h){run(h,true);}
  private static void run(GameTestHelper h,boolean fullHall){
-  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+917504,120,at.getZ());var held=new ArrayList<net.minecraft.world.level.ChunkPos>();
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+917504+(fullHall?32768:0),120,at.getZ());var held=new ArrayList<net.minecraft.world.level.ChunkPos>();
   for(int x=(base.getX()-3)>>4;x<=(base.getX()+53)>>4;x++)for(int z=(base.getZ()-3)>>4;z<=(base.getZ()+16)>>4;z++){
    var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);held.add(cp);}l.getChunk(x,z);
   }

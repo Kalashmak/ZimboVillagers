@@ -33,6 +33,12 @@ public final class PorterWork {
   else if(t.getString("stage").equals("deliver"))throw new IllegalStateException("Unpaid porter parcel");
   var target=t.getUUID(t.getString("stage").equals("fetch")?"source":"destination");var b=e.settlement().buildings().stream().filter(x->x.id().equals(target)).findFirst();
   if(b.isEmpty()){w.workStatus("logistics_missing_chest");return;}var pos=LogisticsRoutes.position(e,b.get());var c=LogisticsRoutes.chest(l,e,b.get());if(c==null){w.workStatus("logistics_missing_chest");return;}var item=ItemStack.of(t.getCompound("item"));
+  if(t.getString("stage").equals("fetch")&&!WorldJournal.exists(l,operation(t,"take"))){
+   var destination=t.getUUID("destination");var dest=e.settlement().buildings().stream().filter(x->x.id().equals(destination)).findFirst().orElse(null);
+   if(dest!=null&&l.hasChunkAt(LogisticsRoutes.position(e,dest))){var receiving=LogisticsRoutes.chest(l,e,dest);
+    if(receiving!=null&&!LogisticsRoutes.fits(receiving,java.util.List.of(item))){release(l,w.getUUID());w.workStatus("logistics_supply_changed");return;}
+   }
+  }
   if(!near(w,pos)){w.workStatus(t.getString("stage").equals("fetch")?"logistics_fetching":"logistics_delivering");w.displayWorkItem(t.getString("stage").equals("deliver")?item:ItemStack.EMPTY);approach(w,pos);return;}w.getNavigation().stop();
   if(t.getString("stage").equals("fetch")){var held=WorldJournal.recoverAmount(l,operation(t,"take"));if(held.isEmpty()&&!WorldJournal.exists(l,operation(t,"take"))){for(int slot=0;slot<c.getContainerSize();slot++)if(ItemStack.isSameItemSameTags(item,c.getItem(slot))&&c.getItem(slot).getCount()>=item.getCount()&&LogisticsRoutes.count(c,s->ItemStack.isSameItemSameTags(s,item))-item.getCount()>=LogisticsRoutes.reserve(b.get(),item)){held=WorldJournal.takeAmount(l,operation(t,"take"),pos,slot,c.getItem(slot).copy(),item.getCount());break;}}
    if(held.isEmpty()){release(l,w.getUUID());w.workStatus("logistics_supply_changed");return;}if(!ItemStack.matches(item,held))throw new IllegalStateException("Mismatched porter receipt");t.putString("stage","deliver");NbtRecord.write(path(l,w.getUUID()),t);w.displayWorkItem(held);return;}

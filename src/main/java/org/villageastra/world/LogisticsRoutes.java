@@ -70,7 +70,7 @@ public final class LogisticsRoutes {
   *  shortfall to the hall, 2 workers' supplies and workshops' inputs, then a producer's chest at least half full, 3 food (the pantry's bread,
   *  the restaurant's dishes), 4 research (its level-I price, scientific works to the laboratory), 5 roads and trails, the clinic's bandages, an
   *  automatic farm's seed, the store's carts, 6 the producers' output to the stock, fullest chest first. Within a class the order of
-  *  Workshops.wants (what the workshops craft by), and the source nearest the courier. The hall's stock is never carried off (CF-E). */
+  *  Workshops.wants (what the workshops craft by), and the source nearest the courier. Construction reserves stay at the hall; only emergency surplus grain returns to farms (AD345). */
  public static final int NEED_BUILD=1,NEED_SUPPLY=2,NEED_FOOD=3,NEED_RESEARCH=4,NEED_WAYS=5,NEED_OUTPUT=6;
  /** The producers whose output goes to the stock (a yard's products only, AD-138). */
  private static final Set<String> PRODUCERS=Set.of("farm","forester","mine","livestock");
@@ -83,15 +83,37 @@ public final class LogisticsRoutes {
  /** Excavated intermediates are usable stock too; sandstone need not be crafted again from sand. */
  /** Generic bulk exports leave real slots for food, tools and paid outputs. Explicit wants still take precedence. */
  private static boolean surplusFits(OwnedChestEntity stock,ItemStack item){
-  if(item.is(Items.WHEAT)||Population.nutrition(item)>0)return true;
+  // A scarce staple may refill one stack; abundant food obeys the same space
+  // reserve as other bulk exports. Explicit food/construction wants are above this filter.
+  if((item.is(Items.WHEAT)||Population.nutrition(item)>0)&&stock.countItem(item.getItem())<item.getMaxStackSize())return true;
   int empty=0;for(int i=0;i<stock.getContainerSize();i++)if(stock.getItem(i).isEmpty())empty++;
-  return empty>=12;
+  return empty>12;
+ }
+ /** A crowded hall returns only surplus grain to loaded farms, keeping construction reservations and four stacks for food. */
+ private static Route grainOverflow(ServerLevel l,SettlementData.Entry e,BlockPos from,int load,Predicate<Route> accept){
+  var hall=Workshops.hall(e);var c=hall==null?null:chest(l,e,hall);if(c==null)return null;
+  int empty=0;for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).isEmpty())empty++;
+  if(empty>=12)return null;
+  int available=count(c,s->s.is(Items.WHEAT))-256-HallReserve.reserved(l,e,Items.WHEAT)-PorterWork.reserved(l,e,hall.id(),s->s.is(Items.WHEAT),false);
+  if(available<=0)return null;
+  var farms=e.settlement().buildings().stream().filter(b->b.type().equals("farm"));
+  if(from!=null)farms=farms.sorted(Comparator.comparingDouble(b->position(e,b).distSqr(from)));
+  for(var farm:farms.toList()){
+   if(!l.hasChunkAt(position(e,farm)))continue;var dest=chest(l,e,farm);if(dest==null)continue;
+   for(int slot=0;slot<c.getContainerSize();slot++){
+    var stack=c.getItem(slot);if(!stack.is(Items.WHEAT))continue;
+    var item=stack.copyWithCount(Math.min(load,Math.min(available,stack.getCount())));
+    if(!room(dest,item))continue;var route=new Route(hall,farm,item);if(accept==null||accept.test(route))return route;
+   }
+  }
+  return null;
  }
  private static boolean mineral(ItemStack item){return Workshops.mined(item.getItem())||Set.of(Items.SANDSTONE,Items.RED_SANDSTONE,Items.SAND,Items.RED_SAND).contains(item.getItem());}
  /** AD-147: the next route of a warehouse's courier by need (see NEED_*): {@code from} the courier's place (null: sources by id), {@code load} the
   *  most one leg takes, {@code accept} what a cart leg must fit (null: anything). */
  public static Route byNeed(ServerLevel l,SettlementData.Entry e,Settlement.Building stock,BlockPos from,int load,Predicate<Route> accept){
   var wants=Workshops.wants(l,e);Route r;
+  if((r=grainOverflow(l,e,from,load,accept))!=null)return r;
   if((r=wants(l,e,wants,NEED_BUILD,from,load,accept))!=null)return r;
   if((r=wants(l,e,wants,NEED_SUPPLY,from,load,accept))!=null)return r;
   if((r=constructionInputs(l,e,wants,from,load,accept))!=null)return r;
@@ -137,6 +159,7 @@ public final class LogisticsRoutes {
  public static Route choose(ServerLevel l,SettlementData.Entry e,Settlement.Building post,BlockPos from){int load=load(l,e,post);
   if(WarehouseStore.is(post))return byNeed(l,e,post,from,load,null);
   if(SmithyDelivery.post(post))return SmithyDelivery.route(l,e,post,load);
+  var recovery=grainOverflow(l,e,from,load,null);if(recovery!=null)return recovery;
   // AD-029: approved construction materials to the hall, then inputs published by workshops, then other workshop products.
   for(var want:Workshops.wants(l,e)){var dest=e.settlement().buildings().stream().filter(b->b.id().equals(want.destination())).findFirst().orElse(null);if(dest==null)continue;var c=chest(l,e,dest);if(c==null)continue;
    var route=find(l,e,dest,new Demand("want",want::matches,want.count()+count(c,want::matches)),load);if(route!=null)return route;}
