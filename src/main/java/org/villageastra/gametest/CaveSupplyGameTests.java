@@ -50,6 +50,8 @@ public final class CaveSupplyGameTests {
  public static void minerPaysForTheBlockingFaceBeforeExtractingItsOrderedOre(GameTestHelper h){trip(h,true,1,false,true);}
  @GameTest(template="empty",batch="deep_building_stone",timeoutTicks=12000)
  public static void exhaustedMinerFindsDeepBuildingStoneWithoutAnOreOrderAndReturns(GameTestHelper h){trip(h,false,1,false,false,true);}
+ @GameTest(template="empty",batch="building_stone_face",timeoutTicks=12000)
+ public static void minerOpensOnePaidRockBeforeOrderedBuildingStone(GameTestHelper h){trip(h,true,1,false,true,true);}
  private static void trip(GameTestHelper h,boolean high){
   trip(h,high,1,false);
  }
@@ -88,7 +90,19 @@ public final class CaveSupplyGameTests {
   var scan=new CompoundTag();scan.putInt("surveyCursor",cursor);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),scan);
   if(buildingStone){
    h.assertTrue(l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,target.getX(),target.getZ())-target.getY()>8,"Building stone is deeper than the former surface window");
-   h.assertTrue(HarvestAccess.find(npc,target,320)!=null&&SurfaceQuarry.safe(l,target),"Deep stone has a real dry reversible native route outside protection");
+   h.assertTrue(SurfaceQuarry.safe(l,target),"Deep stone remains outside protection and fluid bounds");
+   if(face){
+    h.assertTrue(HarvestAccess.find(npc,target,320)==null&&HarvestAccess.find(npc,target.west(),320)!=null,"The stone is hidden behind one genuinely reachable safe rock face");
+    var bound=new CompoundTag();bound.putLong("oreTarget",target.asLong());bound.putInt("faceDepth",QuarryFace.MAX_OBSTRUCTIONS);
+    h.assertTrue(QuarryFace.next(npc,bound,Set.of())==null&&QuarryFace.find(npc,target,Set.of(target))==null,"The finite face budget and another worker's reservation still forbid excavation");
+    for(var hazard:List.of(Blocks.WATER,Blocks.LAVA)){
+     l.setBlock(target.east(),hazard.defaultBlockState(),2);h.assertTrue(QuarryFace.find(npc,target,Set.of())==null,"Building stone never opens a fluid boundary");l.setBlock(target.east(),Blocks.STONE.defaultBlockState(),2);
+    }
+    l.setBlock(target.above(),Blocks.GRAVEL.defaultBlockState(),2);h.assertTrue(QuarryFace.find(npc,target,Set.of())==null,"Building stone never releases a falling ceiling");l.setBlock(target.above(),Blocks.STONE.defaultBlockState(),2);
+    var protectedSettlement=new Settlement(UUID.randomUUID());protectedSettlement.addBuilding(new Settlement.Building(UUID.randomUUID(),"town_hall",0,0,0));SettlementData.get(l.getServer()).add(new SettlementData.Entry(protectedSettlement,l.dimension().location().toString(),target));
+    try{h.assertTrue(OwnershipEvents.protectedBlock(l,target)&&QuarryFace.find(npc,target,Set.of())==null,"A building plot cannot become a quarry face");}finally{SettlementData.get(l.getServer()).remove(protectedSettlement.id());}
+   }
+   else h.assertTrue(HarvestAccess.find(npc,target,320)!=null,"Deep stone has a real dry reversible native route");
    h.runAtTickTime(240,()->h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).hasUUID("id"),"A miner must find deep demanded building stone even without an ore demand"));
   }
   var reloaded=new boolean[]{false};var jobs=new HashSet<UUID>();var running=new NaturalSupplyGoal[]{supply};int expected=breaking?1:ores;
@@ -108,6 +122,7 @@ public final class CaveSupplyGameTests {
    if(face)h.assertTrue(chest.countItem(Items.COBBLESTONE)==1&&npc.tickCount>=400,"One real obstruction was excavated, worked and physically delivered with the ore");
    if(ores>1){h.assertTrue(breaking||reloaded[0]&&jobs.size()==ores&&npc.tickCount>=200*ores,"Separate paid blocks survive goal reload");for(int i=1;i<ores;i++)h.assertTrue(l.getBlockState(target.south(i)).is(breaking?Blocks.IRON_ORE:Blocks.AIR),"A broken pick cannot mine another block");}
    h.assertTrue(npc.getHealth()==npc.getMaxHealth()&&l.getBlockState(target.below(high?4:2)).is(Blocks.STONE)&&l.getBlockState(new BlockPos(target.getX(),95,target.getZ())).is(Blocks.STONE),"Body returns safely; working floor and cave roof stay intact");
+   if(buildingStone&&face)com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_BUILDING_STONE_FACE VERIFIED bodyTicks={} andesite={} cobblestone={} returnedWear={}",npc.tickCount,chest.countItem(product),chest.countItem(Items.COBBLESTONE),returnedDamage);
    npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();
   });
  }
