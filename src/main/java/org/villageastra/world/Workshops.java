@@ -290,13 +290,27 @@ public final class Workshops {
   if(held<=0)return plan(l,spec,chest,wants,bank);
   var other=new net.minecraft.world.SimpleContainer(chest.getContainerSize());
   for(int slot=0;slot<chest.getContainerSize();slot++){var stack=chest.getItem(slot).copy();if(stack.is(Items.WHEAT)){int keep=Math.min(held,stack.getCount());stack.shrink(keep);held-=keep;}other.setItem(slot,stack);}
-  for(var want:wants){var job=plan(l,spec,want.need()==LogisticsRoutes.NEED_BUILD?chest:other,List.of(want),bank);if(job!=null)return job;}return null;
+  for(int from=0;from<wants.size();){int end=groupEnd(wants,from);var job=plan(l,spec,wants.get(from).need()==LogisticsRoutes.NEED_BUILD?chest:other,wants.subList(from,end),bank);if(job!=null)return job;from=end;}return null;
  }
  /** Next job for this workshop without a fuel bank. */
  public static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants){return plan(l,spec,chest,wants,0);}
  private static Job plan(ServerLevel l,Spec spec,Container chest,List<Want> wants,int bank){
   var stock=chest instanceof PlanInventory?chest:new PlanInventory(chest);var memo=new HashMap<PlanKey,Job>();
-  for(var want:wants)for(var option:want.ingredient().getItems()){var job=plan(l,spec,stock,option.getItem(),want.count(),0,bank,memo);if(job!=null)return job;}
+  // Finish an affordable requested product before reworking its material into
+  // an intermediate for another unpaid bill. Preserve the demand-class order.
+  for(int from=0;from<wants.size();){int end=groupEnd(wants,from);
+   for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems())for(var job:candidates(l,spec,option.getItem(),want.count())){
+    if(recyclesNeededMaterial(job,Set.of(option.getItem())))continue;var ready=funded(l,stock,job,bank);if(ready!=null)return ready;
+   }
+   for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems()){var job=plan(l,spec,stock,option.getItem(),want.count(),0,bank,memo);if(job!=null)return job;}
+   from=end;
+  }
+  return null;
+ }
+ private static int groupEnd(List<Want> wants,int from){int end=from+1;while(end<wants.size()&&wants.get(end).need()==wants.get(from).need())end++;return end;}
+ private static Job funded(ServerLevel l,Container chest,Job job,int bank){
+  if(supplied(chest,job,bank))return job;
+  if(job.units()>1&&(job.recipe().startsWith("custom:")||NaturalFurnace.recipe(l,job))){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)return scale(unit,Math.min(job.units(),fit));}
   return null;
  }
  private record PlanKey(Item item,int count,int depth,Set<Item> ancestors){}
@@ -317,11 +331,10 @@ public final class Workshops {
  private static Job seek(ServerLevel l,Spec spec,Container chest,Item target,int wanted,int depth,int bank,Map<PlanKey,Job> memo,Set<Item> visiting){
   for(var job:candidates(l,spec,target,wanted)){
    if(recyclesNeededMaterial(job,visiting))continue;
-   if(supplied(chest,job,bank))return job;
+   var ready=funded(l,chest,job,bank);if(ready!=null)return ready;
    // Start whole affordable units of custom work or vanilla smelting rather
    // than strand three paid inputs while waiting for a fourth. Unit costs,
    // fuel, labor and the maximum batch remain unchanged.
-   if(job.units()>1&&(job.recipe().startsWith("custom:")||NaturalFurnace.recipe(l,job))){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)return scale(unit,Math.min(job.units(),fit));}
    if(depth>=(spec.building().equals("town_hall")?12:3))continue;
    for(var in:dependencies(job)){int missing=in.count()-available(chest,in);if(missing<=0)continue;
     for(var option:in.ingredient().getItems()){var sub=plan(l,spec,chest,option.getItem(),missing,depth+1,bank,memo,visiting);if(sub!=null)return sub;}}
