@@ -58,7 +58,14 @@ public final class SharedQuarrySearchGameTests {
     }
     h.assertTrue(HarvestRouteCache.stats(npc).plans()==11,"Successful combined paths are not retained");
    }
+   var ore=base.offset(27,1,2);l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+   long before=HarvestRouteCache.stats(npc).plans();
+   try(var survey=HarvestRouteCache.survey(npc)){
+    h.assertTrue(HarvestAccess.find(npc,ore,128)==null,"The unsupported gap still rejects every dry ore platform");
+    h.assertTrue(HarvestRouteCache.stats(npc).plans()-before==2,"Initial ore sensing uses one native query per adjacent/shelf group, instead of an individual query and a second shared query for each: "+(HarvestRouteCache.stats(npc).plans()-before));
+   }
    for(int x=13;x<=20;x++)for(int z=-6;z<=6;z++)l.setBlock(base.offset(x,0,z),Blocks.STONE.defaultBlockState(),2);
+   h.assertTrue(HarvestAccess.find(npc,ore,128)!=null,"Fresh actual work access observes the new bridge without reusing a sensing path");
    h.assertTrue(HarvestAccess.reversible(HarvestRouteCache.planAny(npc,targets,128)),"Working search sees a newly opened bridge immediately outside sensing");
   }finally{npc.discard();for(var cp:held)l.setChunkForced(cp.x,cp.z,false);}
   h.succeed();

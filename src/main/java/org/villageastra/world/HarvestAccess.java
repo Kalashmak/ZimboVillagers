@@ -65,6 +65,15 @@ public final class HarvestAccess {
    if(visible(worker,feet,target))(offset.getX()*offset.getX()+offset.getZ()*offset.getZ()==1?adjacent:shelves).add(feet.immutable());
   }
   for(var candidates:java.util.List.of(adjacent,shelves))while(!candidates.isEmpty()){
+   // During sensing ask once for all remaining platforms in the same preferred
+   // group. A reachable route that would remove its support is rejected and the
+   // other platforms are still examined. Never reuse the selected working path.
+   if(range>0&&HarvestRouteCache.sensing(worker)){
+    var path=HarvestRouteCache.planAny(worker,new java.util.LinkedHashSet<>(candidates),range);
+    if(path==null||!path.canReach())break;var chosen=path.getTarget();if(!candidates.remove(chosen))break;
+    if(survivesExtraction(path,target))return chosen;
+    continue;
+   }
    // Retain the first valid platform when its original individual route works.
    var first=candidates.remove(0);if(survivesExtraction(HarvestRouteCache.plan(worker,first,range),target))return first;
    // Default-range callers keep their original navigation policy.

@@ -390,6 +390,10 @@ public final class Workshops {
  /** Raw inputs this workshop lacks for the first want it could produce, for the whole job that want calls for (up to the recipe's batch) even when a smaller job could start; published for porters. */
  public static List<Input> needs(ServerLevel l,Spec spec,Container chest,List<Want> wants){return needs(l,null,spec,chest,wants,0);}
  public static List<Input> needs(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants){return needs(l,e,spec,chest,wants,0);}
+ /** Current self-supply shortages include the real station's already paid fuel bank. */
+ public static List<Input> needs(ServerLevel l,SettlementData.Entry e,Settlement.Building b,Container chest,List<Want> wants){
+  var spec=spec(l,e,b);return spec==null?List.of():needs(l,e,spec,chest,wants,inspect(l,b.id()).getInt("fuelBank"));
+ }
  private static List<Input> needs(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){
   chest=chest instanceof PlanInventory?chest:new PlanInventory(chest);
   for(var want:wants)for(var option:want.ingredient().getItems()){var result=new ArrayList<Input>();if(needs(l,e,spec,chest,option.getItem(),want.count(),0,bank,result))return result;}

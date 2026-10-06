@@ -181,6 +181,19 @@ public final class LogisticsRoutes {
  /** A worker only fetches for their own workplace or exports its stock to a real outstanding demand. */
  public static Route workerRoute(ServerLevel l,SettlementData.Entry e,Settlement.Building own){
   if(own==null)return null;var wants=Workshops.wants(l,e);
+  // A maker fetches current recipe inputs before hauling the finished product
+  // it could make itself. Recompute shortages against its real current stock:
+  // an old published flour shortage must not hide newly missing oven fuel.
+  var spec=Workshops.spec(l,e,own);var ownStock=chest(l,e,own);
+  if(spec!=null&&ownStock!=null){
+   // A supplied station works next, unless its real finished surplus needs
+   // delivery first. Clearing that surplus prevents an output-full deadlock.
+   if(Workshops.plan(l,e,own,ownStock,wants)!=null)return SmithyDelivery.post(own)&&SmithyDelivery.delivers(l,e)?null:from(l,e,own,LOAD);
+   for(var input:Workshops.needs(l,e,own,ownStock,wants)){
+    var route=find(l,e,own,new Demand("workshop_input",input::matches,input.count()+count(ownStock,input::matches)));
+    if(route!=null)return route;
+   }
+  }
   for(var want:wants)if(want.destination().equals(own.id())){var c=chest(l,e,own);if(c==null)continue;var route=find(l,e,own,new Demand("worker",want::matches,want.count()+count(c,want::matches)));if(route!=null)return route;}
   var source=chest(l,e,own);if(source==null)return null;
   // AD-155: the smith of a smithy that delivers (its courier, its wolves) stays at the anvil.

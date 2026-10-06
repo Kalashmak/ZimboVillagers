@@ -23,6 +23,8 @@ public final class HarvestRouteCache {
  }
  private HarvestRouteCache(){}
  public static Survey survey(ResidentEntity worker){return new Survey(worker);}
+ /** Only initial sensing may combine platforms; working routes retain their original choice. */
+ public static boolean sensing(ResidentEntity worker){return ACTIVE.get()==worker;}
  public static Stats stats(ResidentEntity worker){var m=MEMOS.get(worker);return m==null?new Stats(0,0,0):new Stats(m.plans,m.hits,m.misses.size());}
  public static Path plan(ResidentEntity worker,BlockPos feet,int range){
   if(ACTIVE.get()!=worker||!(worker.level() instanceof ServerLevel l))return nativePlan(worker,feet,range);
