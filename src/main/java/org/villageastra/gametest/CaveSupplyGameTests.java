@@ -48,6 +48,8 @@ public final class CaveSupplyGameTests {
  public static void lastDurabilityEndsTheVeinTripWithoutAnExtraOreOrTool(GameTestHelper h){trip(h,true,3,true);}
  @GameTest(template="empty",batch="quarry_face",timeoutTicks=12000)
  public static void minerPaysForTheBlockingFaceBeforeExtractingItsOrderedOre(GameTestHelper h){trip(h,true,1,false,true);}
+ @GameTest(template="empty",batch="deep_building_stone",timeoutTicks=12000)
+ public static void exhaustedMinerFindsDeepBuildingStoneWithoutAnOreOrderAndReturns(GameTestHelper h){trip(h,false,1,false,false,true);}
  private static void trip(GameTestHelper h,boolean high){
   trip(h,high,1,false);
  }
@@ -55,6 +57,10 @@ public final class CaveSupplyGameTests {
   trip(h,high,ores,breaking,false);
  }
  private static void trip(GameTestHelper h,boolean high,int ores,boolean breaking,boolean face){
+  trip(h,high,ores,breaking,face,false);
+ }
+ private static void trip(GameTestHelper h,boolean high,int ores,boolean breaking,boolean face,boolean buildingStone){
+  var product=buildingStone?Items.ANDESITE:Items.RAW_IRON;
   var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+(face?327680:ores>1?(breaking?262144:245760):(high?180224:114688)),120,at.getZ());
   var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
   for(int x=(base.getX()-2)>>4;x<=(base.getX()+85)>>4;x++)for(int z=(base.getZ()-2)>>4;z<=(base.getZ()+4)>>4;z++){
@@ -65,7 +71,7 @@ public final class CaveSupplyGameTests {
    for(int y=80;y<=140;y++)l.setBlock(new BlockPos(base.getX()+x,y,base.getZ()+z),y==floor?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
   }
   for(int x=76;x<=85;x++)for(int z=-2;z<=4;z++)l.setBlock(new BlockPos(base.getX()+x,95,base.getZ()+z),Blocks.STONE.defaultBlockState(),2);
-  var target=base.offset(80,high?-33:-35,2);for(int i=0;i<ores;i++)l.setBlock(target.south(i),Blocks.IRON_ORE.defaultBlockState(),2);
+  var target=base.offset(80,high?-33:-35,2);for(int i=0;i<ores;i++)l.setBlock(target.south(i),(buildingStone?Blocks.ANDESITE:Blocks.IRON_ORE).defaultBlockState(),2);
   if(face)for(var d:net.minecraft.core.Direction.values())l.setBlock(target.relative(d),Blocks.STONE.defaultBlockState(),2);
   var s=new Settlement(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),base);
   var hall=new Settlement.Building(UUID.randomUUID(),"town_hall",0,0,0);s.addBuilding(hall);
@@ -75,23 +81,28 @@ public final class CaveSupplyGameTests {
   var work=MineWork.read(l,mine);int limit=MineWork.floorStep(l,e,mine,work);s.noteMine(mine.id(),limit,3,5,7);
   work.putInt("step",limit+1);work.putInt("side",MineDrive.DONE);work.putInt("floorStep",limit);work.putString("stage","choose");work.putString("status","mine_floor");work.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
   work.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,limit).toArray());MineWork.write(l,mine,work);
-  var project=new CompoundTag();var job=UUID.randomUUID();project.putUUID("id",job);project.putUUID("project",job);project.putString("kind","building");project.putString("design","home");project.putLong("origin",base.offset(40,0,20).asLong());var cost=new CompoundTag();cost.putInt("minecraft:raw_iron",ores);project.put("cost",cost);project.put("cargo",new ListTag());project.put("ops",new ListTag());HallUpgradeGoal.store(l,s.id(),project);
+  var project=new CompoundTag();var job=UUID.randomUUID();project.putUUID("id",job);project.putUUID("project",job);project.putString("kind","building");project.putString("design","home");project.putLong("origin",base.offset(40,0,20).asLong());var cost=new CompoundTag();cost.putInt(buildingStone?"minecraft:andesite":"minecraft:raw_iron",ores);project.put("cost",cost);project.put("cargo",new ListTag());project.put("ops",new ListTag());HallUpgradeGoal.store(l,s.id(),project);
   var npc=VillageAstra.RESIDENT.get().create(l);var person=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);s.admit(person,home);s.assign(person.id(),Profession.MINER,mine.id());npc.bind(s.id(),s.resident(person.id()));npc.moveTo(base.getX()+2.5,121,base.getZ()+2.5);npc.setOnGround(true);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);var supply=new NaturalSupplyGoal(npc,true);npc.goalSelector.addGoal(1,supply);l.addFreshEntity(npc);
   // Resume the real bounded survey at this column, not a pre-created harvest job.
   int cursor=0;for(int x=-192;x<=192;x++)for(int z=-192;z<=192;z++){int d=x*x+z*z;if(d<6404||d==6404&&(x<80||x==80&&z<2))cursor++;}
   var scan=new CompoundTag();scan.putInt("surveyCursor",cursor);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),scan);
+  if(buildingStone){
+   h.assertTrue(l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,target.getX(),target.getZ())-target.getY()>8,"Building stone is deeper than the former surface window");
+   h.assertTrue(HarvestAccess.find(npc,target,320)!=null&&SurfaceQuarry.safe(l,target),"Deep stone has a real dry reversible native route outside protection");
+   h.runAtTickTime(240,()->h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).hasUUID("id"),"A miner must find deep demanded building stone even without an ore demand"));
+  }
   var reloaded=new boolean[]{false};var jobs=new HashSet<UUID>();var running=new NaturalSupplyGoal[]{supply};int expected=breaking?1:ores;
   if(ores>1)h.onEachTick(()->{
    var current=NaturalSupplyGoal.inspect(l,npc.getUUID());if(!current.hasUUID("id"))return;jobs.add(current.getUUID("id"));
    var bag=current.getList("bag",Tag.TAG_COMPOUND);if(!breaking&&!reloaded[0]&&bag.size()==2){
-    var cargo=NaturalSupplyGoal.cargo(l,current);int iron=0,picks=0,damage=-1;for(var raw:cargo){var st=ItemStack.of((CompoundTag)raw);if(st.is(Items.RAW_IRON))iron+=st.getCount();if(st.is(Items.STONE_PICKAXE)){picks+=st.getCount();damage=st.getDamageValue();}}
+    var cargo=NaturalSupplyGoal.cargo(l,current);int iron=0,picks=0,damage=-1;for(var raw:cargo){var st=ItemStack.of((CompoundTag)raw);if(st.is(product))iron+=st.getCount();if(st.is(Items.STONE_PICKAXE)){picks+=st.getCount();damage=st.getDamageValue();}}
     h.assertTrue(iron==2&&picks==1&&damage==2,"Interrupted third block retains only two paid ore and the same twice-used tool");
     npc.goalSelector.removeGoal(running[0]);running[0]=new NaturalSupplyGoal(npc,true);npc.goalSelector.addGoal(1,running[0]);reloaded[0]=true;
    }
-   if(current.getString("stage").equals("carry"))h.assertTrue(current.getList("cargo",Tag.TAG_COMPOUND).stream().mapToInt(raw->{var st=ItemStack.of((CompoundTag)raw);return st.is(Items.RAW_IRON)?st.getCount():0;}).sum()==expected,"One return carries the paid vein; no return after each block");
+   if(current.getString("stage").equals("carry"))h.assertTrue(current.getList("cargo",Tag.TAG_COMPOUND).stream().mapToInt(raw->{var st=ItemStack.of((CompoundTag)raw);return st.is(product)?st.getCount():0;}).sum()==expected,"One return carries the paid vein; no return after each block");
   });
   h.succeedWhen(()->{
-   h.assertTrue(chest.countItem(Items.RAW_IRON)==expected&&l.getBlockState(target).isAir(),"The covered wall ore must be mined and physically delivered: "+npc.position()+" ticks="+npc.tickCount);
+   h.assertTrue(chest.countItem(product)==expected&&l.getBlockState(target).isAir(),"The covered wall ore must be mined and physically delivered: "+npc.position()+" ticks="+npc.tickCount);
    int returnedDamage=-1;for(int slot=0;slot<chest.getContainerSize();slot++)if(chest.getItem(slot).is(Items.STONE_PICKAXE))returnedDamage=chest.getItem(slot).getDamageValue();
    h.assertTrue(chest.countItem(Items.STONE_PICKAXE)==(breaking?0:1)&&(breaking||returnedDamage==(face?expected+1:expected)),"The same borrowed pick pays each actual block: count="+chest.countItem(Items.STONE_PICKAXE)+" damage="+returnedDamage);
    if(face)h.assertTrue(chest.countItem(Items.COBBLESTONE)==1&&npc.tickCount>=400,"One real obstruction was excavated, worked and physically delivered with the ore");

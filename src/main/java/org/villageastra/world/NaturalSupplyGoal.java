@@ -141,22 +141,25 @@ public final class NaturalSupplyGoal extends Goal {
  // Deferred loading, elapsed budget and costly queries resume the exact same survey depth.
  @Override public boolean canUse(){var e=entry();if(e==null||!test&&worker.getServer().getPlayerCount()==0||!CargoCustody.mayStartWork(worker))return false;if(worker.tickCount-check>=20){check=worker.tickCount;surveyLeft=1024;surveyPlanStart=HarvestRouteCache.stats(worker).plans();surveySpentNanos=0;}else if(!surveyPending)return false;surveyPending=false;var l=(ServerLevel)worker.level();state=inspect(l,worker.getUUID());if(!cursorLoaded){int storedRadius=state.getInt("surveyRadius");surveyRadius=SEARCH_AREAS.containsKey(storedRadius)?storedRadius:SEARCH_RADIUS;cursor=Math.floorMod(state.getInt("surveyCursor"),searchArea().size());surveyY=state.contains("surveyY")?state.getInt("surveyY"):Integer.MAX_VALUE;cursorLoaded=true;}if(active(state))return true;if(primaryResourcePending(l,e,worker))return false;if(worker.tickCount-demandCheck>=100){cachedDemand=demand(l,e);cachedMiningPriority=miningPriority(l,e,worker);demandCheck=worker.tickCount;}if(cachedMiningPriority)return false;var wanted=cachedDemand;if(wanted.isEmpty())return false;var reserved=reservedTargets(l,e,worker.getUUID());if(wanted.contains(Items.SUGAR_CANE)){var ready=ReedNursery.mature(worker,e,reserved);if(ready!=null)return begin(ready.target(),ready.stand(),l.getBlockState(ready.target()),false);}
   boolean quarry=SurfaceQuarry.mayStart(l,e,worker);var hall=Workshops.hall(e);var chest=hall==null?null:LogisticsRoutes.chest(l,e,hall);
-  var oreDemand=new HashSet<Item>(wanted);oreDemand.retainAll(Set.of(Items.RAW_IRON,Items.RAW_COPPER,Items.RAW_GOLD,Items.COAL,Items.DIAMOND,Items.REDSTONE,Items.LAPIS_LAZULI,Items.EMERALD));
-  boolean deepQuarry=quarry&&!oreDemand.isEmpty();
+  // Exposed building stone in a reachable cave is a quarry demand too; keep the
+  // same shaft floor, native route, safety, paid tool and per-block labor guards.
+  var quarryDemand=new HashSet<Item>(wanted);quarryDemand.retainAll(Set.of(Items.RAW_IRON,Items.RAW_COPPER,Items.RAW_GOLD,Items.COAL,Items.DIAMOND,Items.REDSTONE,Items.LAPIS_LAZULI,Items.EMERALD,Items.ANDESITE,Items.GRANITE,Items.DIORITE,Items.TUFF,Items.SANDSTONE,Items.RED_SANDSTONE));
+  boolean deepQuarry=quarry&&!quarryDemand.isEmpty();
   var quarryMine=deepQuarry?e.settlement().workplace(worker.getUUID()):null;
   int quarryFloor=quarryMine==null?l.getMinBuildHeight():MineWork.floorY(l,e,quarryMine,BuildingTiers.level(l,e,quarryMine));
   // Pending continuation shares one allowance across the whole 20-tick window;
   // another selector pass must not immediately replenish an exhausted budget.
   long surveyStarted=System.nanoTime(),surveyDeadline=surveyStarted+Math.max(0L,5_000_000L-surveySpentNanos),surveyPlans=surveyPlanStart;
   try(var sensing=HarvestRouteCache.survey(worker)){
+  if(quarry&&nearbyQuarry(l,e,quarryDemand,reserved,surveyDeadline,surveyPlans))return true;
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
-    &&quarry&&resumeFace(l,e,oreDemand,reserved))return true;
+    &&quarry&&resumeFace(l,e,quarryDemand,reserved))return true;
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
     &&resumeLoose(l,wanted,reserved,surveyDeadline,surveyPlans))return true;
-  for(;surveyLeft>0;surveyLeft--){if(System.nanoTime()>=surveyDeadline){surveyPending=true;break;}var offset=nextColumn();var column=e.center().offset(offset);if(!l.hasChunkAt(column)){var touch=TouchLoad.ensure(l,column);if(touch!=TouchLoad.Touch.OK){cursor--;surveyPending=touch==TouchLoad.Touch.DEFERRED;saveSurvey();return false;}}int top=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ());int start=Math.min(Math.min(l.getMaxBuildHeight()-1,top+3),surveyY);surveyY=Integer.MAX_VALUE;for(int y=start;y>=Math.max(l.getMinBuildHeight(),deepQuarry?quarryFloor:top-8);y--){if(System.nanoTime()>=surveyDeadline||HarvestRouteCache.stats(worker).plans()-surveyPlans>=SURVEY_PLANS)return pauseSurvey(y);var pos=new BlockPos(column.getX(),y,column.getZ());if(reserved.contains(pos))continue;var before=l.getBlockState(pos);if(y<top-8&&!MineOutcrops.wanted(before,oreDemand))continue;boolean quarryYield=quarry&&(MineOutcrops.wanted(before,wanted)||before.is(Blocks.STONE)&&wanted.contains(Items.COBBLESTONE)||before.is(Blocks.DEEPSLATE)&&wanted.contains(Items.COBBLED_DEEPSLATE));if(!mayYield(before,wanted)&&!quarryYield)continue;if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&before.is(Blocks.SUGAR_CANE)&&!l.getBlockState(pos.above()).is(Blocks.SUGAR_CANE))com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE plantCandidate pos={} wanted={} safe={}",pos,wanted.contains(Items.SUGAR_CANE),safe(l,pos));boolean stone=quarry&&SurfaceQuarry.safe(l,pos);int slot=stone?SurfaceQuarry.tool(l,e,before):-1;if(stone&&slot<0||!stone&&!safe(l,pos))continue;var pick=stone?chest.getItem(slot):ItemStack.EMPTY;var loot=Block.getDrops(before,l,pos,null,worker,pick);if(loot.stream().noneMatch(s->wanted.contains(s.getItem())))continue;
+  for(;surveyLeft>0;surveyLeft--){if(System.nanoTime()>=surveyDeadline){surveyPending=true;break;}var offset=nextColumn();var column=e.center().offset(offset);if(!l.hasChunkAt(column)){var touch=TouchLoad.ensure(l,column);if(touch!=TouchLoad.Touch.OK){cursor--;surveyPending=touch==TouchLoad.Touch.DEFERRED;saveSurvey();return false;}}int top=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ());int start=Math.min(Math.min(l.getMaxBuildHeight()-1,top+3),surveyY);surveyY=Integer.MAX_VALUE;for(int y=start;y>=Math.max(l.getMinBuildHeight(),deepQuarry?quarryFloor:top-8);y--){if(System.nanoTime()>=surveyDeadline||HarvestRouteCache.stats(worker).plans()-surveyPlans>=SURVEY_PLANS)return pauseSurvey(y);var pos=new BlockPos(column.getX(),y,column.getZ());if(reserved.contains(pos))continue;var before=l.getBlockState(pos);if(y<top-8&&!MineOutcrops.wanted(before,quarryDemand))continue;boolean quarryYield=quarry&&(MineOutcrops.wanted(before,wanted)||before.is(Blocks.STONE)&&wanted.contains(Items.COBBLESTONE)||before.is(Blocks.DEEPSLATE)&&wanted.contains(Items.COBBLED_DEEPSLATE));if(!mayYield(before,wanted)&&!quarryYield)continue;if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&before.is(Blocks.SUGAR_CANE)&&!l.getBlockState(pos.above()).is(Blocks.SUGAR_CANE))com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE plantCandidate pos={} wanted={} safe={}",pos,wanted.contains(Items.SUGAR_CANE),safe(l,pos));boolean stone=quarry&&SurfaceQuarry.safe(l,pos);int slot=stone?SurfaceQuarry.tool(l,e,before):-1;if(stone&&slot<0||!stone&&!safe(l,pos))continue;var pick=stone?chest.getItem(slot):ItemStack.EMPTY;var loot=Block.getDrops(before,l,pos,null,worker,pick);if(loot.stream().noneMatch(s->wanted.contains(s.getItem())))continue;
     if(!ResourceExpedition.survey(worker,pos))return pauseSurvey(y);BlockPos stand;if(!stone&&LooseHarvestAccess.loose(before)){var choice=LooseHarvestAccess.find(worker,pos,wanted,reserved,ROUTE_RANGE,(int)Math.max(0,SURVEY_PLANS-(HarvestRouteCache.stats(worker).plans()-surveyPlans)));if(choice==null)stand=null;else{pos=choice.target();before=l.getBlockState(pos);stand=choice.stand();}}else stand=HarvestAccess.find(worker,pos,ROUTE_RANGE);if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&before.is(Blocks.SUGAR_CANE))com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE plantAccess pos={} from={} stand={}",pos,worker.blockPosition(),stand);
-    if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke")&&stone&&MineOutcrops.wanted(before,oreDemand))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_CAVE_SUPPLY actor={} ore={} from={} stand={} floor={}",worker.getUUID(),pos,worker.blockPosition(),stand,quarryFloor);
-    if(stand==null){if(stone&&MineOutcrops.wanted(before,oreDemand)){var face=QuarryFace.find(worker,pos,reserved);if(face!=null){begin(face.target(),face.stand(),l.getBlockState(face.target()),true);state.putLong("oreTarget",pos.asLong());state.putInt("faceDepth",1);save();if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke"))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_QUARRY_FACE actor={} ore={} rock={} stand={} depth=1",worker.getUUID(),pos,face.target(),face.stand());return true;}}continue;}return begin(pos,stand,before,stone);}}
+    if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke")&&stone&&MineOutcrops.wanted(before,quarryDemand))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_CAVE_SUPPLY actor={} ore={} from={} stand={} floor={}",worker.getUUID(),pos,worker.blockPosition(),stand,quarryFloor);
+    if(stand==null){if(stone&&MineOutcrops.wanted(before,quarryDemand)){var face=QuarryFace.find(worker,pos,reserved);if(face!=null){begin(face.target(),face.stand(),l.getBlockState(face.target()),true);state.putLong("oreTarget",pos.asLong());state.putInt("faceDepth",1);save();if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke"))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_QUARRY_FACE actor={} ore={} rock={} stand={} depth=1",worker.getUUID(),pos,face.target(),face.stand());return true;}}continue;}return begin(pos,stand,before,stone);}}
   saveSurvey();return false;
   }finally{surveySpentNanos+=System.nanoTime()-surveyStarted;}
  }
@@ -190,6 +193,24 @@ public final class NaturalSupplyGoal extends Goal {
  }
  /** Consider a completed short face once before the general survey. This starts
   * a new loan and job; the previous cargo and receipts remain completed. */
+ private int localQuarryCheck=-1000;
+ /** Notice demanded rock beside the body before distant cave sensing consumes
+  * the window. Read only a small loaded neighbourhood, at most once per100 body
+  * ticks, sharing the existing elapsed/native budget and extraction guards. */
+ private boolean nearbyQuarry(ServerLevel l,SettlementData.Entry e,Set<Item> wanted,Set<BlockPos> reserved,long deadline,long plans){
+  if(worker.tickCount-localQuarryCheck<100)return false;
+  localQuarryCheck=worker.tickCount;var feet=worker.blockPosition();
+  for(int radius=0;radius<=2;radius++)for(int dx=-radius;dx<=radius;dx++)for(int dz=-radius;dz<=radius;dz++){
+   if(Math.max(Math.abs(dx),Math.abs(dz))!=radius)continue;
+   for(int dy=-1;dy<=1;dy++){
+    if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS)return false;
+    var pos=feet.offset(dx,dy,dz);if(!l.hasChunkAt(pos)||reserved.contains(pos))continue;var before=l.getBlockState(pos);
+    if(!MineOutcrops.wanted(before,wanted)||!SurfaceQuarry.safe(l,pos)||SurfaceQuarry.tool(l,e,before)<0)continue;
+    if(!ResourceExpedition.survey(worker,pos))continue;var stand=HarvestAccess.find(worker,pos,ROUTE_RANGE);
+    if(stand!=null)return begin(pos,stand,before,true);
+   }
+  }return false;
+ }
  private boolean resumeFace(ServerLevel l,SettlementData.Entry e,Set<Item> wanted,Set<BlockPos> reserved){
   if(!state.getBoolean("complete")||!state.getBoolean("quarry")||!state.contains("oreTarget")||state.getBoolean("faceResumeChecked"))return false;
   var ore=BlockPos.of(state.getLong("oreTarget"));
