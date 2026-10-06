@@ -52,6 +52,10 @@ public final class CaveSupplyGameTests {
  public static void exhaustedMinerFindsDeepBuildingStoneWithoutAnOreOrderAndReturns(GameTestHelper h){trip(h,false,1,false,false,true);}
  @GameTest(template="empty",batch="building_stone_face",timeoutTicks=12000)
  public static void minerOpensOnePaidRockBeforeOrderedBuildingStone(GameTestHelper h){trip(h,true,1,false,true,true);}
+ @GameTest(template="empty",batch="building_stone_bulk",timeoutTicks=12000)
+ public static void exposedBuildingStoneSharesPaidToolAndPhysicalReturnAcrossGoalReload(GameTestHelper h){trip(h,true,3,false,false,true);}
+ @GameTest(template="empty",batch="building_stone_bulk_break",timeoutTicks=12000)
+ public static void lastDurabilityLeavesRemainingBuildingStoneUnmined(GameTestHelper h){trip(h,true,3,true,false,true);}
  private static void trip(GameTestHelper h,boolean high){
   trip(h,high,1,false);
  }
@@ -120,8 +124,9 @@ public final class CaveSupplyGameTests {
    int returnedDamage=-1;for(int slot=0;slot<chest.getContainerSize();slot++)if(chest.getItem(slot).is(Items.STONE_PICKAXE))returnedDamage=chest.getItem(slot).getDamageValue();
    h.assertTrue(chest.countItem(Items.STONE_PICKAXE)==(breaking?0:1)&&(breaking||returnedDamage==(face?expected+1:expected)),"The same borrowed pick pays each actual block: count="+chest.countItem(Items.STONE_PICKAXE)+" damage="+returnedDamage);
    if(face)h.assertTrue(chest.countItem(Items.COBBLESTONE)==1&&npc.tickCount>=400,"One real obstruction was excavated, worked and physically delivered with the ore");
-   if(ores>1){h.assertTrue(breaking||reloaded[0]&&jobs.size()==ores&&npc.tickCount>=200*ores,"Separate paid blocks survive goal reload");for(int i=1;i<ores;i++)h.assertTrue(l.getBlockState(target.south(i)).is(breaking?Blocks.IRON_ORE:Blocks.AIR),"A broken pick cannot mine another block");}
+   if(ores>1){h.assertTrue(breaking||reloaded[0]&&jobs.size()==ores&&npc.tickCount>=200*ores,"Separate paid blocks survive goal reload");for(int i=1;i<ores;i++)h.assertTrue(l.getBlockState(target.south(i)).is(breaking?(buildingStone?Blocks.ANDESITE:Blocks.IRON_ORE):Blocks.AIR),"A broken pick cannot mine another block");}
    h.assertTrue(npc.getHealth()==npc.getMaxHealth()&&l.getBlockState(target.below(high?4:2)).is(Blocks.STONE)&&l.getBlockState(new BlockPos(target.getX(),95,target.getZ())).is(Blocks.STONE),"Body returns safely; working floor and cave roof stay intact");
+   if(buildingStone&&ores>1)com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_BUILDING_STONE_BULK VERIFIED bodyTicks={} andesite={} returnedWear={} reloaded={}",npc.tickCount,chest.countItem(product),returnedDamage,reloaded[0]);
    if(buildingStone&&face)com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_BUILDING_STONE_FACE VERIFIED bodyTicks={} andesite={} cobblestone={} returnedWear={}",npc.tickCount,chest.countItem(product),chest.countItem(Items.COBBLESTONE),returnedDamage);
    npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();
   });

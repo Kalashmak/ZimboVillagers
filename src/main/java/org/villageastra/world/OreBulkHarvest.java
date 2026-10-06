@@ -6,13 +6,13 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Work the adjacent exposed vein with the same paid tool before returning home. */
+/** Work the adjacent exposed mineral deposit with the same paid tool before returning home. */
 public final class OreBulkHarvest {
  private OreBulkHarvest(){}
  public static BulkHarvest.Next next(ResidentEntity worker,BlockPos previous,BlockState material,ItemStack pick,int held,Set<BlockPos> reserved){
   if(pick.isEmpty()||pick.isEnchanted()||!pick.isCorrectToolForDrops(material)
       ||pick.getDamageValue()>=pick.getMaxDamage()
-      ||!(material.is(BlockTags.IRON_ORES)||material.is(BlockTags.COAL_ORES)||material.is(BlockTags.COPPER_ORES)||material.is(BlockTags.GOLD_ORES)))return null;
+      ||!QuarryFace.resource(material))return null;
   // Unenchanted copper can drop five pieces; leave room for its largest yield.
   if(held+(material.is(BlockTags.COPPER_ORES)?5:1)>BulkHarvest.CAPACITY)return null;
   var l=(ServerLevel)worker.level();var candidates=new ArrayList<BlockPos>();
