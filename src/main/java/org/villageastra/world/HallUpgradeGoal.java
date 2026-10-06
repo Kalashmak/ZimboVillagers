@@ -99,7 +99,7 @@ public final class HallUpgradeGoal extends Goal {
  }
  /** Atomic handover: old cargo and receipt ids stay inside the same durable record. */
  static boolean suspendForFood(ServerLevel l,SettlementData.Entry e,CompoundTag expected,CompoundTag farm){
-  var file=path(l,e.settlement().id());if(!FoodConstruction.maySuspend(l,e)||!shared(file).equals(expected)||!farm.getString("design").equals("farm")||farm.contains("waitingProject"))return false;
+  var file=path(l,e.settlement().id());if(!FoodConstruction.maySuspend(l,e)||!shared(file).equals(expected)||!farm.getString("design").equals(FoodConstruction.rescueDesign(l,e))||farm.contains("waitingProject"))return false;
   var replacement=farm.copy();replacement.put("waitingProject",expected.copy());write(file,replacement);return true;
  }
  static boolean resumeAfterFood(ServerLevel l,SettlementData.Entry e){

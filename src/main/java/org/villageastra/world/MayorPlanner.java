@@ -41,6 +41,7 @@ public final class MayorPlanner {
   *  still refuses is passed over, so the school of a village without Education I never holds up everything else. */
  public static String need(ServerLevel l,SettlementData.Entry e){
   if(e.settlement().governance().playerMayor()==null&&foodShortage(l,e)&&ResearchGate.designRefusal(l,e,"farm").isEmpty())return "farm";
+  if(processingShortage(l,e)&&ResearchGate.designRefusal(l,e,"restaurant").isEmpty())return "restaurant";
   var n=need(e.settlement(),type->!Set.of("mill","carpentry","masonry").contains(type)&&ResearchGate.designRefusal(l,e,type).isEmpty());return "home_2".equals(n)?HousingLadder.houseFor(l,e):n;
  }
  /** The next project must feed the existing population and the next child of a
@@ -58,6 +59,19 @@ public final class MayorPlanner {
   // FarmYield is uninterrupted vanilla growth. Use the same quarter reserve as
   // the farm rating instead of treating its theoretical maximum as dependable food.
   return food*FarmYield.WHEAT_PER_RESIDENT+1e-9<demand*FarmField.RATING;
+ }
+ /** Even uninterrupted hand baking cannot sustain the next housed child once
+  * meals exceed the single baker's daytime labor. This is an upper bound:
+  * fetching, funding and deposits only reduce it. Keep the published recipe. */
+ public static boolean processingShortage(ServerLevel l,SettlementData.Entry e){
+  var s=e.settlement();if(s.governance().playerMayor()!=null||has(s,"restaurant"))return false;
+  if(s.residents().stream().noneMatch(r->r.alive()&&r.life()==Resident.Life.ADULT&&r.profession()==null))return false;
+  long target=s.residents().stream().filter(Resident::alive).count();
+  if(s.homes().stream().anyMatch(h->h.usable()&&s.occupancy(h.id())<h.capacity()))target++;
+  double demand=target*Population.MEAL_NUTRITION*24000D/Population.MEAL_INTERVAL;
+  double available=(24000D-(SleepGoal.DAWN-SleepGoal.DUSK))/HandBread.LABOR_PER_BREAD
+      *Population.nutrition(new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.BREAD));
+  return demand>available&&HandBread.wheatAvailable(l,e)>=HandBread.WHEAT_PER_UNIT;
  }
  /** AD-101: what a village of its own mayor builds next — the shortages first, then the watch and the barracks once it is large enough
   *  and has the research for them, so an NPC village grows the way a played one does. */
@@ -191,7 +205,7 @@ public final class MayorPlanner {
    // building ground. The bounded downward scan crosses a natural canopy.
    if(ground==null){rejected.merge("no_ground",1,Integer::sum);continue;}
    if(!GrowthPlots.available(e,design,ground,0)){rejected.merge("growth_space",1,Integer::sum);continue;}
-   var survey=design.equals("farm")?FoodConstruction.survey(l,e,ground):BuildingOrders.survey(l,e,design,0,ground);
+   var survey=Set.of("farm","restaurant").contains(design)?FoodConstruction.survey(l,e,design,ground):BuildingOrders.survey(l,e,design,0,ground);
    if(survey.ok()){CURSOR.put(e.settlement().id(),(start+i)%candidates.size());if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke"))com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MAYOR_SITE design={} cursor={} total={} approvedCandidate={} rejected={}",design,start,candidates.size(),ground,rejected);return ground;}
    rejected.merge("survey_"+survey.reason(),1,Integer::sum);
    if(Boolean.getBoolean("villageastra.autonomyGrowthSmoke")&&survey.reason().equals("conflicts")){
@@ -231,7 +245,7 @@ public final class MayorPlanner {
   if(mayor.distanceToSqr(p.site().getX()+.5,p.site().getY()+1,p.site().getZ()+.5)>BuildingOrders.SITE_DISTANCE*BuildingOrders.SITE_DISTANCE)return "walking";
   if(!GrowthPlots.available(e,p.design(),p.site(),0)){PROPOSALS.remove(e.settlement().id());return "rejected_growth_space";}
   if(BuildingOrders.HOUSING.contains(BuildingBlueprints.base(p.design()))&&BuildingWood.choose(l,e,p.design()).isEmpty()){PROPOSALS.remove(e.settlement().id());return "rejected_timber_source";}
-  var reason=p.design().equals("farm")&&FoodConstruction.maySuspend(l,e)?FoodConstruction.approve(l,e,p.site()):BuildingOrders.approve(l,e,p.design(),0,p.site());PROPOSALS.remove(e.settlement().id());
+  var reason=p.design().equals(FoodConstruction.rescueDesign(l,e))&&FoodConstruction.maySuspend(l,e)?FoodConstruction.approve(l,e,p.site()):BuildingOrders.approve(l,e,p.design(),0,p.site());PROPOSALS.remove(e.settlement().id());
   if(reason.isEmpty()){SettlementData.get(l.getServer()).setDirty();return "approved";}
   return "rejected_"+reason;
  }

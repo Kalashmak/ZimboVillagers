@@ -190,7 +190,10 @@ public final class BuildingOrders {
  }
  /** A mayor may survey a food rescue while an untouched, unfunded project waits. */
  public static Survey foodSurvey(ServerLevel l,SettlementData.Entry e,int rotation,BlockPos site){
-  return survey(l,e,"farm",rotation,site,null,-1,false,null,BuildingWood.choose(l,e,"farm"),FoodConstruction.maySuspend(l,e));
+  return foodSurvey(l,e,"farm",rotation,site);
+ }
+ public static Survey foodSurvey(ServerLevel l,SettlementData.Entry e,String design,int rotation,BlockPos site){
+  return survey(l,e,design,rotation,site,null,-1,false,null,BuildingWood.choose(l,e,design),FoodConstruction.maySuspend(l,e)&&design.equals(FoodConstruction.rescueDesign(l,e)));
  }
  private static Survey survey(ServerLevel l,SettlementData.Entry e,String requested,int variant,BlockPos origin,Settlement.Building repair,int cap,boolean anyDesign,UUID beside,String wood,boolean priorityFood){
   var conflicts=new LinkedHashSet<BlockPos>();var empty=new CompoundTag();
