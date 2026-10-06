@@ -23,7 +23,7 @@ public final class WorkshopToolChainGameTests {
   s.addBuilding(new Settlement.Building(UUID.randomUUID(),"forester",24,0,0));
   var wants=List.of(new Workshops.Want(Ingredient.of(Items.STRIPPED_BIRCH_LOG),2,hall.id()));var needs=Workshops.needs(l,e,Workshops.spec("town_hall"),c,wants);
   h.assertTrue(!needs.isEmpty()&&needs.stream().anyMatch(in->in.matches(new ItemStack(Items.BIRCH_LOG))),"Raw timber is still requested");
-  h.assertTrue(needs.stream().noneMatch(in->Arrays.stream(in.ingredient().getItems()).anyMatch(st->st.is(ItemTags.AXES))),"Hall must request craftable tool inputs, not an axe no gatherer can harvest");
+  h.assertTrue(needs.stream().noneMatch(in->Arrays.stream(in.ingredient().getItems()).anyMatch(st->st.is(ItemTags.AXES))),"Hall must request craftable tool inputs, not an axe no gatherer can harvest: "+needs.stream().map(in->in.ingredient().toJson()+" x"+in.count()).toList());
   h.assertTrue(c.isEmpty(),"Publishing demand cannot create goods");SettlementData.get(l.getServer()).remove(s.id());h.succeed();
  }
  private static void strip(GameTestHelper h,boolean supplied){

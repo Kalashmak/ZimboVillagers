@@ -300,8 +300,8 @@ public final class Workshops {
   // Finish an affordable requested product before reworking its material into
   // an intermediate for another unpaid bill. Preserve the demand-class order.
   for(int from=0;from<wants.size();){int end=groupEnd(wants,from);
-   for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems())for(var job:candidates(l,spec,option.getItem(),want.count())){
-    if(recyclesNeededMaterial(job,Set.of(option.getItem())))continue;var ready=funded(l,spec,stock,job,bank,false);if(ready!=null)return ready;
+   for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems())for(var template:candidates(l,spec,option.getItem(),want.count())){
+    var job=withoutAncestors(template,Set.of(option.getItem()));if(job==null)continue;var ready=funded(l,spec,stock,job,bank,false);if(ready!=null)return ready;
    }
    stock.conversionKeep=conversionKeep(l,spec,stock,wants.subList(from,end));memo.clear();
    for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems()){var job=plan(l,spec,stock,option.getItem(),want.count(),0,bank,memo);if(job!=null)return job;}
@@ -339,16 +339,27 @@ public final class Workshops {
  }
  // Accumulating three ingots must not spend an existing ingot on nuggets and then craft it back forever.
  // Direct nugget demand still permits that recipe: an ingot is not an ancestor of that independent request.
- private static boolean recyclesNeededMaterial(Job job,Set<Item> visiting){return job.inputs().stream().anyMatch(in->visiting.stream().anyMatch(item->in.matches(new ItemStack(item))));}
+ private static Job withoutAncestors(Job job,Set<Item> visiting){
+  List<Input> inputs=null;
+  for(int index=0;index<job.inputs().size();index++){var in=job.inputs().get(index);if(visiting.stream().noneMatch(item->in.matches(new ItemStack(item))))continue;
+   var allowed=Arrays.stream(in.ingredient().getItems()).filter(stack->!visiting.contains(stack.getItem())).toArray(ItemStack[]::new);if(allowed.length==0)return null;
+   if(inputs==null)inputs=new ArrayList<>(job.inputs());inputs.set(index,new Input(Ingredient.of(allowed),in.count()));
+  }
+  return inputs==null?job:new Job(job.recipe(),List.copyOf(inputs),job.fuelTicks(),job.tool(),job.toolDamage(),job.outputs(),job.labor(),job.units(),job.batch());
+ }
  // Prefer shortages with real village suppliers over an uncraftable compressed block or loot item.
  // This ranks missing inputs only; an already supplied recipe remains usable regardless of its source.
  private static long unsupported(SettlementData.Entry e,List<Input> inputs){return inputs.stream().filter(in->Arrays.stream(in.ingredient().getItems()).noneMatch(s->e!=null?raw(e,s.getItem()):RAW.values().stream().anyMatch(items->items.contains(s.getItem()))||NaturalSupplyGoal.provides(s.getItem())||s.is(net.minecraft.tags.ItemTags.LOGS)||s.is(net.minecraft.tags.ItemTags.SAPLINGS)||s.is(net.minecraft.tags.ItemTags.WOOL))).mapToLong(Input::count).sum();}
  /** Missing tools are production dependencies too; they remain reusable tools in the paid job. */
  private static List<Input> dependencies(Job job){if(job.tool()==null)return job.inputs();var all=new ArrayList<>(job.inputs());all.add(job.tool());return all;}
  private static Job seek(ServerLevel l,Spec spec,Container chest,Item target,int wanted,int depth,int bank,Map<PlanKey,Job> memo,Set<Item> visiting){
-  for(var job:candidates(l,spec,target,wanted)){
-   if(recyclesNeededMaterial(job,visiting))continue;
+  for(var template:candidates(l,spec,target,wanted)){
+   var job=withoutAncestors(template,visiting);if(job==null)continue;
    var ready=funded(l,spec,chest,job,bank,true);if(ready!=null)return ready;
+   // A mixed tag may use a real stocked alternative, but must not reopen an
+   // unfunded forest of interchangeable wood recipes. Raw shortages are
+   // published separately by leaves; reconsider when the gatherer supplies it.
+   if(job!=template){boolean absent=false;for(int i=0;i<job.inputs().size();i++)if(job.inputs().get(i)!=template.inputs().get(i)&&available(chest,job.inputs().get(i))<job.inputs().get(i).count()/job.units()){absent=true;break;}if(absent)continue;}
    // Start whole affordable units of custom work or vanilla smelting rather
    // than strand three paid inputs while waiting for a fourth. Unit costs,
    // fuel, labor and the maximum batch remain unchanged.
@@ -373,8 +384,10 @@ public final class Workshops {
   if(depth>12||--budget[0]<0||!visiting.add(target))return null;
   try{var key=new PlanKey(target,wanted,depth,Set.copyOf(visiting));if(memo.containsKey(key))return memo.get(key);var jobs=candidates(l,spec,target,wanted);if(jobs.isEmpty()||RAW.values().stream().anyMatch(items->items.contains(target))||target==Items.WHITE_WOOL||target==Items.CLAY_BALL)return List.of(new Input(Ingredient.of(target),Math.max(1,wanted)));
    List<Input> best=null;long bestCost=Long.MAX_VALUE,bestUnsupported=Long.MAX_VALUE;
-   for(var job:jobs){var path=new ArrayList<Input>();boolean possible=true;
-    if(recyclesNeededMaterial(job,visiting))continue;
+   // Shortage expansion retains its conservative cycle pruning. Unlike a
+   // stocked job, an unfunded tag cannot establish which alternative will
+   // actually be supplied; widening it here exhausts the finite search budget.
+   for(var job:jobs){if(job.inputs().stream().anyMatch(in->visiting.stream().anyMatch(item->in.matches(new ItemStack(item)))))continue;var path=new ArrayList<Input>();boolean possible=true;
     for(var in:dependencies(job)){int missing=in.count()-available(chest,in);if(missing<=0)continue;List<Input> selected=null;long score=Long.MAX_VALUE,unavailable=Long.MAX_VALUE;
      for(var option:in.ingredient().getItems()){var sub=leaves(l,e,spec,chest,option.getItem(),missing,depth+1,bank,visiting,memo,budget);if(sub==null)continue;long cost=sub.stream().mapToLong(Input::count).sum(),absent=unsupported(e,sub);if(absent<unavailable||absent==unavailable&&cost<score){score=cost;unavailable=absent;selected=sub;}}
      if(selected==null){possible=false;break;}path.addAll(selected);}

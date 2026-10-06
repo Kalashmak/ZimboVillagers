@@ -67,6 +67,31 @@ public final class RecipeCycleGameTests {
   var job=plan(h,Items.IRON_PICKAXE,new ItemStack(Items.IRON_INGOT,2),new ItemStack(Items.IRON_NUGGET,9),new ItemStack(Items.STICK,2));
   h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.IRON_INGOT))&&job.inputs().stream().anyMatch(i->i.matches(new ItemStack(Items.IRON_NUGGET))),"Existing nuggets are a legitimate source of new iron");h.succeed();
  }
+ @GameTest(template="empty",batch="recipe_ancestor_tags") public static void rawBirchCanMakeTheMissingAxeForItsOwnStrippingOrder(GameTestHelper h){
+  var job=Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),new SimpleContainer(new ItemStack(Items.BIRCH_LOG),new ItemStack(Items.COBBLESTONE,3)),List.of(new Workshops.Want(Ingredient.of(Items.STRIPPED_BIRCH_LOG),1,UUID.randomUUID())));
+  h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.BIRCH_PLANKS))&&job.inputs().stream().anyMatch(in->in.matches(new ItemStack(Items.BIRCH_LOG))),"Actual raw birch can make boards for the missing axe despite a birch_logs tag also including the requested stripped log: "+job);
+  h.assertTrue(job.inputs().stream().noneMatch(in->in.matches(new ItemStack(Items.STRIPPED_BIRCH_LOG))),"The paid job cannot consume its requested ancestor");h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_ancestor_tags") public static void aPartialStrippedStockIsNotSpentOnItsMissingTool(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.STRIPPED_BIRCH_LOG),new ItemStack(Items.BIRCH_LOG),new ItemStack(Items.COBBLESTONE,3));
+  var job=Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,List.of(new Workshops.Want(Ingredient.of(Items.STRIPPED_BIRCH_LOG),2,UUID.randomUUID())));
+  h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.BIRCH_PLANKS))&&job.inputs().stream().allMatch(in->!in.matches(new ItemStack(Items.STRIPPED_BIRCH_LOG))),"Missing tool uses raw logs and retains the partially accumulated final product");h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_ancestor_tags") public static void noRawBirchDoesNotRecycleTheOnlyFinishedLog(GameTestHelper h){
+  var stock=new SimpleContainer(new ItemStack(Items.STRIPPED_BIRCH_LOG),new ItemStack(Items.COBBLESTONE,3));var wants=List.of(new Workshops.Want(Ingredient.of(Items.STRIPPED_BIRCH_LOG),2,UUID.randomUUID()));
+  h.assertTrue(Workshops.plan(h.getLevel(),Workshops.spec("town_hall"),stock,wants)==null,"The only finished log is not a source of its own tool");
+  var needs=Workshops.needs(h.getLevel(),Workshops.spec("town_hall"),stock,wants);h.assertTrue(needs.stream().anyMatch(in->in.matches(new ItemStack(Items.BIRCH_LOG)))&&needs.stream().noneMatch(in->in.matches(new ItemStack(Items.STRIPPED_BIRCH_LOG))),"Published shortage can be supplied by real raw birch, never its ancestor: "+needs);h.succeed();
+ }
+ @GameTest(template="empty",batch="recipe_ancestor_payment") public static void narrowedAncestorIngredientSurvivesThePaidJobSnapshot(GameTestHelper h){
+  var l=h.getLevel();var s=new org.villageastra.domain.Settlement(UUID.randomUUID());var e=new org.villageastra.server.SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new net.minecraft.core.BlockPos(2,3,2)));var hall=new org.villageastra.domain.Settlement.Building(UUID.randomUUID(),"town_hall",0,0,0);s.addBuilding(hall);org.villageastra.server.SettlementData.get(l.getServer()).add(e);
+  l.setBlock(org.villageastra.world.LogisticsRoutes.position(e,hall),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var chest=org.villageastra.world.LogisticsRoutes.chest(l,e,hall);chest.setItem(0,new ItemStack(Items.STRIPPED_BIRCH_LOG));chest.setItem(1,new ItemStack(Items.BIRCH_LOG));chest.setItem(2,new ItemStack(Items.COBBLESTONE,3));
+  var wants=List.of(new Workshops.Want(Ingredient.of(Items.STRIPPED_BIRCH_LOG),2,hall.id()));Workshops.advance(l,e,hall,0,wants);
+  var job=Workshops.inspect(l,hall.id());h.assertTrue(job.getString("recipe").equals("minecraft:birch_planks"),"Snapshot plans actual raw-birch boards for the axe");
+  var narrowed=Ingredient.fromJson(com.google.gson.JsonParser.parseString(job.getList("inputs",10).getCompound(0).getString("ingredient")));h.assertTrue(narrowed.test(new ItemStack(Items.BIRCH_LOG))&&!narrowed.test(new ItemStack(Items.STRIPPED_BIRCH_LOG)),"Persisted exact alternatives exclude the finished log");
+  // Explicit trusted component clock: verifies payment/serialization, not body travel or natural elapsed labor.
+  for(long now=20;now<=40000&&chest.countItem(Items.BIRCH_PLANKS)==0;now+=20)Workshops.advance(l,e,hall,now,wants);
+  h.assertTrue(chest.countItem(Items.STRIPPED_BIRCH_LOG)==1&&chest.countItem(Items.BIRCH_LOG)==0&&chest.countItem(Items.BIRCH_PLANKS)==4,"Journal payment consumes the real raw log once, leaves slot0 finished log, and deposits four boards");org.villageastra.server.SettlementData.get(l.getServer()).remove(s.id());h.succeed();
+ }
  @GameTest(template="empty",batch="recipe_cycle") public static void requestedNuggetsStillCraftFromAnIngot(GameTestHelper h){
   var job=plan(h,Items.IRON_NUGGET,new ItemStack(Items.IRON_INGOT));
   h.assertTrue(job!=null&&job.outputs().stream().anyMatch(s->s.is(Items.IRON_NUGGET)),"Direct demand for nuggets still permits the conversion");h.succeed();
