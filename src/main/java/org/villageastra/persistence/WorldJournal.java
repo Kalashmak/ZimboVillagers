@@ -117,6 +117,20 @@ public final class WorldJournal {
             return result;
         }catch(IOException e){throw new IllegalStateException(e);}
     }
+    /** Paid support exchange: record real loot while replacing the full support directly, never through air. */
+    public static java.util.List<ItemStack> harvestReplace(ServerLevel level,UUID id,BlockPos pos,BlockState before,BlockState after,ItemStack tool) {
+        try {
+            CompoundTag intent;
+            if(exists(level,id))intent=read(path(level,id));
+            else {
+                intent=base(level,id,pos,"block");intent.put("before",NbtUtils.writeBlockState(before));intent.put("after",NbtUtils.writeBlockState(after));
+                var loot=new ListTag();for(var stack:net.minecraft.world.level.block.Block.getDrops(before,level,pos,null,null,tool))loot.add(stack.save(new CompoundTag()));intent.put("loot",loot);
+            }
+            if(!intent.getString("kind").equals("block")||!intent.contains("loot")||intent.getLong("pos")!=pos.asLong()||!intent.getCompound("after").equals(NbtUtils.writeBlockState(after)))throw new IOException("Mismatched support exchange receipt");
+            var applied=execute(level,id,intent);if(applied==null)return null;
+            var result=new java.util.ArrayList<ItemStack>();for(var raw:applied.getList("loot",Tag.TAG_COMPOUND))result.add(ItemStack.of((CompoundTag)raw));return result;
+        }catch(IOException e){throw new IllegalStateException(e);}
+    }
     public static boolean deposit(ServerLevel level,UUID id,BlockPos pos,ItemStack stack) {
         try {
             if(Files.exists(path(level,id)))return execute(level,id,read(path(level,id)))!=null;

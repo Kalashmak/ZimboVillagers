@@ -12,6 +12,50 @@ import org.villageastra.server.*;
 import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class MineProspectingGameTests {
+ @GameTest(template="empty",batch="mine_floor_exchange",timeoutTicks=1800)
+ public static void minerPaysStoneAndExchangesFloorOreWithoutOpeningSupport(GameTestHelper h){
+  var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());
+  var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*8,96,old.e.center().getZ()*8));data.add(e);
+  var t=new ResearchV2Town.Town(old.l,e,old.s,old.shop);ResearchV2Town.lay(t.l,e,t.shop,"mine");t.l.setBlock(e.center().offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
+  var base=BuildingPlacement.origin(e,t.shop);var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();
+  for(int x=base.getX()>>4;x<=(base.getX()+16)>>4;x++)for(int z=(base.getZ()+3)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,t.s.id());chunks.add(cp);}
+  for(int x=(base.getX()>>4)-2;x<=((base.getX()+16)>>4)+2;x++)for(int z=((base.getZ()+3)>>4)-2;z<=((base.getZ()+10)>>4)+2;z++)t.l.getChunk(x,z);
+  for(int x=0;x<=16;x++)for(int z=3;z<=10;z++)for(int y=-2;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
+  for(int x=2;x<=10;x++)for(int z=4;z<=8;z++){int foot=z<=5?1:z<=7?0:-1;for(int y=foot;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.AIR.defaultBlockState(),2);}
+  var stock=LogisticsRoutes.position(e,t.shop);t.l.setBlock(stock,VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var chest=(net.minecraft.world.Container)t.l.getBlockEntity(stock);chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
+  var ore=BuildingPlacement.at(e,t.shop,6,-1,7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+  t.s.noteMine(t.shop.id(),32,3,5,0);t.s.noteMine(t.shop.id(),new MineArea.Gallery(0,MineDrive.EAST,6));t.s.noteMine(t.shop.id(),new MineArea.Gallery(1,MineDrive.EAST,6));
+  var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:lantern",2);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);
+  var hall=LogisticsRoutes.chest(t.l,e,Workshops.hall(e));hall.setItem(0,new ItemStack(Items.COAL,8));hall.setItem(1,new ItemStack(Items.STICK,8));
+  var npc=VillageAstra.RESIDENT.get().create(t.l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));
+  var start=BuildingPlacement.at(e,t.shop,10,-1,8);npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);npc.setOnGround(true);npc.setNoAi(true);
+  var state=MineWork.read(t.l,t.shop);state.putInt("width",3);state.putInt("height",5);state.putInt("descent",0);state.putInt("step",33);state.putInt("floorStep",32);state.putInt("extentStep",32);state.putInt("stairAudit",33);state.putInt("side",MineDrive.DONE);state.putString("stage","choose");state.putUUID("worker",npc.getUUID());state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
+  chest.clearContent();h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"No floor job without actual replacement stone");chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
+  state.put("tool",new ItemStack(Items.WOODEN_PICKAXE).save(new CompoundTag()));h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"Insufficient pick never selects floor iron");state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
+  t.l.setBlock(ore.north(),Blocks.WATER.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"Paid stone does not permit exposing water");t.l.setBlock(ore.north(),Blocks.STONE.defaultBlockState(),2);
+  h.assertTrue(MineOreWork.begin(npc,e,t.shop,state),"Reachable floor iron must become a paid, support-preserving mining job; needed="+MineProspecting.needed(t.l,e,t.shop)+" path="+HarvestAccess.reversible(npc.routeTo(BuildingPlacement.at(e,t.shop,6,-1,8),0,128))+" chest="+LogisticsRoutes.chest(t.l,e,t.shop));
+  var operation=state.getCompound("mineOre").getUUID("id");var unpaid=state.copy();MineWork.write(t.l,t.shop,state);
+  npc.setNoAi(false);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);npc.goalSelector.addGoal(6,new ResourceWorkGoal(npc,true,()->6000L));t.l.addFreshEntity(npc);
+  var checkpoints=new CompoundTag[1];h.onEachTick(()->{
+   t.l.resetEmptyTime();
+   h.assertTrue(t.l.getBlockState(ore).is(Blocks.IRON_ORE)||t.l.getBlockState(ore).is(Blocks.COBBLESTONE),"The shared gallery support never becomes air");
+   var saved=MineWork.read(t.l,t.shop);if(saved.contains("mineOre")&&saved.getCompound("mineOre").getBoolean("floorTaken")){if(checkpoints[0]==null){
+    var debitAhead=unpaid.copy();MineOreWork.reconcile(t.l,debitAhead);MineOreWork.reconcile(t.l,debitAhead);h.assertTrue(ForestFixture.count(debitAhead.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"Stone receipt ahead of the checkpoint is recovered once");
+    var cancelled=debitAhead.copy();MineOreWork.clear(t.l,npc,cancelled);h.assertTrue(!MineOreWork.active(cancelled)&&ForestFixture.count(cancelled.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"An interrupted job retains its actual unplaced stone");
+    var custody=JobCargo.snapshot(npc,true);h.assertTrue(ForestFixture.count(custody.items(),Items.COBBLESTONE)==1&&ForestFixture.count(custody.items(),Items.RAW_IRON)==0,"Death custody includes paid stone before exchange");
+   }checkpoints[0]=saved.copy();}
+  });
+  h.startSequence().thenWaitUntil(()->h.assertTrue(org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,operation)!=null,"Native miner must fetch stone, walk back and exchange the floor"))
+   .thenExecute(()->{
+    var after=MineWork.read(t.l,t.shop);h.assertTrue(npc.tickCount>10&&checkpoints[0]!=null,"Real body travel and a paid checkpoint precede replacement");
+    h.assertTrue(chest.countItem(Items.COBBLESTONE)==1&&ForestFixture.count(after.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==0&&ForestFixture.count(after.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON)==1,"Exactly one stone paid, one raw iron carried");
+    h.assertTrue(ItemStack.of(after.getCompound("tool")).getDamageValue()==1&&npc.getHealth()==npc.getMaxHealth(),"Actual mining wears the pick once and preserves health");
+    var replay=checkpoints[0].copy();MineOreWork.reconcile(t.l,replay);MineOreWork.reconcile(t.l,replay);h.assertTrue(ForestFixture.count(replay.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==0&&ForestFixture.count(replay.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON)==1,"Journal-ahead replay consumes the paid stone once and returns one ore");
+    var custody=JobCargo.snapshot(npc,true);h.assertTrue(ForestFixture.count(custody.items(),Items.COBBLESTONE)==0&&ForestFixture.count(custody.items(),Items.RAW_IRON)==1,"Death custody after replacement contains ore and no spent stone");
+    com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_FLOOR_EXCHANGE VERIFIED bodyTicks={} ore={} stonePaid=1 iron=1 pickWear=1",npc.tickCount,ore);npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);
+   }).thenSucceed();
+  h.runAtTickTime(1700,()->{var saved=MineWork.read(t.l,t.shop);var detail="Floor trip stalled: pos="+npc.position()+" bodyTicks="+npc.tickCount+" status="+npc.workStatus()+" ticking="+t.l.isPositionEntityTicking(npc.blockPosition())+" state="+saved; npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);h.assertTrue(false,detail);});
+ }
  private record Town(ResearchV2Town.Town town,ResidentEntity npc,CompoundTag state){}
  private static Town town(GameTestHelper h){return town(h,false);}
  private static Town town(GameTestHelper h,boolean isolated){

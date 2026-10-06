@@ -241,6 +241,7 @@ public final class ResourceWorkGoal extends Goal {
             if(!MineOreWork.active(state)&&stage.equals("choose")&&worker.tickCount-oreCheck>=100){oreCheck=worker.tickCount;MineOreWork.begin(worker,e,mine,state);}
             if(MineOreWork.active(state)){
                 if(WorldJournal.exists(level,state.getCompound("mineOre").getUUID("id"))){MineOreWork.tick(worker,state);save();return;}
+                if(MineOreWork.needsStone(level,state)){if(MineOreWork.approaching(worker,state)&&near(beside(MineOreWork.materialSource(state))))MineOreWork.fetchStone(worker,e,mine,state);save();return;}
                 if(!MineOreWork.approaching(worker,state)){save();return;}
                 if(near(MineOreWork.stand(state))&&worker.getEyePosition().distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(MineOreWork.target(state)))<=16)MineOreWork.tick(worker,state);
                 save();return;
