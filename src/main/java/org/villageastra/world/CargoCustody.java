@@ -37,10 +37,15 @@ public final class CargoCustody {
   t.putString("dimension",worker.level().dimension().location().toString());t.putString("sourceDimension",SettlementData.get(server).entry(worker.settlementId()).dimension());t.putBoolean("dead",death);t.putLong("deathPos",worker.blockPosition().asLong());t.put("jobs",snapshot.jobs());t.put("items",snapshot.items());save(server,t);return t;
  }
  public static boolean mayStartWork(ResidentEntity worker){
+  return mayStartWork(worker,false);
+ }
+ /** Only a courier's verified food recovery may work through hunger; other custody gates remain. */
+ public static boolean mayStartFoodTransport(ResidentEntity worker){return mayStartWork(worker,true);}
+ private static boolean mayStartWork(ResidentEntity worker,boolean foodTransport){
   var server=worker.getServer();if(dead(server,worker.getUUID())||pending(server,worker.getUUID()))return false;
   var entry=SettlementData.get(server).entry(worker.settlementId());if(entry==null)return true;
   var resident=entry.settlement().resident(worker.getUUID());var building=entry.settlement().workplace(worker.getUUID());
-  if(!Population.mayWork(resident)){worker.workStatus("hungry");return false;}
+  if(!Population.mayWork(resident)&&!(foodTransport&&PorterWork.foodEmergency(worker))){worker.workStatus("hungry");return false;}
   String signature=worker.settlementId()+"/"+(resident==null?"missing":resident.life()+"/"+resident.profession())+"/"+(building==null?"none":building.id())+"/"+(worker.blockWork()==null?"none":worker.blockWork().id());
   var admitted=ADMITTED.computeIfAbsent(server,k->new HashMap<>());if(signature.equals(admitted.get(worker.getUUID())))return true;
   if(beginReturn(worker))return false;admitted.put(worker.getUUID(),signature);return true;

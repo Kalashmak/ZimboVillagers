@@ -90,7 +90,7 @@ public final class LogisticsRoutes {
   return empty>12;
  }
  /** A crowded hall returns only surplus grain to loaded farms, keeping construction reservations and four stacks for food. */
- private static Route grainOverflow(ServerLevel l,SettlementData.Entry e,BlockPos from,int load,Predicate<Route> accept){
+ static Route grainOverflow(ServerLevel l,SettlementData.Entry e,BlockPos from,int load,Predicate<Route> accept){
   var hall=Workshops.hall(e);var c=hall==null?null:chest(l,e,hall);if(c==null)return null;
   int empty=0;for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).isEmpty())empty++;
   if(empty>=12)return null;

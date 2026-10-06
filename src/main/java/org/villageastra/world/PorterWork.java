@@ -22,7 +22,27 @@ public final class PorterWork {
  public static void release(ServerLevel l,UUID worker){var t=inspect(l,worker);if(!t.isEmpty()){t.putString("stage","complete");NbtRecord.write(path(l,worker),t);}}
  private static boolean near(ResidentEntity w,net.minecraft.core.BlockPos p){return w.distanceToSqr(p.getX()+1.5,p.getY(),p.getZ()+.5)<=6.25;}
  private static void approach(ResidentEntity w,net.minecraft.core.BlockPos p){w.getNavigation().moveTo(p.getX()+1.5,p.getY(),p.getZ()+.5,.8);}
- public static boolean eligible(ResidentEntity w){if(!(w.level() instanceof ServerLevel l)||!w.isAlive()||w.settlementId()==null||w.escortPlayer()!=null||l.getServer().getPlayerCount()==0)return false;var e=SettlementData.get(l.getServer()).entry(w.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;var r=e.settlement().resident(w.getUUID());var b=e.settlement().workplace(w.getUUID());return r!=null&&r.alive()&&r.profession()==Profession.PORTER&&b!=null&&(Set.of("town_hall","warehouse").contains(b.type())||SmithyDelivery.post(b));}
+ public static boolean eligible(ResidentEntity w){return eligible(w,false);}
+ /** Hunger must not strand paid food or prevent clearing grain from a blocked bread pantry. */
+ static boolean foodEmergency(ResidentEntity w){
+  if(!(w.level() instanceof ServerLevel l)||w.settlementId()==null)return false;
+  var e=SettlementData.get(l.getServer()).entry(w.settlementId());if(e==null)return false;
+  var r=e.settlement().resident(w.getUUID());var post=e.settlement().workplace(w.getUUID());
+  if(r==null||!r.alive()||r.sick()||r.profession()!=Profession.PORTER||post==null||!Set.of("town_hall","warehouse").contains(post.type()))return false;
+  var t=inspect(l,w.getUUID());
+  if(active(t)){
+   var item=ItemStack.of(t.getCompound("item"));
+   var source=e.settlement().buildings().stream().filter(b->b.id().equals(t.getUUID("source"))).findFirst().orElse(null);
+   var dest=e.settlement().buildings().stream().filter(b->b.id().equals(t.getUUID("destination"))).findFirst().orElse(null);
+   if(dest!=null&&Set.of("town_hall","warehouse").contains(dest.type())&&Population.nutrition(item)>0)return true;
+   if(source!=null&&dest!=null&&source.type().equals("town_hall")&&dest.type().equals("farm")&&item.is(net.minecraft.world.item.Items.WHEAT))return true;
+   if(!t.getString("stage").equals("fetch")||WorldJournal.exists(l,operation(t,"take")))return false;
+  }
+  var bread=HandBread.inspect(l,e.settlement().id());
+  return bread.getString("stage").equals("output")&&bread.getInt("output")==0&&bread.getInt("bread")>0
+      &&LogisticsRoutes.grainOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null;
+ }
+ public static boolean eligible(ResidentEntity w,boolean withoutPlayers){if(!(w.level() instanceof ServerLevel l)||!w.isAlive()||w.settlementId()==null||w.escortPlayer()!=null||l.getServer().getPlayerCount()==0&&!withoutPlayers)return false;var e=SettlementData.get(l.getServer()).entry(w.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;var r=e.settlement().resident(w.getUUID());var b=e.settlement().workplace(w.getUUID());return r!=null&&r.alive()&&r.profession()==Profession.PORTER&&b!=null&&(Set.of("town_hall","warehouse").contains(b.type())||SmithyDelivery.post(b));}
  /** Trusted physical step, called only after production eligibility/custody checks. */
  public static void step(ResidentEntity w){step(w,null,false);}
  public static void step(ResidentEntity w,LogisticsRoutes.Route selected,boolean selfSupply){var l=(ServerLevel)w.level();var e=SettlementData.get(l.getServer()).entry(w.settlementId());var assignment=e.settlement().workplace(w.getUUID());if(assignment==null)return;var t=inspect(l,w.getUUID());
