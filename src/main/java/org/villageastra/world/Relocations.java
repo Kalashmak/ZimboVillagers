@@ -444,7 +444,7 @@ public final class Relocations {
  private static Active active(ServerLevel l,SettlementData.Entry e){
   var id=e.settlement().id();long now=l.getGameTime();var seen=ACTIVE.get(id);if(seen!=null&&now-(long)seen[0]>=0&&now-(long)seen[0]<20)return (Active)seen[1];
   Active a=null;
-  if(HallUpgradeGoal.pending(l,id)){var t=HallUpgradeGoal.inspect(l,id);
+  if(HallUpgradeGoal.pending(l,id)){var t=HallUpgradeGoal.headerView(l,id);
    if(t.getBoolean("relocate")){var o=BlockPos.of(t.getLong("origin"));var design=t.getString("design");int turns=t.getInt("rotation");var size=BuildingPlacement.size(design,turns);
     var h=HEIGHTS.computeIfAbsent(design,k->{var ys=BuildingBlueprints.layout(k,BlockPos.ZERO).entrySet().stream().filter(c->!c.getValue().isAir()).mapToInt(c->c.getKey().getY()).toArray();return new int[]{Arrays.stream(ys).min().orElse(0),Arrays.stream(ys).max().orElse(8)};});
     a=new Active(HallConstructionPlan.projectId(t),BuildingOrders.buildingId(t),t.getBoolean("moved"),o.getX()-3,o.getY()+h[0]-3,o.getZ()-3,o.getX()+size[0]+2,o.getY()+h[1]+3,o.getZ()+size[1]+2);}}

@@ -33,6 +33,7 @@ public final class HarvestAccess {
  public static boolean standing(Level l,BlockPos feet,BlockPos target){
   boolean inReach=net.minecraft.world.phys.Vec3.atBottomCenterOf(feet).add(0,1.5,0).distanceToSqr(net.minecraft.world.phys.Vec3.atCenterOf(target))<=16;
   if(feet.below().equals(target)||!inReach||!l.hasChunkAt(feet)||l.getBlockState(feet.below()).is(net.minecraft.world.level.block.Blocks.MAGMA_BLOCK))return false;
+  if(!ClayBankHarvest.dryStand(l,feet,target))return false;
   return l.getFluidState(feet).isEmpty()&&l.getFluidState(feet.above()).isEmpty()
    &&l.getBlockState(feet).getCollisionShape(l,feet).isEmpty()
    &&l.getBlockState(feet.above()).getCollisionShape(l,feet.above()).isEmpty()
