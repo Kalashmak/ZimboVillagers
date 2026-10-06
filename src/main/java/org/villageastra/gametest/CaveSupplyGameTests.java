@@ -117,7 +117,7 @@ public final class CaveSupplyGameTests {
     h.assertTrue(iron==2&&picks==1&&damage==2,"Interrupted third block retains only two paid ore and the same twice-used tool");
     npc.goalSelector.removeGoal(running[0]);running[0]=new NaturalSupplyGoal(npc,true);npc.goalSelector.addGoal(1,running[0]);reloaded[0]=true;
    }
-   if(current.getString("stage").equals("carry"))h.assertTrue(current.getList("cargo",Tag.TAG_COMPOUND).stream().mapToInt(raw->{var st=ItemStack.of((CompoundTag)raw);return st.is(product)?st.getCount():0;}).sum()==expected,"One return carries the paid vein; no return after each block");
+   if(current.getString("stage").equals("carry"))h.assertTrue(current.getList("cargo",Tag.TAG_COMPOUND).stream().mapToInt(raw->{var st=ItemStack.of((CompoundTag)raw);return st.is(product)?st.getCount():0;}).sum()==expected,"One return carries the paid vein; no return after each block: pos="+npc.position()+" bodyTicks="+npc.tickCount+" state="+current+" path="+(npc.getNavigation().getPath()==null?null:npc.getNavigation().getPath().getTarget()));
   });
   h.succeedWhen(()->{
    h.assertTrue(chest.countItem(product)==expected&&l.getBlockState(target).isAir(),"The covered wall ore must be mined and physically delivered: "+npc.position()+" ticks="+npc.tickCount);

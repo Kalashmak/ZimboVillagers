@@ -65,7 +65,7 @@ public final class NaturalSupplyGoal extends Goal {
  private SettlementData.Entry entry(){if(!(worker.level() instanceof ServerLevel)||worker.settlementId()==null||worker.escortPlayer()!=null)return null;var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());return e!=null&&e.dimension().equals(worker.level().dimension().location().toString())&&eligible(e.settlement().resident(worker.getUUID()))?e:null;}
  private void save(){advanceSearchArea();state.putInt("surveyRadius",surveyRadius);state.putInt("surveyCursor",cursor);if(surveyY==Integer.MAX_VALUE)state.remove("surveyY");else state.putInt("surveyY",surveyY);NbtRecord.write(path((ServerLevel)worker.level(),worker.getUUID()),state);}
  private void saveSurvey(){advanceSearchArea();int next=cursor;if(state.getInt("surveyRadius")!=surveyRadius||!state.contains("surveyCursor")||state.getInt("surveyCursor")!=next||(state.contains("surveyY")?state.getInt("surveyY"):Integer.MAX_VALUE)!=surveyY)save();}
- /** AD-131 (check fix 7): no logs — wood is the forester's, felled a whole wild tree at a time (ForestWork), never a log out of a crown. */
+ /** AD-131 (check fix 7): no logs вЂ” wood is the forester's, felled a whole wild tree at a time (ForestWork), never a log out of a crown. */
  public static boolean natural(BlockState s){return !s.requiresCorrectToolForDrops()&&(s.is(BlockTags.SAND)||s.is(BlockTags.DIRT)||s.is(BlockTags.FLOWERS)||s.is(Blocks.GRAVEL)||s.is(Blocks.CLAY)||s.is(Blocks.MOSS_BLOCK)||s.is(Blocks.SUGAR_CANE)||s.is(Blocks.CACTUS));}
  /** Capability of this gatherer, not a promise that the biome contains the deposit. */
  public static boolean provides(Item item){if(item==Items.CLAY_BALL||item==Items.FLINT)return true;if(!(item instanceof BlockItem block)||item==Items.GRASS_BLOCK||item==Items.PODZOL||item==Items.MYCELIUM||item==Items.ROOTED_DIRT)return false;return natural(block.getBlock().defaultBlockState());}
@@ -156,6 +156,8 @@ public final class NaturalSupplyGoal extends Goal {
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
     &&quarry&&resumeFace(l,e,quarryDemand,reserved))return true;
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
+    &&quarry&&resumeQuarryDeposit(l,e,quarryDemand,reserved,surveyDeadline,surveyPlans))return true;
+  if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
     &&resumeLoose(l,wanted,reserved,surveyDeadline,surveyPlans))return true;
   for(;surveyLeft>0;surveyLeft--){if(System.nanoTime()>=surveyDeadline){surveyPending=true;break;}var offset=nextColumn();var column=e.center().offset(offset);if(!l.hasChunkAt(column)){var touch=TouchLoad.ensure(l,column);if(touch!=TouchLoad.Touch.OK){cursor--;surveyPending=touch==TouchLoad.Touch.DEFERRED;saveSurvey();return false;}}int top=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ());int start=Math.min(Math.min(l.getMaxBuildHeight()-1,top+3),surveyY);surveyY=Integer.MAX_VALUE;for(int y=start;y>=Math.max(l.getMinBuildHeight(),deepQuarry?quarryFloor:top-8);y--){if(System.nanoTime()>=surveyDeadline||HarvestRouteCache.stats(worker).plans()-surveyPlans>=SURVEY_PLANS)return pauseSurvey(y);var pos=new BlockPos(column.getX(),y,column.getZ());if(reserved.contains(pos))continue;var before=l.getBlockState(pos);if(y<top-8&&!MineOutcrops.wanted(before,quarryDemand))continue;boolean quarryYield=quarry&&(MineOutcrops.wanted(before,wanted)||before.is(Blocks.STONE)&&wanted.contains(Items.COBBLESTONE)||before.is(Blocks.DEEPSLATE)&&wanted.contains(Items.COBBLED_DEEPSLATE));if(!mayYield(before,wanted)&&!quarryYield)continue;if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&before.is(Blocks.SUGAR_CANE)&&!l.getBlockState(pos.above()).is(Blocks.SUGAR_CANE))com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE plantCandidate pos={} wanted={} safe={}",pos,wanted.contains(Items.SUGAR_CANE),safe(l,pos));boolean stone=quarry&&SurfaceQuarry.safe(l,pos);int slot=stone?SurfaceQuarry.tool(l,e,before):-1;if(stone&&slot<0||!stone&&!safe(l,pos))continue;var pick=stone?chest.getItem(slot):ItemStack.EMPTY;var loot=Block.getDrops(before,l,pos,null,worker,pick);if(loot.stream().noneMatch(s->wanted.contains(s.getItem())))continue;
     if(!ResourceExpedition.survey(worker,pos))return pauseSurvey(y);BlockPos stand;if(!stone&&LooseHarvestAccess.loose(before)){var choice=LooseHarvestAccess.find(worker,pos,wanted,reserved,ROUTE_RANGE,(int)Math.max(0,SURVEY_PLANS-(HarvestRouteCache.stats(worker).plans()-surveyPlans)));if(choice==null)stand=null;else{pos=choice.target();before=l.getBlockState(pos);stand=choice.stand();}}else stand=HarvestAccess.find(worker,pos,ROUTE_RANGE);if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&before.is(Blocks.SUGAR_CANE))com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE plantAccess pos={} from={} stand={}",pos,worker.blockPosition(),stand);
@@ -225,6 +227,29 @@ public final class NaturalSupplyGoal extends Goal {
   if(SurfaceQuarry.tool(l,e,l.getBlockState(face.target()))<0)return false;
   begin(face.target(),face.stand(),l.getBlockState(face.target()),true);
   state.putLong("oreTarget",ore.asLong());state.putInt("faceDepth",1);save();return true;
+ }
+ /** A completed, journal-confirmed mineral trip remembers its last deposit.
+  * Recheck a finite nearby volume before the distant survey, without reusing
+  * the old cargo, loan or route. Each new trip borrows and pays normally. */
+ private boolean resumeQuarryDeposit(ServerLevel l,SettlementData.Entry e,Set<Item> wanted,Set<BlockPos> reserved,long deadline,long plans){
+  if(!state.getBoolean("complete")||!state.getBoolean("quarry")||state.getBoolean("quarryResumeChecked")
+    ||!state.hasUUID("id")||!state.contains("target")||!state.contains("before"))return false;
+  var material=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),state.getCompound("before"));
+  if(!QuarryFace.resource(material)||!MineOutcrops.wanted(material,wanted)||SurfaceQuarry.tool(l,e,material)<0)return false;
+  var receipt=WorldJournal.recoverExisting(l,state.getUUID("id"));var previous=BlockPos.of(state.getLong("target"));
+  if(receipt==null||!receipt.getString("kind").equals("block")||receipt.getLong("pos")!=previous.asLong()
+    ||!receipt.getCompound("before").equals(state.getCompound("before")))return false;
+  if(!l.hasChunkAt(previous)||!ResourceExpedition.survey(worker,previous))return false;
+  // Stable geometry order makes a yielded cursor meaningful after body movement
+  // or reload; absent/changed/unsafe blocks are still checked again as encountered.
+  var positions=new ArrayList<BlockPos>();for(var p:BlockPos.betweenClosed(previous.offset(-4,-2,-4),previous.offset(4,2,4)))positions.add(p.immutable());
+  positions.sort(Comparator.comparingDouble(p->p.distSqr(previous)));
+  for(int index=state.getInt("quarryResumeCursor");index<positions.size();index++){
+   if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){state.putInt("quarryResumeCursor",index);surveyPending=true;save();return false;}
+   var p=positions.get(index);if(reserved.contains(p)||!l.hasChunkAt(p)||!l.getBlockState(p).is(material.getBlock())||!SurfaceQuarry.safe(l,p))continue;
+   var stand=HarvestAccess.find(worker,p,ROUTE_RANGE);if(stand!=null)return begin(p,stand,l.getBlockState(p),true);
+  }
+  state.putBoolean("quarryResumeChecked",true);state.remove("quarryResumeCursor");save();return false;
  }
  private boolean pauseSurvey(int y){cursor--;surveyY=y;surveyPending=true;saveSurvey();return false;}
  private boolean begin(BlockPos pos,BlockPos stand,BlockState before,boolean stone){state=new CompoundTag();state.putUUID("id",UUID.randomUUID());state.putLong("target",pos.asLong());state.putLong("stand",stand.asLong());state.put("before",NbtUtils.writeBlockState(before));state.putBoolean("quarry",stone);state.putString("stage",stone?"tool":"dig");save();return true;}
