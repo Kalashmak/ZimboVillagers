@@ -65,7 +65,7 @@ public final class WorldJournal {
     public static ItemStack recoverAmount(ServerLevel level,UUID id){
         if(!exists(level,id))return ItemStack.EMPTY;
         try{var intent=read(path(level,id));if(!intent.getString("kind").equals("take"))throw new IOException("Not a withdrawal");
-            var applied=execute(level,id,intent);if(applied==null)return ItemStack.EMPTY;
+            var applied=replayRecorded(level,id,intent);if(applied==null)return ItemStack.EMPTY;
             var before=ItemStack.of(applied.getCompound("before"));int count=before.getCount()-ItemStack.of(applied.getCompound("after")).getCount();
             if(count<=0)throw new IOException("Invalid cargo size");return before.copyWithCount(count);
         }catch(IOException e){throw new IllegalStateException(e);}
@@ -158,13 +158,15 @@ public final class WorldJournal {
     public static CompoundTag recoverExisting(ServerLevel level,UUID id){
         if(!exists(level,id))return null;
         try{
-            var receipt=read(path(level,id));
-            if(receipt.getInt("schema")!=1||!receipt.getUUID("id").equals(id)||!receipt.getString("dimension").equals(level.dimension().location().toString()))throw new IOException("Invalid existing receipt");
-            var pos=BlockPos.of(receipt.getLong("pos"));
-            // Only an already recorded server operation can load a dependency chunk for reconciliation.
-            if(!level.hasChunkAt(pos))level.getChunk(pos.getX()>>4,pos.getZ()>>4);
-            return execute(level,id,receipt);
+            return replayRecorded(level,id,read(path(level,id)));
         }catch(IOException e){throw new IllegalStateException(e);}
+    }
+    private static CompoundTag replayRecorded(ServerLevel level,UUID id,CompoundTag receipt)throws IOException{
+        if(receipt.getInt("schema")!=1||!receipt.getUUID("id").equals(id)||!receipt.getString("dimension").equals(level.dimension().location().toString()))throw new IOException("Invalid existing receipt");
+        var pos=BlockPos.of(receipt.getLong("pos"));
+        // Only an already recorded server operation can load its dependency for reconciliation.
+        if(!level.hasChunkAt(pos))level.getChunk(pos.getX()>>4,pos.getZ()>>4);
+        return execute(level,id,receipt);
     }
     /** Container contents and the receipt live in the same chunk transaction. No free container item. */
     public static boolean dropCargo(ServerLevel level,UUID id,BlockPos pos,UUID settlement,ListTag contents){
