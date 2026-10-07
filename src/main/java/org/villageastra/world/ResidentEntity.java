@@ -193,7 +193,8 @@ public final class ResidentEntity extends PathfinderMob {
                         // A one-way cave step can lead straight back onto the isolated
                         // ledge just left by controlled descent. Recovery memory must
                         // guide the expedition planner as well as wall climbing.
-                        for(int i=0;i<count;i++)if(Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos())))neighbors[kept++]=neighbors[i];return kept;
+                        // Exclude unsafe floating headroom during search so a longer safe detour can still be found.
+                        for(int i=0;i<count;i++)if(Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos()))&&ShoreEscapeGoal.clearWaterNode(ResidentEntity.this,neighbors[i].asBlockPos()))neighbors[kept++]=neighbors[i];return kept;
                     }
                     @Override public net.minecraft.world.level.pathfinder.BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter blocks,int x,int y,int z,net.minecraft.world.entity.Mob mob){
                         var state=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y,z));

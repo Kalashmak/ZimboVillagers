@@ -74,4 +74,30 @@ public final class ResourceReturnRouteGameTests {
    var path=npc.routeTo(end,0,48);h.assertTrue(down?path==null||!path.canReach():path!=null&&path.canReach(),"Downward columns are excluded without banning upward water: down="+down);
   }h.succeed();
  }
+ @GameTest(template="empty",batch="return_waterlogged_obstacle",timeoutTicks=2400)
+ public static void returnSearchAvoidsUnsafeNodeBeforeRejectingTheWholeRoute(GameTestHelper h){
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+159744,150,at.getZ());
+  var held=PhysicalFixtureChunks.force(l,base,-3,16,-3,24);
+  for(int x=-3;x<=16;x++)for(int z=-3;z<=24;z++)for(int y=-3;y<=5;y++){
+   boolean passage=z==0&&x>=0&&x<=13||z>=0&&z<=20&&(x==3||x==7)||z==20&&x>=3&&x<=7;
+   l.setBlock(base.offset(x,y,z),(passage&&y>=1&&y<=3?Blocks.AIR:Blocks.STONE).defaultBlockState(),2);
+  }
+  for(int x=9;x<=10;x++)for(int y=-2;y<=0;y++)l.setBlock(base.offset(x,y,0),Blocks.WATER.defaultBlockState(),2);
+  var stem=Blocks.POINTED_DRIPSTONE.defaultBlockState().setValue(PointedDripstoneBlock.TIP_DIRECTION,net.minecraft.core.Direction.UP).setValue(PointedDripstoneBlock.THICKNESS,net.minecraft.world.level.block.state.properties.DripstoneThickness.FRUSTUM).setValue(PointedDripstoneBlock.WATERLOGGED,true);
+  l.setBlock(base.offset(5,0,0),stem,2);l.setBlock(base.offset(5,1,0),stem.setValue(PointedDripstoneBlock.THICKNESS,net.minecraft.world.level.block.state.properties.DripstoneThickness.TIP).setValue(PointedDripstoneBlock.WATERLOGGED,false),2);
+  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(base.getX()+.5,base.getY()+1,base.getZ()+.5);npc.setOnGround(true);var target=base.offset(13,1,0);
+  var route=ResourceReturnRoute.plan(npc,target);h.assertTrue(route!=null&&route.canReach()&&ShoreEscapeGoal.clearSwimPath(npc,route),"Return search must choose the longer safe passage around the waterlogged obstacle");
+  npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);npc.goalSelector.addGoal(0,new FloatGoal(npc));npc.goalSelector.addGoal(1,new ShoreEscapeGoal(npc));
+  npc.goalSelector.addGoal(5,new Goal(){
+   {setFlags(EnumSet.of(Flag.MOVE));}public boolean canUse(){return true;}public boolean requiresUpdateEveryTick(){return true;}
+   public void tick(){if(npc.tickCount%20==0&&(npc.onGround()||npc.isInWaterOrBubble()))npc.getNavigation().moveTo(ResourceReturnRoute.plan(npc,target),.8);}
+   public void stop(){npc.getNavigation().stop();}
+  });
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Obstacle corridor chunk ready")).thenExecute(()->l.addFreshEntity(npc));
+  Runnable clean=()->{npc.discard();PhysicalFixtureChunks.release(l,held);};
+  boolean[] detoured={false};
+  h.onEachTick(()->{if(npc.getZ()>base.getZ()+18)detoured[0]=true;if(npc.onGround()&&npc.distanceToSqr(target.getCenter())<2){h.assertTrue(detoured[0]&&npc.getHealth()==npc.getMaxHealth(),"Body completes safe detour and water crossing with full health");clean.run();h.succeed();}});
+  h.runAtTickTime(2200,()->{String why="No safe physical return: "+npc.position()+" ticks="+npc.tickCount;clean.run();h.assertTrue(false,why);});
+ }
+
 }

@@ -24,8 +24,11 @@ final class MineReturnWaypoints {
   if(targets.isEmpty())return null;float water=worker.getPathfindingMalus(BlockPathTypes.WATER);
   try{
    worker.setPathfindingMalus(BlockPathTypes.WATER,-1F);var path=worker.routeToAny(targets,NaturalSupplyGoal.ROUTE_RANGE);
-   return HarvestAccess.reversible(path)?new ResourceReturnRoute.ReturnPath(path):null;
+   if(HarvestAccess.reversible(path))return new ResourceReturnRoute.ReturnPath(path);
   }finally{worker.setPathfindingMalus(BlockPathTypes.WATER,water);}
+  // A complete open-water leg can connect an existing dry gallery; partial swims never qualify.
+  var wet=worker.routeToAny(targets,NaturalSupplyGoal.ROUTE_RANGE);
+  return HarvestAccess.reversible(wet)&&ShoreEscapeGoal.clearSwimPath(worker,wet)?new ResourceReturnRoute.ReturnPath(wet):null;
  }
  private static void add(ResidentEntity worker,Set<BlockPos> targets,BlockPos p){
   var l=worker.level();double distance=p.distSqr(worker.blockPosition());
