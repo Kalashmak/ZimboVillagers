@@ -13,13 +13,21 @@ import org.villageastra.world.*;
 public final class StrandedLedgeGameTests {
  @GameTest(template="empty",batch="stranded_ledge",timeoutTicks=1800)
  public static void carrierDescendsRoofedLedgeThenWalksUpToDestination(GameTestHelper h){
+  run(h,false);
+ }
+ @GameTest(template="empty",batch="ledge_cycle",timeoutTicks=2400)
+ public static void recoveryDoesNotClimbBackOntoKnownDeadEnd(GameTestHelper h){
+  run(h,true);
+ }
+ private static void run(GameTestHelper h,boolean basin){
   var l=h.getLevel();var base=h.absolutePos(new BlockPos(8,4,8));
   var held=PhysicalFixtureChunks.force(l,base,-5,15,-5,5);
   for(int x=-5;x<=15;x++)for(int z=-5;z<=5;z++)for(int y=0;y<=12;y++){
    boolean floor=y==0,ledge=x==0&&z==0&&y<=5;
    boolean roof=x>=-1&&x<=1&&z>=-1&&z<=1&&y==8;
    boolean stairs=x>=5&&x<=12&&Math.abs(z)<=1&&y<=x-4;
-   l.setBlock(base.offset(x,y,z),(floor||ledge||roof||stairs?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
+   boolean rim=basin&&(Math.abs(x)>=3||Math.abs(z)>=3)&&y<=3;
+   l.setBlock(base.offset(x,y,z),(floor||ledge||roof||stairs||rim?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
   }
   var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(base.getX()+.5,base.getY()+6,base.getZ()+.5);
   npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);

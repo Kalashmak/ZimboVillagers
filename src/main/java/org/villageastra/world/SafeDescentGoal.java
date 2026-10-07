@@ -6,7 +6,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
 /** A stalled resident can climb down a dry, clear edge, including an isolated ledge on a return route. */
 public final class SafeDescentGoal extends Goal {
- private final ResidentEntity resident;private Vec3 last;private int checks,still,ticks,phase;private Route route;
+ private final ResidentEntity resident;private Vec3 last;private int checks,still,ticks,phase;private Route route;private boolean isolatedReturn;
  private record Route(BlockPos anchor,BlockPos edge,BlockPos landing){}
  public SafeDescentGoal(ResidentEntity r){resident=r;setFlags(EnumSet.of(Flag.MOVE,Flag.JUMP));}
  private static boolean open(ResidentEntity r,BlockPos p){var l=r.level();return l.hasChunkAt(p)&&l.getFluidState(p).isEmpty()&&l.getBlockState(p).getCollisionShape(l,p).isEmpty();}
@@ -44,9 +44,9 @@ public final class SafeDescentGoal extends Goal {
  @Override public boolean canUse(){
   if(++checks%20!=0)return false;var now=resident.position();
   if(last!=null&&now.multiply(1,0,1).distanceToSqr(last.multiply(1,0,1))<.5625)still+=20;else{still=0;last=now;}
-  if(still<200)return false;var target=destination(resident);if(target==null)return false;route=find(resident,target);return route!=null;
+  if(still<200)return false;var target=destination(resident);if(target==null)return false;route=find(resident,target);isolatedReturn=target.getY()>resident.getY()-2;return route!=null;
  }
- @Override public void start(){ticks=0;phase=0;resident.getNavigation().stop();resident.workStatus("escaping_pit");}
+ @Override public void start(){ticks=0;phase=0;if(isolatedReturn)RecoveryLedges.remember(resident,resident.blockPosition());resident.getNavigation().stop();resident.workStatus("escaping_pit");}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public boolean canContinueToUse(){return route!=null&&ticks<240&&!resident.isInWaterOrBubble()&&!(resident.onGround()&&resident.position().distanceToSqr(Vec3.atBottomCenterOf(route.landing()))<.16);}
  @Override public void tick(){

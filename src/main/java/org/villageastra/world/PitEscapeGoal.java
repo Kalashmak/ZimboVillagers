@@ -57,6 +57,9 @@ public final class PitEscapeGoal extends Goal {
    for(var d:Direction.Plane.HORIZONTAL){var p=up.relative(d);if(!l.hasChunkAt(p)||!l.getFluidState(p).isEmpty()||!l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP))continue;
     if(l.getBlockState(p).isAir()&&l.getBlockState(p.above()).isAir()&&!l.getBlockState(p.below()).is(net.minecraft.world.level.block.Blocks.MAGMA_BLOCK)){
      if(y>6&&!continuousWall(r,from,p,d))continue;
+     // A recent controlled descent already proved this unchanged ledge a dead end.
+     // An explicit nearby destination may still legitimately require that very ledge.
+     if(RecoveryLedges.deadEnd(r,p)&&(target==null||target.distSqr(p)>4))continue;
      // A reachable nearby ledge does not prove that the stalled long-distance route uses it.
      // The bounded floor and stillness checks already distinguish recovery from ordinary travel.
      // An intermediate low shelf may still be inside the same basin. Prefer the highest
