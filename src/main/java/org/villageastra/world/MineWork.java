@@ -39,7 +39,11 @@ public final class MineWork {
   catch(IOException e){throw new IllegalStateException(e);}
  }
  /** AD-112: a drive record read as MineDrive sees it — its shape and where it stands. */
- public static MineDrive.Shape shape(CompoundTag t){return MineDrive.Shape.of(t.getInt("width")==3?3:1,Math.max(3,Math.min(5,t.getInt("height"))),Math.max(0,t.getInt("descent")));}
+ public static MineDrive.Shape shape(CompoundTag t){
+  var base=MineDrive.Shape.of(t.getInt("width")==3?3:1,Math.max(3,Math.min(5,t.getInt("height"))),Math.max(0,t.getInt("descent")));
+  int length=Math.max(base.galleryLength(),Math.min(MineArea.maxGalleryLength(),t.getInt("prospectLength")));
+  return new MineDrive.Shape(base.width(),base.height(),base.descent(),length,base.galleryHeight(),base.beamEvery());
+ }
  public static MineDrive.Drive drive(CompoundTag t){return new MineDrive.Drive(Math.max(0,t.getInt("step")),Math.max(0,t.getInt("cell")),Math.max(MineDrive.EAST,Math.min(MineDrive.DONE,t.getInt("side"))),Math.max(0,t.getInt("run")));}
  /** A record from before AD-112 (no floor noted) and the stair view below: a floor no drive reaches, so only the stair is read. */
  private static final int STAIR_ONLY=4095;
@@ -68,6 +72,7 @@ public final class MineWork {
  public static BlockPos target(SettlementData.Entry e,Settlement.Building b,CompoundTag t){return at(e,b,MineDrive.next(drive(t),STAIR_ONLY,shape(t)).cell());}
  /** One cell done (dug or found open), under the floor its target was chosen with. */
  public static void step(CompoundTag t){int floor=floorOf(t);var d=drive(t);var s=shape(t);var n=MineDrive.advance(d,floor,s);
+  if(t.getBoolean("prospectExtension")&&MineDrive.stage(d,floor)!=MineDrive.Stage.STAIR&&n.side()!=d.side())n=new MineDrive.Drive(d.step(),0,MineDrive.DONE,0);
   // AD-122: a stair step finished — its stairs are due ("stairStep"), set by the miner from the stone he carries before he goes on.
   if(MineDrive.stage(d,floor)==MineDrive.Stage.STAIR&&n.step()>d.step()&&!MineDrive.stairs(d.step(),s).isEmpty())t.putInt("stairStep",d.step());
   // AD-122: a finished stair step or gallery column may be due a light ("lightsDue": cell, stand, wall — 8 numbers each).
@@ -77,7 +82,7 @@ public final class MineWork {
    more[i]=light.cell().x();more[i+1]=light.cell().y();more[i+2]=light.cell().z();more[i+3]=light.stand().x();more[i+4]=light.stand().y();more[i+5]=light.stand().z();more[i+6]=light.wallX();more[i+7]=light.wallZ();t.putIntArray("lightsDue",more);}}
   put(t,n,floor);}
  /** The gallery cell is unsafe (not ground, or a fluid in or beside it): that gallery ends, the drive turns to the other side or to the floor. */
- public static void blocked(CompoundTag t){int floor=floorOf(t);put(t,MineDrive.blocked(drive(t),floor),floor);}
+ public static void blocked(CompoundTag t){int floor=floorOf(t);var d=drive(t);put(t,t.getBoolean("prospectExtension")&&MineDrive.stage(d,floor)!=MineDrive.Stage.STAIR?new MineDrive.Drive(d.step(),0,MineDrive.DONE,0):MineDrive.blocked(d,floor),floor);}
  /** One cell done: the drive moves on (a finished stair row steps deeper, a finished gallery turns) and the record is written. */
  public static void advance(ServerLevel l,Settlement.Building b,CompoundTag t){step(t);write(l,b,t);}
  /** Whether the cell the record chose is one of a gallery (its stage is noted with the choice), not of the stair. */

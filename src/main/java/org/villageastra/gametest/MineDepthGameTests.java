@@ -125,7 +125,7 @@ public final class MineDepthGameTests {
    npc=VillageAstra.RESIDENT.get().create(t.l);npc.bind(t.s.id(),t.s.resident(r.id()));npc.setNoAi(true);
    // He stands beside the mine chest, where a miner at the floor of his level goes: nothing moves him, so his status is the drive's.
    var feet=LogisticsRoutes.position(t.e,t.mine).east();npc.moveTo(feet.getX()+.5,feet.getY(),feet.getZ()+.5,0,0);t.l.addFreshEntity(npc);
-   var record=drive(t,f+1,0);for(int row=0;row<=f;row++)for(var cell:MineDrive.stairs(row,MineWork.shape(record)))t.l.setBlock(at(t,cell),Blocks.COBBLESTONE_STAIRS.defaultBlockState(),2);record.putString("stage","choose");record.put("tool",new ItemStack(Items.IRON_PICKAXE).save(new CompoundTag()));MineWork.write(t.l,t.mine,record);
+   var record=drive(t,f+1,0);record.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,f).toArray());for(int row=0;row<=f;row++)for(var cell:MineDrive.stairs(row,MineWork.shape(record)))t.l.setBlock(at(t,cell),Blocks.COBBLESTONE_STAIRS.defaultBlockState(),2);record.putString("stage","choose");record.put("tool",new ItemStack(Items.IRON_PICKAXE).save(new CompoundTag()));MineWork.write(t.l,t.mine,record);
    var goal=new ResourceWorkGoal(npc,true,()->6000L);
    h.assertTrue(goal.canUse(),"The miner takes up his drive");
    goal.tick();var after=MineWork.read(t.l,t.mine);

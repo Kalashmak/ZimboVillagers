@@ -56,6 +56,59 @@ public final class MineProspectingGameTests {
    }).thenSucceed();
   h.runAtTickTime(1700,()->{var saved=MineWork.read(t.l,t.shop);var detail="Floor trip stalled: pos="+npc.position()+" bodyTicks="+npc.tickCount+" status="+npc.workStatus()+" ticking="+t.l.isPositionEntityTicking(npc.blockPosition())+" state="+saved; npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);h.assertTrue(false,detail);});
  }
+
+ @GameTest(template="empty",batch="mine_extension",timeoutTicks=2400)
+ public static void exhaustedMineExtendsItsPaidWorkingFaceToRealOre(GameTestHelper h){
+  var f=town(h,true);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
+  var base=BuildingPlacement.origin(t.e,t.shop);var forced=PhysicalFixtureChunks.force(t.l,base,0,55,0,z+3);
+  for(int x=2;x<=54;x++)for(int dz=-2;dz<=2;dz++)for(int dy=-1;dy<=6;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z+dz),Blocks.STONE.defaultBlockState(),2);
+  int initial=CoreEffects.mine().galleryLength();
+  for(int x=4;x<5+initial;x++)for(int dy=0;dy<5;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z),Blocks.AIR.defaultBlockState(),2);
+  t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,initial));
+  state.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,floor).toArray());state.putString("stage","choose");
+  var ore=BuildingPlacement.at(t.e,t.shop,6+initial,y+1,z);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+  h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,state),"Unmet real ore demand resumes a fully worked gallery instead of idling forever");
+  h.assertTrue(state.getInt("floorStep")==floor&&state.getInt("run")==initial,"Existing depth and paid gallery endpoint are retained");
+  MineWork.write(t.l,t.shop,state);var saved=MineWork.read(t.l,t.shop);var next=MineWork.next(t.l,t.e,t.shop,saved);
+  h.assertTrue(next.stage()==MineDrive.Stage.EAST&&next.cell().x()==5+initial,"Reload resumes the next unmined column");
+  var start=BuildingPlacement.at(t.e,t.shop,3+initial,y,z);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);f.npc.setNoAi(false);f.npc.onlyGoals(g->false,6,new ResourceWorkGoal(f.npc,true,()->6000));boolean[] started={false};
+  h.onEachTick(()->{
+   if(!started[0]){if(TouchLoad.ticking(t.l,f.npc.blockPosition()))started[0]=t.l.addFreshEntity(f.npc);return;}
+   var work=MineWork.read(t.l,t.shop);int iron=ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON);
+   if(iron==0)return;
+   h.assertTrue(iron==1&&t.l.getBlockState(ore).isAir(),"Native mining yields exactly the real ore block");
+   h.assertTrue(ItemStack.of(work.getCompound("tool")).getDamageValue()>=5&&f.npc.tickCount>20,"Stone and ore require ordinary tool wear and body ticks");
+   h.assertTrue(t.s.mineAreas().get(t.shop.id()).lastStep()==floor&&t.s.mineAreas().get(t.shop.id()).galleries().stream().anyMatch(g->g.step()==floor&&g.side()==MineDrive.EAST&&g.length()>initial),"Only actually excavated extension is claimed, without deeper stairs");
+   com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MINE_EXTENSION VERIFIED bodyTicks={} iron={} work={}",f.npc.tickCount,iron,work);
+   f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);h.succeed();
+  });
+  h.runAtTickTime(2300,()->h.assertTrue(false,"Extension stalled: "+f.npc.position()+" "+f.npc.workStatus()+" "+MineWork.read(t.l,t.shop)));
+ }
+
+ @GameTest(template="empty",batch="mine_extension_guards",timeoutTicks=200)
+ public static void extensionRespectsStockWaterSupportAndSurveyBounds(GameTestHelper h){
+  var f=town(h,true);var t=f.town;try{
+   var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor,n=CoreEffects.mine().galleryLength();
+   state.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,floor).toArray());state.putString("stage","choose");
+   var face=BuildingPlacement.at(t.e,t.shop,5+n,y+4,z);var support=face.below(5);t.l.getChunk(face.getX()>>4,face.getZ()>>4);
+   for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++)for(int dy=-5;dy<=1;dy++)t.l.setBlock(face.offset(dx,dy,dz),Blocks.STONE.defaultBlockState(),2);
+   t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,n-1));
+   h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"An unfinished or previously blocked section is not extended");
+   t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,n));t.l.setBlock(face.north(),Blocks.WATER.defaultBlockState(),2);
+   h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"A wet face is never opened for more ore");t.l.setBlock(face.north(),Blocks.STONE.defaultBlockState(),2);t.l.setBlock(support,Blocks.AIR.defaultBlockState(),2);
+   h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"A new section needs actual floor support");t.l.setBlock(support,Blocks.STONE.defaultBlockState(),2);
+   var other=new Settlement(UUID.randomUUID());other.addBuilding(new Settlement.Building(UUID.randomUUID(),"home",0,0,0));var data=SettlementData.get(t.l.getServer());data.add(new SettlementData.Entry(other,t.e.dimension(),face));
+   try{h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"A longer gallery cannot cut another building");}finally{data.remove(other.id());}
+   var chest=LogisticsRoutes.chest(t.l,t.e,t.shop);chest.setItem(0,new ItemStack(Items.RAW_IRON,64));
+   h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"Ore already awaiting delivery prevents unnecessary excavation");chest.clearContent();
+   h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,state),"The same dry supported face with unmet demand is eligible");
+   var ending=state.copy();ending.putInt("run",ending.getInt("prospectLength")-1);ending.putInt("cell",4);ending.putString("mineStage","EAST");MineWork.step(ending);
+   h.assertTrue(ending.getInt("side")==MineDrive.DONE,"Finishing a section never replays the opposite paid gallery");
+   t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,MineArea.maxGalleryLength()));
+   h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"Bounded survey footprint is never exceeded");
+   h.assertTrue(t.l.getBlockState(face).is(Blocks.STONE)&&ItemStack.of(state.getCompound("tool")).getDamageValue()==0,"Planning alone never mines or pays resources");
+  }finally{f.npc.discard();ResearchV2Town.done(t);}h.succeed();
+ }
  private record Town(ResearchV2Town.Town town,ResidentEntity npc,CompoundTag state){}
  private static Town town(GameTestHelper h){return town(h,false);}
  private static Town town(GameTestHelper h,boolean isolated){
@@ -248,8 +301,8 @@ public final class MineProspectingGameTests {
  }
  @GameTest(template="empty",batch="mine_prospect",timeoutTicks=100)
  public static void deeperUpgradeResumesDeepestStairAndNeverBypassesDepthLimit(GameTestHelper h){
-  var t=new CompoundTag();t.putInt("prospectFloor",18);t.putInt("prospectLimit",25);t.putInt("extentStep",25);t.putInt("step",19);t.putInt("cell",3);t.putInt("side",1);t.putInt("run",6);t.putInt("galleryOf",18);
+  var t=new CompoundTag();t.putInt("prospectFloor",18);t.putInt("prospectLimit",25);t.putInt("extentStep",25);t.putInt("step",19);t.putInt("cell",3);t.putInt("side",1);t.putInt("run",6);t.putInt("galleryOf",18);t.putInt("prospectLength",48);t.putBoolean("prospectExtension",true);
   h.assertTrue(MineProspecting.activeFloor(t,12)==12,"A reduced working level still limits the survey");
-  h.assertTrue(MineProspecting.activeFloor(t,40)==40&&t.getInt("step")==26&&t.getInt("cell")==0&&!t.contains("prospectFloor")&&!t.contains("galleryOf"),"A higher level resumes below the deepest existing staircase");h.succeed();
+  h.assertTrue(MineProspecting.activeFloor(t,40)==40&&t.getInt("step")==26&&t.getInt("cell")==0&&!t.contains("prospectFloor")&&!t.contains("galleryOf")&&!t.contains("prospectLength")&&!t.contains("prospectExtension"),"A higher level resumes below the deepest existing staircase");h.succeed();
  }
 }

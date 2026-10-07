@@ -6,9 +6,11 @@ import java.util.*;
  *  AD-112: the galleries driven east and west from the landing of each floor (MineDrive), protected like the stair. */
 public record MineArea(int lastStep,int width,int height,int descent,List<Gallery> galleries) {
     public static final int MAX_GALLERIES=64;
+    /** Four ordinary survey sections; the working level still limits depth. */
+    public static int maxGalleryLength(){return CoreEffects.mine().galleryLength()*4;}
     /** One gallery: the stair step of its landing (z 7+step), its side (MineDrive.EAST/WEST) and how many columns of it are dug. */
     public record Gallery(int step,int side,int length){
-        public Gallery{if(step<0||step>4095||(side!=MineDrive.EAST&&side!=MineDrive.WEST)||length<1||length>CoreEffects.mine().galleryLength())throw new IllegalArgumentException("Invalid mine gallery");}
+        public Gallery{if(step<0||step>4095||(side!=MineDrive.EAST&&side!=MineDrive.WEST)||length<1||length>maxGalleryLength())throw new IllegalArgumentException("Invalid mine gallery");}
     }
     public MineArea(int lastStep,int width){this(lastStep,width,width==1?3:4,0);}
     public MineArea(int lastStep,int width,int height){this(lastStep,width,height,0);}

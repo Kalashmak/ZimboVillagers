@@ -447,7 +447,7 @@ public final class ResourceWorkGoal extends Goal {
                 if(!level.hasChunkAt(target)){if(carrying()){deliverUndug();return;}status("unloaded");return;}
                 var block=level.getBlockState(target);
                 // An unsafe gallery cell (not ground, a block entity, a fluid in it or beside it) ends that gallery: the drive turns to the other side.
-                if(MineWork.gallery(state)&&(!MineWork.galleryFloor(level,mineEntry,mine,state,next.cell())||MineWork.unsafeGallery(level,target))){MineWork.blocked(state);save();return;}
+                if(MineWork.gallery(state)&&(!MineWork.galleryFloor(level,mineEntry,mine,state,next.cell())||MineWork.unsafeGallery(level,target)||state.getBoolean("prospectExtension")&&org.villageastra.server.OwnershipEvents.protectedBlock(level,target,b->!b.id().equals(mine.id())))){MineWork.blocked(state);save();return;}
                 // An open cell the drive passes; one that asks for a beam sends the batch to the chest first — the timber is fetched from the hall after.
                 if(block.isAir()||MineWork.builtLining(level,mineEntry,mine,target,state)){if(MineWork.gallery(state))MineWork.claim(level,mineEntry,mine,state);advanceMine();afterCell(level);return;}
                 // Only recognized soil, stone and ore; reject containers, structural wood and fluids.
