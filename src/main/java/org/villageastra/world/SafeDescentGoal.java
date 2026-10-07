@@ -4,7 +4,7 @@ import net.minecraft.core.*;
 import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.phys.Vec3;
-/** A stalled resident can climb down a dry, clear edge toward a lower work destination. */
+/** A stalled resident can climb down a dry, clear edge, including an isolated ledge on a return route. */
 public final class SafeDescentGoal extends Goal {
  private final ResidentEntity resident;private Vec3 last;private int checks,still,ticks,phase;private Route route;
  private record Route(BlockPos anchor,BlockPos edge,BlockPos landing){}
@@ -12,7 +12,14 @@ public final class SafeDescentGoal extends Goal {
  private static boolean open(ResidentEntity r,BlockPos p){var l=r.level();return l.hasChunkAt(p)&&l.getFluidState(p).isEmpty()&&l.getBlockState(p).getCollisionShape(l,p).isEmpty();}
  private static boolean stand(ResidentEntity r,BlockPos p){var l=r.level();return open(r,p)&&open(r,p.above())&&(l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP)||l.getBlockState(p.below()).getBlock() instanceof net.minecraft.world.level.block.ChestBlock&&l.getFluidState(p.below()).isEmpty())&&!l.getBlockState(p.below()).is(Blocks.MAGMA_BLOCK)&&!l.getBlockState(p.below()).is(Blocks.CAMPFIRE)&&!l.getBlockState(p.below()).is(Blocks.SOUL_CAMPFIRE);}
  private static Route find(ResidentEntity r,BlockPos destination){
-  if(!r.onGround()||r.isInWaterOrBubble()||r.isPassenger()||r.isSleeping()||r.child()||destination.getY()>r.getY()-2)return null;
+  if(!r.onGround()||r.isInWaterOrBubble()||r.isPassenger()||r.isSleeping()||r.child())return null;
+  if(destination.getY()>r.getY()-2){
+   // A roofed cave ledge can require descending before returning to an upper chest or bed.
+   // Only a finished, failed one-node route proves that ordinary navigation cannot leave
+   // this foothold. Never replace a usable route or descend merely because a goal is far away.
+   var path=r.getNavigation().getPath();
+   if(path==null||path.canReach()||!path.isDone()||path.getNodeCount()!=1||destination.distSqr(r.blockPosition())<=9)return null;
+  }
   var foot=r.blockPosition();Route best=null;double score=Double.MAX_VALUE;
   for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++){
    var anchor=foot.offset(x,0,z);if(!stand(r,anchor))continue;
