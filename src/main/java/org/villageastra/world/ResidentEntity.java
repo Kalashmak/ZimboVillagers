@@ -105,7 +105,7 @@ public final class ResidentEntity extends PathfinderMob {
     /** AD-106: the route this resident would walk to a place, planned on a navigation of its own so the one it walks by is left alone.
      *  Null while it is in the air. */
     public net.minecraft.world.level.pathfinder.Path routeTo(net.minecraft.core.BlockPos target, int accuracy) {
-        var nav = createNavigation(level()); configure(nav); return nav.createPath(target, accuracy);
+        var nav = createNavigation(level()); configure(nav); return ResidentPlannedRoute.keep(nav.createPath(target, accuracy),accuracy,0,PATH_BUDGET);
     }
     private boolean reversibleRoute;
     @Override public int getMaxFallDistance(){return reversibleRoute?1:super.getMaxFallDistance();}
@@ -114,13 +114,13 @@ public final class ResidentEntity extends PathfinderMob {
     /** A separate planner with an explicit, bounded exploration budget; does not change the active navigation. */
     public net.minecraft.world.level.pathfinder.Path routeTo(net.minecraft.core.BlockPos target,int accuracy,int range,float exploration){
         boolean previous=reversibleRoute;reversibleRoute=true;
-        try{var nav=createNavigation(level());configure(nav);nav.setMaxVisitedNodesMultiplier(exploration);return nav.createPath(target,accuracy,range);}
+        try{var nav=createNavigation(level());configure(nav);nav.setMaxVisitedNodesMultiplier(exploration);return ResidentPlannedRoute.keep(nav.createPath(target,accuracy,range),accuracy,range,exploration);}
         finally{reversibleRoute=previous;}
     }
     /** Several verified work platforms share one bounded native expedition search. */
     public net.minecraft.world.level.pathfinder.Path routeToAny(java.util.Set<net.minecraft.core.BlockPos> targets,int range){
         boolean previous=reversibleRoute;reversibleRoute=true;
-        try{var nav=(ResidentNavigation)createNavigation(level());configure(nav);nav.setMaxVisitedNodesMultiplier(PATH_BUDGET*Math.max(1F,range/(float)Math.max(1D,getAttributeValue(Attributes.FOLLOW_RANGE))));return nav.toAny(targets,range);}
+        try{var nav=(ResidentNavigation)createNavigation(level());configure(nav);float exploration=PATH_BUDGET*Math.max(1F,range/(float)Math.max(1D,getAttributeValue(Attributes.FOLLOW_RANGE)));nav.setMaxVisitedNodesMultiplier(exploration);return ResidentPlannedRoute.keep(nav.toAny(targets,range),0,range,exploration);}
         finally{reversibleRoute=previous;}
     }
     private class ResidentNavigation extends net.minecraft.world.entity.ai.navigation.GroundPathNavigation {
@@ -139,21 +139,29 @@ public final class ResidentEntity extends PathfinderMob {
     @Override protected net.minecraft.world.entity.ai.navigation.PathNavigation createNavigation(Level level) {
         return new ResidentNavigation(level) {
             private double requestedSpeed;
+            @Override protected net.minecraft.world.level.pathfinder.Path createPath(java.util.Set<net.minecraft.core.BlockPos> targets,int padding,boolean above,int accuracy,float range){
+                // The vanilla cache belongs to this navigator's own last request. An imported
+                // route must not be returned as a cached path to an earlier bedroom target.
+                var active=path;
+                if(!(active instanceof ResidentPlannedRoute)&&!(active instanceof ResourceReturnRoute.ReturnPath))return super.createPath(targets,padding,above,accuracy,range);
+                path=null;
+                try{return super.createPath(targets,padding,above,accuracy,range);}finally{path=active;}
+            }
             @Override public void tick(){speedModifier=ResidentTravel.speed(ResidentEntity.this,path,requestedSpeed);super.tick();}
             @Override public boolean moveTo(net.minecraft.world.level.pathfinder.Path incoming,double speed){
                 requestedSpeed=speed;
                 // Vanilla compares only nodes; an identical ordinary path must not erase the return policy (or keep it for another goal).
-                if((incoming instanceof ResourceReturnRoute.ReturnPath)!=(path instanceof ResourceReturnRoute.ReturnPath)){path=null;hasDelayedRecomputation=false;}
+                if(!ResidentPlannedRoute.samePolicy(incoming,path)){path=null;hasDelayedRecomputation=false;}
                 return super.moveTo(incoming,ResidentTravel.speed(ResidentEntity.this,incoming,speed));
             }
-            @Override public net.minecraft.core.BlockPos getTargetPos(){return path instanceof ResourceReturnRoute.ReturnPath?path.getTarget():super.getTargetPos();}
+            @Override public net.minecraft.core.BlockPos getTargetPos(){return path instanceof ResourceReturnRoute.ReturnPath||path instanceof ResidentPlannedRoute?path.getTarget():super.getTargetPos();}
             @Override public void recomputePath(){
-                if(!(path instanceof ResourceReturnRoute.ReturnPath)){super.recomputePath();return;}
+                if(!(path instanceof ResourceReturnRoute.ReturnPath)&&!(path instanceof ResidentPlannedRoute)){super.recomputePath();return;}
                 if(!canUpdatePath()||level.getGameTime()-timeLastRecompute<=20L){hasDelayedRecomputation=true;return;}
-                path=ResourceReturnRoute.plan(ResidentEntity.this,path.getTarget());
+                path=path instanceof ResidentPlannedRoute request?request.refresh(ResidentEntity.this):ResourceReturnRoute.plan(ResidentEntity.this,path.getTarget());
                 timeLastRecompute=level.getGameTime();hasDelayedRecomputation=false;
             }
-            @Override public void stop(){if(path instanceof ResourceReturnRoute.ReturnPath)hasDelayedRecomputation=false;super.stop();}
+            @Override public void stop(){if(path instanceof ResourceReturnRoute.ReturnPath||path instanceof ResidentPlannedRoute)hasDelayedRecomputation=false;super.stop();}
             @Override protected net.minecraft.world.level.pathfinder.PathFinder createPathFinder(int maxVisitedNodes) {
                 nodeEvaluator = new net.minecraft.world.level.pathfinder.WalkNodeEvaluator() {
                     // Long expeditions can alias vanilla's packed int key, particularly at negative coordinates.
