@@ -93,7 +93,25 @@ public final class CargoCustody {
     // A reassigned miner still carries the old tools through the same real cave.
     // Retain the dry expedition route and its recovery policy instead of replacing
     // it with a short ordinary path that cannot reach the surface rim.
-    if(worker.onGround()||worker.isInWaterOrBubble())worker.getNavigation().moveTo(ResourceReturnRoute.plan(worker,stock.east()),.8);
+    if(worker.onGround()||worker.isInWaterOrBubble()){
+     // Keep the selected gallery across routine replans and night-time interruptions.
+     if(t.contains("returnWaypoint")){
+      var waypoint=BlockPos.of(t.getLong("returnWaypoint"));
+      if(worker.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(waypoint))>2.25){
+       var leg=ResourceReturnRoute.plan(worker,waypoint);
+       if(leg!=null&&leg.canReach()){worker.getNavigation().moveTo(leg,.8);return;}
+      }
+      t.remove("returnWaypoint");save(server,t);
+     }
+     var route=ResourceReturnRoute.plan(worker,stock.east());
+     if((route==null||!route.canReach())&&worker.onGround()&&level.getGameTime()>=t.getLong("mineRouteCheck")){
+      t.putLong("mineRouteCheck",level.getGameTime()+200);
+      var throughMine=MineReturnWaypoints.plan(worker,entry);
+      if(throughMine!=null){t.putLong("returnWaypoint",throughMine.getTarget().asLong());route=throughMine;}
+      save(server,t);
+     }
+     worker.getNavigation().moveTo(route,.8);
+    }
     return;
    }
    worker.getNavigation().stop();
