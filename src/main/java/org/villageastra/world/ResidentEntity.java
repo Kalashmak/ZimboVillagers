@@ -94,6 +94,26 @@ public final class ResidentEntity extends PathfinderMob {
     private static final float PATH_BUDGET=4F;
     private final class ResidentMovement extends net.minecraft.world.entity.ai.control.MoveControl {
         ResidentMovement(){super(ResidentEntity.this);}
+        private boolean paddling;
+        @Override public void tick(){
+            if(paddling){setXxa(0);paddling=false;}
+            boolean steering=operation==Operation.MOVE_TO||operation==Operation.JUMPING;
+            super.tick();
+            // Paddle toward the waypoint while compensating a sideways current. These are
+            // ordinary bounded movement inputs; collisions, buoyancy and fluid physics remain active.
+            if(steering&&isInWaterOrBubble()&&speedModifier>0){
+                paddling=true;
+                var delta=new net.minecraft.world.phys.Vec3(wantedX-getX(),0,wantedZ-getZ());
+                double distance=delta.length();
+                var desired=distance<1E-6?net.minecraft.world.phys.Vec3.ZERO:delta.scale(Math.min(speedModifier*.75,distance*2)/distance);
+                var flow=level().getFluidState(blockPosition()).getFlow(level(),blockPosition());
+                var input=desired.subtract(flow.x*.7,0,flow.z*.7);
+                if(input.lengthSqr()>1)input=input.normalize();
+                double yaw=Math.toRadians(getYRot());
+                setXxa((float)(input.x*Math.cos(yaw)+input.z*Math.sin(yaw)));
+                setZza((float)(input.z*Math.cos(yaw)-input.x*Math.sin(yaw)));
+            }
+        }
         void swimTo(net.minecraft.world.phys.Vec3 target,double speed){
             // A failed bank jump never lands under a low roof. The verified
             // horizontal escape must be allowed to steer before onGround.
