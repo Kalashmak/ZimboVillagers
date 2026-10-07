@@ -47,6 +47,14 @@ public final class ForestOverflowGameTests {
     chest.setItem(0,ItemStack.EMPTY);chest.setItem(1,ItemStack.EMPTY);
    }else h.assertTrue(chest.countItem(Items.BIRCH_SAPLING)==1,"The paid last sapling must physically leave the full workplace");
   });
+  h.runAtTickTime(480,()->{
+   if(fullHall){
+    var current=NbtRecord.read(MineWork.path(l,hut.id()));
+    h.assertTrue(current.getInt("delivered")==2&&!current.contains("forestDeliveryAt")&&!WorldJournal.exists(l,Settlement.childId(op,"delivery/2")),"Forest overflow must leave the last food slots free and retain its paid seed");
+    h.assertTrue(LogisticsRoutes.fits(chest,List.of(new ItemStack(Items.WHEAT,16),new ItemStack(Items.BREAD,4))),"Food can still enter the protected pantry space");
+    for(int slot=0;slot<13;slot++)chest.setItem(slot,ItemStack.EMPTY);
+   }
+  });
   h.onEachTick(()->{
    var current=NbtRecord.read(MineWork.path(l,hut.id()));
    if(current.contains("forestDeliveryAt")&&!reloaded[0]&&npc.distanceToSqr(stock.getX()+1.5,stock.getY(),stock.getZ()+.5)>9){

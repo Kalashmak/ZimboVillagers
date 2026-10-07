@@ -42,7 +42,7 @@ public final class LogisticsRoutes {
   if(b.type().equals("farm")){if(item.is(Items.SUGAR_CANE))return 1;if(item.is(Items.CARROT)||item.is(Items.POTATO))return 4;if(item.is(Items.WHEAT_SEEDS)||item.is(Items.BEETROOT_SEEDS))return 8;}
   if(item.is(net.minecraft.tags.ItemTags.LOGS)){if(b.type().equals("mine"))return 8;if(b.type().equals("forester")&&b.level()>=ForestBalance.SAW_FROM)return ForestBalance.LOG_KEEP;}return 0;}
  private static boolean output(ItemStack s){return s.is(net.minecraft.tags.ItemTags.LOGS)||Set.of(Items.COBBLESTONE,Items.COBBLED_DEEPSLATE,Items.RAW_IRON,Items.RAW_COPPER,Items.RAW_GOLD,Items.COAL,Items.DIAMOND,Items.REDSTONE,Items.LAPIS_LAZULI,Items.EMERALD,Items.WHEAT,Items.CARROT,Items.POTATO,Items.BEETROOT,Items.SUGAR_CANE,
-  // AD-130: the earth the miner digs out is the hall's stock too — the barn's upper fields are laid of it (with the quarry's and the roads' spoil).
+  // AD-130: the earth the miner digs out is the hall's stock too вЂ” the barn's upper fields are laid of it (with the quarry's and the roads' spoil).
   Items.DIRT).contains(s.getItem());}
  private static boolean room(OwnedChestEntity c,ItemStack item){for(int i=0;i<c.getContainerSize();i++){var current=c.getItem(i);if(current.isEmpty()||ItemStack.isSameItemSameTags(current,item)&&current.getCount()+item.getCount()<=Math.min(current.getMaxStackSize(),c.getMaxStackSize()))return true;}return false;}
  private static Route find(ServerLevel l,SettlementData.Entry e,Settlement.Building dest,Demand demand){return find(l,e,dest,demand,LOAD);}
@@ -66,7 +66,7 @@ public final class LogisticsRoutes {
  /** The parcel of a porter working at this building: a warehouse's by its level, any other post (the hall, a worker's own supply) LOAD. */
  public static int load(ServerLevel l,SettlementData.Entry e,Settlement.Building post){return post!=null&&post.type().equals("warehouse")?load(BuildingLevels.level(l,e,post)):LOAD;}
  public static Route choose(ServerLevel l,SettlementData.Entry e){return choose(l,e,null);}
- /** AD-147 §1.3 (CF-C, CF-D): the need classes of a warehouse's courier, the first class with a route wins: 1 the approved construction's
+ /** AD-147 В§1.3 (CF-C, CF-D): the need classes of a warehouse's courier, the first class with a route wins: 1 the approved construction's
   *  shortfall to the hall, 2 workers' supplies and workshops' inputs, then a producer's chest at least half full, 3 food (the pantry's bread,
   *  the restaurant's dishes), 4 research (its level-I price, scientific works to the laboratory), 5 roads and trails, the clinic's bandages, an
   *  automatic farm's seed, the store's carts, 6 the producers' output to the stock, fullest chest first. Within a class the order of
@@ -82,7 +82,9 @@ public final class LogisticsRoutes {
  public static boolean product(Settlement.Building b,ItemStack item){return !item.isEmpty()&&(b.type().equals("livestock")?LivestockPens.product(item):output(item)||b.type().equals(ForesterHut.TYPE)&&(item.is(net.minecraft.tags.ItemTags.PLANKS)||item.is(Items.APPLE))||b.type().equals("mine")&&mineral(item));}
  /** Excavated intermediates are usable stock too; sandstone need not be crafted again from sand. */
  /** Generic bulk exports leave real slots for food, tools and paid outputs. Explicit wants still take precedence. */
- private static boolean surplusFits(OwnedChestEntity stock,ItemStack item){
+ public static boolean surplusFits(net.minecraft.world.Container stock,ItemStack item){
+  // Filling an existing stack consumes no reserved empty slot.
+  for(int i=0;i<stock.getContainerSize();i++){var held=stock.getItem(i);if(!held.isEmpty()&&ItemStack.isSameItemSameTags(held,item)&&held.getCount()+item.getCount()<=Math.min(stock.getMaxStackSize(),item.getMaxStackSize()))return true;}
   // A scarce staple may refill one stack; abundant food obeys the same space
   // reserve as other bulk exports. Explicit food/construction wants are above this filter.
   if((item.is(Items.WHEAT)||Population.nutrition(item)>0)&&stock.countItem(item.getItem())<item.getMaxStackSize())return true;
@@ -155,7 +157,7 @@ public final class LogisticsRoutes {
  }
  /** The next route of a porter working at this post (null: a route with the level-I parcel). */
  public static Route choose(ServerLevel l,SettlementData.Entry e,Settlement.Building post){return choose(l,e,post,null);}
- /** The next route of a porter at this post standing at {@code from}: a warehouse's courier by need (AD-147 §1.3), any other the AD-029 order. */
+ /** The next route of a porter at this post standing at {@code from}: a warehouse's courier by need (AD-147 В§1.3), any other the AD-029 order. */
  public static Route choose(ServerLevel l,SettlementData.Entry e,Settlement.Building post,BlockPos from){int load=load(l,e,post);
   if(WarehouseStore.is(post))return byNeed(l,e,post,from,load,null);
   if(SmithyDelivery.post(post))return SmithyDelivery.route(l,e,post,load);
