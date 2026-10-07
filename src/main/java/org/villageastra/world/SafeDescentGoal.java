@@ -13,19 +13,20 @@ public final class SafeDescentGoal extends Goal {
  private static boolean stand(ResidentEntity r,BlockPos p){var l=r.level();return open(r,p)&&open(r,p.above())&&(l.getBlockState(p.below()).isFaceSturdy(l,p.below(),Direction.UP)||l.getBlockState(p.below()).getBlock() instanceof net.minecraft.world.level.block.ChestBlock&&l.getFluidState(p.below()).isEmpty())&&!l.getBlockState(p.below()).is(Blocks.MAGMA_BLOCK)&&!l.getBlockState(p.below()).is(Blocks.CAMPFIRE)&&!l.getBlockState(p.below()).is(Blocks.SOUL_CAMPFIRE);}
  private static Route find(ResidentEntity r,BlockPos destination){
   if(!r.onGround()||r.isInWaterOrBubble()||r.isPassenger()||r.isSleeping()||r.child())return null;
-  if(destination.getY()>r.getY()-2){
+  boolean retreat=destination.getY()>r.getY()-2;
+  if(retreat){
    // A roofed cave ledge can require descending before returning to an upper chest or bed.
-   // Only a finished, failed one-node route proves that ordinary navigation cannot leave
-   // this foothold. Never replace a usable route or descend merely because a goal is far away.
+   // A failed route whose end has been reached cannot advance from this foothold.
+   // Never replace a usable route or a partial path still travelling toward its end.
    var path=r.getNavigation().getPath();
-   if(path==null||path.canReach()||!path.isDone()||path.getNodeCount()!=1||destination.distSqr(r.blockPosition())<=9)return null;
+   if(path==null||path.canReach()||!path.isDone()||path.getEndNode()==null||r.position().distanceToSqr(Vec3.atBottomCenterOf(path.getEndNode().asBlockPos()))>2.25||destination.distSqr(r.blockPosition())<=9)return null;
   }
   var foot=r.blockPosition();Route best=null;double score=Double.MAX_VALUE;
   for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++){
    var anchor=foot.offset(x,0,z);if(!stand(r,anchor))continue;
    for(var d:Direction.Plane.HORIZONTAL){var edge=anchor.relative(d);if(!open(r,edge)||!open(r,edge.above()))continue;
     for(int drop=1;drop<=6;drop++){var below=edge.below(drop);if(!open(r,below))break;
-     if(drop<2||!stand(r,below))continue;
+     if(drop<(retreat?1:2)||!stand(r,below))continue;
      double cost=below.distSqr(destination)+anchor.distSqr(foot);if(cost<score&&HarvestAccess.reversible(r.routeTo(anchor,0))){best=new Route(anchor,edge,below);score=cost;}break;
     }
    }
