@@ -32,19 +32,28 @@ public final class ReedNursery {
    &&Blocks.SUGAR_CANE.defaultBlockState().canSurvive(l,p)
    &&!OwnershipEvents.protectedBlock(l,p)&&!OwnershipEvents.disallowedPlacement(l,p);
  }
- private static boolean plan(ResidentEntity worker,SettlementData.Entry e,CompoundTag t){
-  var l=(ServerLevel)worker.level();if(planted(l,e.settlement().id()).size()>=CAPACITY)return false;
+ private enum Search { READY, PENDING, UNAVAILABLE }
+ private static Search pending(CompoundTag t,int column,int y){t.putInt("nurseryCursor",column);t.putInt("nurseryY",y);return Search.PENDING;}
+ private static Search plan(ResidentEntity worker,SettlementData.Entry e,CompoundTag t){
+  var l=(ServerLevel)worker.level();if(planted(l,e.settlement().id()).size()>=CAPACITY)return Search.UNAVAILABLE;
+  long deadline=System.nanoTime()+2_000_000L,plans=HarvestRouteCache.stats(worker).plans();int visited=0;
   // Only already loaded nearby shores; never dig a canal, replace soil, or force a permanent area.
-  for(var offset:CELLS){var column=e.center().offset(offset);if(!l.hasChunkAt(column))continue;
+  try(var sensing=HarvestRouteCache.survey(worker)){
+  for(int index=Math.max(0,t.getInt("nurseryCursor"));index<CELLS.size();index++){
+   if(visited++>=512||System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=2){t.putInt("nurseryCursor",index);return Search.PENDING;}
+   var column=e.center().offset(CELLS.get(index));if(!l.hasChunkAt(column)){t.remove("nurseryY");continue;}
    int top=l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,column.getX(),column.getZ());
    // A real shore may lie below a bank overhang. Cane needs soil, water and
    // three clear cells, not sky visibility; never cut away the covering bank.
-   for(int y=top;y>=Math.max(l.getMinBuildHeight()+1,top-16);y--){
+   int start=t.contains("nurseryY")?Math.min(top,t.getInt("nurseryY")):top;t.remove("nurseryY");
+   for(int y=start;y>=Math.max(l.getMinBuildHeight()+1,top-16);y--){
+    if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=2)return pending(t,index,y);
     var p=new BlockPos(column.getX(),y,column.getZ());if(!safe(l,p))continue;
+    if(!ResourceExpedition.survey(worker,p))return pending(t,index,y);
     var stand=HarvestAccess.find(worker,p,NaturalSupplyGoal.ROUTE_RANGE);if(stand==null)continue;
-    t.putLong("nurseryTarget",p.asLong());t.putLong("nurseryStand",stand.asLong());return true;
+    t.putLong("nurseryTarget",p.asLong());t.putLong("nurseryStand",stand.asLong());return Search.READY;
    }
-  }return false;
+  }}t.putInt("nurseryCursor",CELLS.size());return Search.UNAVAILABLE;
  }
  public record Harvest(BlockPos target,BlockPos stand){}
  /** Inspect only remembered loaded plots; ordinary random growth supplies their harvestable tops. */
@@ -64,7 +73,14 @@ public final class ReedNursery {
   if(!t.getString("stage").equals("carry")||t.getInt("delivered")!=0)return false;
   var list=t.getList("cargo",Tag.TAG_COMPOUND);if(list.isEmpty())return false;var seed=ItemStack.of(list.getCompound(0));if(!seed.is(Items.SUGAR_CANE)||seed.getCount()!=1)return false;
   var l=(ServerLevel)worker.level();var receipt=Settlement.childId(t.getUUID("id"),"deliver/0");
-  if(!t.getBoolean("nurseryChecked")){t.putBoolean("nurseryChecked",true);plan(worker,e,t);save(worker,t);}
+  if(!t.getBoolean("nurseryChecked")){
+   // Bring the real seed back by the normal cargo route first. A distant cliff
+   // should not make every local nursery shore look unreachable from the mine.
+   if(worker.blockPosition().distSqr(e.center())>32*32)return false;
+   if(worker.tickCount%20!=0){worker.workStatus("seeking_materials");return true;}
+   var search=plan(worker,e,t);t.putBoolean("nurseryChecked",search!=Search.PENDING);save(worker,t);
+   if(search==Search.PENDING){worker.getNavigation().stop();worker.workStatus("seeking_materials");return true;}
+  }
   if(!t.contains("nurseryTarget"))return false;var target=BlockPos.of(t.getLong("nurseryTarget"));var stand=BlockPos.of(t.getLong("nurseryStand"));
   // Settle an applied placement before checking a later terrain change or the nursery's current size.
   if(WorldJournal.recoverExisting(l,receipt)!=null){record(l,e.settlement().id(),target);t.putInt("delivered",1);save(worker,t);return true;}

@@ -19,10 +19,18 @@ public final class FarmingRelief {
    if(crew.stream().anyMatch(r->!(l.getEntity(r.id()) instanceof ResidentEntity n)||n.escortPlayer()!=null))continue;
    boolean spareBuilder=!HallUpgradeGoal.pending(l,s.id())&&s.residents().stream().filter(x->x.alive()&&x.profession()==Profession.BUILDER).count()>1;
    boolean foodEmergency=Population.storedNutrition(l,e)<HandBread.reserveRations(e);
+   boolean finishCurrent=!foodEmergency&&s.residents().stream().anyMatch(r->r.alive()&&r.profession()==Profession.FARMER
+    &&Population.mayWork(r)&&!farm.equals(s.workplace(r.id()))&&l.getEntity(r.id()) instanceof ResidentEntity);
    var replacement=s.residents().stream().filter(r->r.alive()&&r.life()==Resident.Life.ADULT&&!r.sick())
     .filter(r->r.profession()==null||r.profession()==Profession.FORESTER||r.profession()==Profession.MINER
      ||r.profession()==Profession.PORTER||r.profession()==Profession.BUILDER&&(spareBuilder||foodEmergency))
     .filter(r->l.getEntity(r.id()) instanceof ResidentEntity n&&n.escortPlayer()==null&&!CargoCustody.pending(l.getServer(),r.id()))
+    // A stocked village with another working farm can wait for its supply trip.
+    // Keep transport available too; starvation or loss of the last farmer still
+    // uses the ordinary immediate custody handover below.
+    .filter(r->!finishCurrent||r.profession()!=Profession.PORTER
+     &&!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,r.id()))
+     &&!NaturalSupplyGoal.primaryResourcePending(l,e,(ResidentEntity)l.getEntity(r.id())))
     .sorted(Comparator.<Resident>comparingInt(r->rank(r,spareBuilder)).thenComparing(Resident::id)).findFirst().orElse(null);
    if(replacement==null)continue;
    for(var old:crew){s.unassign(old.id());CargoCustody.beginReturn((ResidentEntity)l.getEntity(old.id()));}
