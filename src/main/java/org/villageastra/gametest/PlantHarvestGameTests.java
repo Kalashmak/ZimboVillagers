@@ -22,10 +22,15 @@ public final class PlantHarvestGameTests {
  public static void paperSurveyContinuesAcrossGoalReloadsAndStillDelivers(GameTestHelper h){harvest(h,160,true);}
  @GameTest(template="empty",batch="bookshelf_expedition",timeoutTicks=6000)
  public static void bookshelfDemandResolvesThroughBindingAndPaperToWildCane(GameTestHelper h){harvest(h,160,false,true);}
+ @GameTest(template="empty",batch="plant_survey_priority",timeoutTicks=2400)
+ public static void newPlantDemandDoesNotWaitForDistantMineralSurveyToWrap(GameTestHelper h){harvest(h,40,false,true,true);}
  private static void harvest(GameTestHelper h,int distance){harvest(h,distance,false);}
  private static void harvest(GameTestHelper h,int distance,boolean reloadSurvey){harvest(h,distance,reloadSurvey,false);}
  private static void harvest(GameTestHelper h,int distance,boolean reloadSurvey,boolean shelf){
-  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO).offset(shelf?49152:distance>96?(reloadSurvey?12288:4096):0,0,0);int height=90;
+  harvest(h,distance,reloadSurvey,shelf,false);
+ }
+ private static void harvest(GameTestHelper h,int distance,boolean reloadSurvey,boolean shelf,boolean priority){
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO).offset(priority?57344:shelf?49152:distance>96?(reloadSurvey?12288:4096):0,0,0);int height=90;
   for(int x=(at.getX()-2)>>4;x<=(at.getX()+distance+4)>>4;x++)for(int z=(at.getZ()-2)>>4;z<=(at.getZ()+9)>>4;z++)l.getChunk(x,z);
   for(int x=-2;x<=distance+4;x++)for(int z=-2;z<=9;z++)height=Math.max(height,l.getHeight(Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,at.getX()+x,at.getZ()+z)+2);
   var base=new BlockPos(at.getX(),height,at.getZ());
@@ -47,12 +52,17 @@ public final class PlantHarvestGameTests {
   if(distance>96)h.assertTrue(needs.stream().anyMatch(n->n.ingredient().test(new net.minecraft.world.item.ItemStack(Items.SUGAR_CANE))),"Paper demand resolves to cane: "+needs);
   h.assertTrue(HarvestAccess.find(npc,target,NaturalSupplyGoal.ROUTE_RANGE)!=null,"Real plant has a reversible route before surveying");
   var goal=new NaturalSupplyGoal[]{new NaturalSupplyGoal(npc,true)};
+  if(priority){
+   var survey=new CompoundTag();survey.putInt("surveyRadius",320);survey.putInt("surveyCursor",300000);
+   org.villageastra.persistence.NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),survey);
+   h.assertTrue(l.addFreshEntity(npc),"Search progresses on native body ticks");
+  }
   if(reloadSurvey)h.runAtTickTime(10,()->h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).contains("surveyCursor"),"Survey progress is durable before it finds any resource"));
   if(distance>96)h.runAtTickTime(5900,()->h.assertTrue(false,"Expedition stalled at "+npc.position()+" ticking="+TouchLoad.ticking(l,npc.blockPosition())+" trip="+NaturalSupplyGoal.inspect(l,npc.getUUID())));
-  h.startSequence().thenWaitUntil(()->{if(reloadSurvey)goal[0]=new NaturalSupplyGoal(npc,true);npc.tickCount+=100;h.assertTrue(goal[0].canUse(),"Survey still searching, resident role="+r.profession());}).thenExecute(()->{
+  h.startSequence().thenWaitUntil(()->{if(reloadSurvey)goal[0]=new NaturalSupplyGoal(npc,true);if(!priority)npc.tickCount+=100;h.assertTrue(goal[0].canUse(),"Survey still searching, resident role="+r.profession());}).thenExecute(()->{
    var trip=NaturalSupplyGoal.inspect(l,npc.getUUID());h.assertTrue(BlockPos.of(trip.getLong("target")).equals(target),"Demand-driven survey selected the real cane top: "+trip);npc.goalSelector.addGoal(5,goal[0]);
    if(distance>96)h.assertTrue(!l.getForcedChunks().contains(new net.minecraft.world.level.ChunkPos(target).toLong()),"Destination is not force-loaded by the fixture");
-  }).thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Entity chunk ready")).thenExecute(()->l.addFreshEntity(npc));
+  }).thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Entity chunk ready")).thenExecute(()->{if(!priority)l.addFreshEntity(npc);});
   h.onEachTick(()->{
    if(chest.countItem(Items.SUGAR_CANE)==1&&!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))){
    h.assertTrue(l.getBlockState(cane).is(Blocks.SUGAR_CANE)&&l.getBlockState(cane.above()).is(Blocks.SUGAR_CANE)&&l.getBlockState(target).isAir(),"Only the paid harvest's top is cut; growing base remains");
