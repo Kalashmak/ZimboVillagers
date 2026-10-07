@@ -28,19 +28,33 @@ public final class ShoreEscapeGoal extends Goal {
  }
  public static boolean clearSwimPath(ResidentEntity r,Path path){for(int i=1;i<path.getNodeCount();i++)if(!clearWaterNode(r,path.getNodePos(i)))return false;return true;}
  /** Leave a low overhang horizontally before planning a floating route to shore.
-  * Every sampled body box must be clear and remain over water; this never cuts terrain or lifts a body through a ceiling. */
+  * Every sampled body box stays clear, over water or a dry landing at most three blocks below.
+  * A capped water column may be left through air; this never cuts terrain or lifts a body through a ceiling. */
+ private boolean safeAirExit(Vec3 goal){
+  var l=resident.level();var foot=BlockPos.containing(goal);
+  if(!l.getFluidState(foot).isEmpty()||!l.getFluidState(foot.above()).isEmpty())return false;
+  for(int down=0;down<=3;down++){
+   var stand=foot.below(down);if(goal.y-stand.getY()>3||!dryBank(resident,stand))continue;
+   double half=resident.getBbWidth()/2D;
+   var swept=new net.minecraft.world.phys.AABB(goal.x-half,stand.getY(),goal.z-half,goal.x+half,goal.y+resident.getBbHeight(),goal.z+half);
+   if(!l.getBlockCollisions(resident,swept).iterator().hasNext())return true;
+  }
+  return false;
+ }
  private Vec3 openWater(){
   var l=resident.level();var foot=resident.blockPosition();
   if(clearWaterNode(resident,foot))return null;
   Vec3 best=null;double cost=Double.MAX_VALUE;
   for(int x=-4;x<=4;x++)for(int z=-4;z<=4;z++){
-   var p=foot.offset(x,0,z);if(x*x+z*z>16||!l.hasChunkAt(p)||!l.getFluidState(p).is(FluidTags.WATER))continue;
-   var goal=new Vec3(p.getX()+.5,resident.getY(),p.getZ()+.5);double distance=goal.distanceToSqr(resident.position());if(distance<.25||distance>=cost)continue;
-   if(!clearWaterNode(resident,p))continue;
+   var p=foot.offset(x,0,z);if(x*x+z*z>16||!l.hasChunkAt(p))continue;
+   var goal=new Vec3(p.getX()+.5,resident.getY(),p.getZ()+.5);
+   boolean water=l.getFluidState(p).is(FluidTags.WATER);
+   if(!water&&!safeAirExit(goal))continue;double distance=goal.distanceToSqr(resident.position());if(distance<.25||distance>=cost)continue;
+   if(water&&!clearWaterNode(resident,p))continue;
    boolean clear=true;int steps=(int)Math.ceil(Math.sqrt(distance)/.15);
    for(int i=1;i<=steps;i++){
     var delta=goal.subtract(resident.position()).scale(i/(double)steps);var point=resident.position().add(delta);var cell=BlockPos.containing(point);
-    if(!l.hasChunkAt(cell)||!l.getFluidState(cell).is(FluidTags.WATER)||l.getBlockState(cell).is(Blocks.BUBBLE_COLUMN)||l.getBlockCollisions(resident,resident.getBoundingBox().move(delta)).iterator().hasNext()){clear=false;break;}
+    if(!l.hasChunkAt(cell)||(!l.getFluidState(cell).is(FluidTags.WATER)&&!safeAirExit(point))||l.getBlockState(cell).is(Blocks.BUBBLE_COLUMN)||l.getBlockCollisions(resident,resident.getBoundingBox().move(delta)).iterator().hasNext()){clear=false;break;}
    }
    if(clear){best=goal;cost=distance;}
   }return best;

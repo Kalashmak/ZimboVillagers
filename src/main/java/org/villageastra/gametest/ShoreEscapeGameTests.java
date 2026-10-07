@@ -59,4 +59,24 @@ public final class ShoreEscapeGameTests {
   }});
   h.runAtTickTime(3450,()->h.assertTrue(false,"Swimmer must reach the low bank with ordinary navigation: "+npc.position()+" tick="+npc.tickCount+" goals="+npc.runningGoals()));
  }
+ @GameTest(template="empty",batch="shore_air_exit",timeoutTicks=1600)
+ public static void submergedResidentLeavesACappedWaterColumnThroughSafeAir(GameTestHelper h){airColumn(h,0);}
+ @GameTest(template="empty",batch="shore_air_exit",timeoutTicks=1600)
+ public static void submergedResidentRejectsAnAirExitAboveADeepDrop(GameTestHelper h){airColumn(h,1);}
+ @GameTest(template="empty",batch="shore_air_exit",timeoutTicks=1600)
+ public static void submergedResidentRejectsAnAirExitBehindStone(GameTestHelper h){airColumn(h,2);}
+ private static void airColumn(GameTestHelper h,int mode){
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+176128,150,at.getZ());var held=PhysicalFixtureChunks.force(l,base,-3,5,-3,3);
+  for(int x=-3;x<=5;x++)for(int z=-3;z<=3;z++)for(int y=-2;y<=9;y++)l.setBlock(base.offset(x,y,z),Blocks.STONE.defaultBlockState(),2);
+  for(int x=mode==2?2:1;x<=3;x++)for(int y=mode==1?-1:4;y<=7;y++)l.setBlock(base.offset(x,y,0),Blocks.AIR.defaultBlockState(),2);
+  for(int y=0;y<=7;y++)l.setBlock(base.offset(0,y,0),Blocks.WATER.defaultBlockState().setValue(net.minecraft.world.level.block.LiquidBlock.LEVEL,y==7?1:8),2);
+  l.setBlock(base.offset(0,7,-1),Blocks.WATER.defaultBlockState(),2);
+  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(base.getX()+.5,base.getY()+6.2,base.getZ()+.5);
+  npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);npc.goalSelector.addGoal(0,new net.minecraft.world.entity.ai.goal.FloatGoal(npc));npc.goalSelector.addGoal(1,new org.villageastra.world.ShoreEscapeGoal(npc));
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Capped waterfall chunk ready")).thenExecute(()->l.addFreshEntity(npc));
+  Runnable clean=()->{npc.discard();PhysicalFixtureChunks.release(l,held);};
+  h.onEachTick(()->{if(npc.tickCount==0)return;if(mode!=0&&npc.tickCount>=200){h.assertTrue(npc.isInWaterOrBubble()&&npc.getX()<base.getX()+1&&npc.getHealth()==npc.getMaxHealth(),"Unsafe air exit must not be selected");clean.run();h.succeed();return;}if(npc.getHealth()<npc.getMaxHealth()){String why="Water column recovery must happen before drowning: "+npc.position()+" bodyTicks="+npc.tickCount;clean.run();h.assertTrue(false,why);}if(npc.onGround()&&!npc.isInWaterOrBubble()&&npc.getX()>base.getX()+1){h.assertTrue(l.getBlockState(base.offset(0,8,0)).is(Blocks.STONE),"Escape preserves the capped roof");clean.run();h.succeed();}});
+  h.runAtTickTime(1400,()->{String why="No physical air exit: "+npc.position()+" bodyTicks="+npc.tickCount;clean.run();h.assertTrue(false,why);});
+ }
+
 }
