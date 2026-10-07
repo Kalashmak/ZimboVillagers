@@ -19,6 +19,8 @@ public final class FieldAccessGameTests {
  public static void builderBackfillsOwnFlowingIrrigation(GameTestHelper h){run(h,false);}
  @GameTest(template="empty",batch="field_access",timeoutTicks=2400)
  public static void builderReusesReturnedScaffoldsForCanopy(GameTestHelper h){run(h,true);}
+ @GameTest(template="empty",batch="canopy_priority",timeoutTicks=6000)
+ public static void appendedCanopyAccessPrecedesTheLongBlockedRoofQueue(GameTestHelper h){run(h,true,true);}
  @GameTest(template="empty",batch="field_access",timeoutTicks=100)
  public static void waterReconciliationRequiresOwnCommittedSource(GameTestHelper h){
   var l=h.getLevel();var base=h.absolutePos(new BlockPos(4,8,4));var id=UUID.randomUUID();var project=project(base,id);var source=op(base,Blocks.AIR.defaultBlockState(),Blocks.WATER.defaultBlockState());source.putBoolean("field",true);source.putBoolean("done",true);
@@ -33,6 +35,9 @@ public final class FieldAccessGameTests {
   project.putString("design","home");h.assertTrue(!FieldWaterDrift.reconcile(l,project,fill),"Ordinary building refused");h.succeed();
  }
  private static void run(GameTestHelper h,boolean canopy){
+  run(h,canopy,false);
+ }
+ private static void run(GameTestHelper h,boolean canopy,boolean longQueue){
   var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+64000,120,at.getZ());var forced=PhysicalFixtureChunks.force(l,base,-6,20,-6,20);
   for(int x=-6;x<=20;x++)for(int z=-6;z<=20;z++)for(int y=-1;y<=12;y++)l.setBlock(base.offset(x,y,z),y<=0?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
   var s=new Settlement(UUID.randomUUID());var hall=new Settlement.Building(UUID.randomUUID(),"town_hall",-100,0,-100);s.addBuilding(hall);var home=UUID.randomUUID();s.addHome(new Settlement.Home(home,1,2,true));var e=new SettlementData.Entry(s,l.dimension().location().toString(),base);SettlementData.get(l.getServer()).add(e);
@@ -42,6 +47,10 @@ public final class FieldAccessGameTests {
    for(int x=7;x<=9;x++)for(int z=7;z<=9;z++)for(int y=1;y<=7;y++)l.setBlock(base.offset(x,y,z),Blocks.COBBLESTONE.defaultBlockState(),2);
    l.setBlock(target,Blocks.BIRCH_LEAVES.defaultBlockState().setValue(net.minecraft.world.level.block.LeavesBlock.PERSISTENT,true),2);
    ops.add(op(target,l.getBlockState(target),Blocks.AIR.defaultBlockState()));cargo.add(new ItemStack(VillageAstra.TIMBER_SCAFFOLD.get(),8).save(new CompoundTag()));
+   if(longQueue){
+    for(int i=0;i<80;i++){var roof=op(base.offset(i%10,12,i/10),Blocks.AIR.defaultBlockState(),Blocks.COBBLESTONE.defaultBlockState());roof.putString("item","minecraft:cobblestone");ops.add(roof);}
+    cargo.add(new ItemStack(Items.COBBLESTONE,64).save(new CompoundTag()));cargo.add(new ItemStack(Items.COBBLESTONE,16).save(new CompoundTag()));
+   }
   }else{
    var water=base.offset(10,0,8);l.setBlock(water,Blocks.AIR.defaultBlockState(),2);l.setBlock(target,Blocks.AIR.defaultBlockState(),2);l.setBlock(target.east(),Blocks.AIR.defaultBlockState(),2);
    var source=op(water,Blocks.AIR.defaultBlockState(),Blocks.WATER.defaultBlockState());source.putBoolean("field",true);source.putBoolean("done",true);ops.add(source);
@@ -57,6 +66,12 @@ public final class FieldAccessGameTests {
    if(canopy?!l.getBlockState(target).isAir():!l.getBlockState(target).is(Blocks.DIRT))return;
    if(canopy&&!clearedInReach[0]){h.assertTrue(npc.getEyePosition().distanceToSqr(target.getCenter())<=BuildingOrders.REACH_SQ,"Canopy cleared within unchanged physical reach");clearedInReach[0]=true;}
    var actual=HallUpgradeGoal.inspect(l,s.id());var current=actual.getList("ops",Tag.TAG_COMPOUND);
+   if(longQueue){
+    h.assertTrue(WorldJournal.inspectCommitted(l,Settlement.childId(id,"block/0"))!=null,"Original clearance ID is preserved");
+    int held=0,placed=0;for(var raw:actual.getList("cargo",Tag.TAG_COMPOUND)){var item=ItemStack.of((CompoundTag)raw);if(item.is(VillageAstra.TIMBER_SCAFFOLD.get().asItem()))held+=item.getCount();}
+    for(int i=81;i<current.size();i++){var access=current.getCompound(i);var cell=HallConstructionPlan.step(access);if(cell.after().is(VillageAstra.TIMBER_SCAFFOLD.get())&&access.getBoolean("done")&&l.getBlockState(cell.pos()).is(VillageAstra.TIMBER_SCAFFOLD.get()))placed++;}
+    h.assertTrue(placed>0&&held+placed==8,"Appended access consumes actual finite scaffold stock before clearance");cleanup.run();h.succeed();return;
+   }
    if(canopy&&current.stream().anyMatch(raw->!((CompoundTag)raw).getBoolean("done")))return;
    if(!canopy)h.assertTrue(npc.getEyePosition().distanceToSqr(target.getCenter())<=BuildingOrders.REACH_SQ,"Physical builder retains reach limit");
    h.assertTrue(WorldJournal.inspectCommitted(l,Settlement.childId(id,"block/"+(canopy?0:1)))!=null,"Actual work has committed receipt");
@@ -66,7 +81,7 @@ public final class FieldAccessGameTests {
    }else h.assertTrue(flowed[0],"Vanilla source actually flowed before physical backfill");
    cleanup.run();h.succeed();
   });
-  h.runAtTickTime(2300,()->{if(ended[0])return;var detail=npc.position()+" "+npc.workStatus()+" "+HallUpgradeGoal.inspect(l,s.id());cleanup.run();throw new GameTestAssertException("Physical farm access stalled: "+detail);});
+  h.runAtTickTime(longQueue?5800:2300,()->{if(ended[0])return;var detail=npc.position()+" "+npc.workStatus()+" "+HallUpgradeGoal.inspect(l,s.id());cleanup.run();throw new GameTestAssertException("Physical farm access stalled: "+detail);});
  }
  private static CompoundTag project(BlockPos base,UUID id){var t=new CompoundTag();t.putInt("schema",2);t.putUUID("id",id);t.putUUID("project",id);t.putString("kind","building");t.putString("design","farm");t.putLong("origin",base.asLong());t.putLong("hatch",base.asLong());t.putBoolean("noHatch",true);t.putBoolean("funded",true);t.put("cost",new CompoundTag());return t;}
  private static CompoundTag op(BlockPos p,net.minecraft.world.level.block.state.BlockState before,net.minecraft.world.level.block.state.BlockState after){var t=new CompoundTag();t.putLong("pos",p.asLong());t.put("before",NbtUtils.writeBlockState(before));t.put("after",NbtUtils.writeBlockState(after));return t;}

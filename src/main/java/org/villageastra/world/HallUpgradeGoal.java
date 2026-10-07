@@ -663,9 +663,20 @@ public final class HallUpgradeGoal extends Goal {
   long gameTime=l.getGameTime();int chosen=-1,handy=-1;var eye=worker.getEyePosition();
   // AD-153: a helper works the storey the site is on — the level of the first unfinished operation and below.
   int layer=BlockPos.of(operations.getCompound(index).getLong("pos")).getY();
+  // Appended access keeps its journal index, but precedes the roof that depends
+  // on it. Otherwise the 64-operation handy window can starve it forever.
+  boolean accessFirst=false;
+  if(!relocate)for(int i=index;i<operations.size();i++){
+   var access=operations.getCompound(i);
+   if(access.getInt("phase")>=0||access.getBoolean("done")||access.getLong("retry")>gameTime||claimedByOther(id,i,gameTime)||helper&&!helpable(l,access,layer))continue;
+   var step=HallConstructionPlan.step(access);
+   if(access.contains("stand")&&step.after().is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())&&!l.getBlockState(step.pos().below()).is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get()))continue;
+   accessFirst=true;break;
+  }
   for(int i=index;i<operations.size()&&(chosen<0||handy<0&&i<chosen+64);i++){
    if(!eligible(operations,index,i))break;
    var candidate=operations.getCompound(i);if(candidate.getBoolean("done")||candidate.getLong("retry")>gameTime||claimedByOther(id,i,gameTime))continue;
+   if(accessFirst&&candidate.getInt("phase")>=0)continue;
    if(helper&&!helpable(l,candidate,layer))continue;
    boolean blocked=false;
    // AD-069: a scaffold column is not taken down while any earlier operation is still to be worked from it — a deferred roof block must not
@@ -827,6 +838,15 @@ public final class HallUpgradeGoal extends Goal {
   if(!shape.isEmpty()&&!l.getEntitiesOfClass(ResidentEntity.class,shape.bounds().move(target),x->x!=worker&&x.isAlive()).isEmpty()){
    op.putLong("retry",gameTime+40);stuckIndex=-1;stuckTicks=0;modeIndex=-1;save();worker.workStatus("waiting_for_access");return;}
   if(relocate){var result=Relocations.effect(l,state,current,this::save);if(!result.isEmpty()){worker.workStatus(result);return;}worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);return;}
+  if(op.contains("item")&&held(op.getString("item"))<1){
+   // A later access plan may need scaffolds that the original columns already
+   // consumed. Fund the actual remainder before changing any block.
+   var have=new java.util.HashMap<String,Integer>();
+   for(var raw:state.getList("cargo",Tag.TAG_COMPOUND)){var stack=ItemStack.of((CompoundTag)raw);if(!stack.isEmpty())have.merge(BuiltInRegistries.ITEM.getKey(stack.getItem()).toString(),stack.getCount(),Integer::sum);}
+   if(!state.contains("initialCost"))state.put("initialCost",state.getCompound("cost").copy());
+   var cost=Relocations.netCost(operations,0,have);var item=op.getString("item");cost.putInt(item,Math.max(cost.getInt(item),have.getOrDefault(item,0)+1));
+   state.put("cost",cost);state.putBoolean("funded",false);save();worker.workStatus("missing_building_materials");return;
+  }
   if(!WorldJournal.place(l,Settlement.childId(id,"block/"+current),target,planned.before(),planned.after())){worker.workStatus("changed_target");return;}
   if(op.contains("item"))consume(op.getString("item"));
   if(op.contains("return"))state.getList("cargo",Tag.TAG_COMPOUND).add(new ItemStack(BuiltInRegistries.ITEM.get(new net.minecraft.resources.ResourceLocation(op.getString("return")))).save(new CompoundTag()));
