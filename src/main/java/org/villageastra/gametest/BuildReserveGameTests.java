@@ -91,13 +91,19 @@ public final class BuildReserveGameTests {
    t.chest.setItem(0,new ItemStack(Items.COBBLESTONE,12));
    var state=project(Map.of(Items.COBBLESTONE,10));queue(t,state);
    h.assertTrue(HallReserve.available(t.l,t.e,Items.COBBLESTONE)==2,"Two of twelve are free");
+   var other=new Settlement.Building(UUID.randomUUID(),"farm",20,0,0);
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,t.hall,Items.COBBLESTONE)==0&&HallReserve.keptFrom(t.l,t.e,other,Items.COBBLESTONE)==10,"The owner sees its own material; another building keeps the same live reserve");
    h.assertTrue(builderTakes(t,state,Items.COBBLESTONE,4).getCount()==4,"The builder takes four");
    h.assertTrue(HallReserve.reserved(t.l,t.e,Items.COBBLESTONE)==6&&HallReserve.available(t.l,t.e,Items.COBBLESTONE)==2,"The reserve shrinks by what he took, the free part stays: "+HallReserve.reserved(t.l,t.e));
    h.assertTrue(take(t,fund(project(Map.of())),Items.COBBLESTONE,8).getCount()==2,"A stranger's take is still cut to the free part");
    // The mayor pauses the project: the stock is free meanwhile; resumed, it is kept again.
    var mayor=UUID.randomUUID();var g=t.s.governance();g.appointPlayer(mayor);var id=HallConstructionPlan.projectId(state);
    h.assertTrue(g.setPaused(mayor,g.epoch(),g.revision(),id,true)&&HallReserve.reserved(t.l,t.e).isEmpty(),"A paused project keeps nothing");
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other,Items.COBBLESTONE)==0,"A subsequent view observes pause immediately");
    h.assertTrue(g.setPaused(mayor,g.epoch(),g.revision(),id,false)&&HallReserve.reserved(t.l,t.e,Items.COBBLESTONE)==6,"Resumed, it keeps its rest again");
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other,Items.COBBLESTONE)==6,"A subsequent view observes resumed remaining material");
+   var saved=t.chest.getItem(0).copy();t.chest.setItem(0,ItemStack.EMPTY);
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other,Items.COBBLESTONE)==0,"Actual stock is read anew even when the plan did not change");t.chest.setItem(0,saved);
    state.putBoolean("funded",true);queue(t,state);
    h.assertTrue(HallReserve.reserved(t.l,t.e).isEmpty(),"Funded, the builder holds all of it: nothing is kept");
    state.putBoolean("funded",false);queue(t,state);

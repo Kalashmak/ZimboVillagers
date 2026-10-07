@@ -59,7 +59,9 @@ public final class HallReserve {
  /** Of the hall stock of this item, what is kept for a project other than one of this building (a card of its next level shows the rest). */
  public static int keptFrom(ServerLevel l,SettlementData.Entry e,Settlement.Building b,Item item){
   var snap=active(l,e);if(snap.reserved().isEmpty())return 0;
-  boolean own=snap.target()==null?b.type().equals("town_hall"):snap.target().equals(b.id());return own?0:held(l,e,item);
+  boolean own=snap.target()==null?b.type().equals("town_hall"):snap.target().equals(b.id());if(own)return 0;
+  // Reuse this call's verified plan; stock remains live and the next call checks its own stamp.
+  var c=chest(l,e);return c==null?0:Math.min(snap.reserved().getOrDefault(item,0),LogisticsRoutes.count(c,s->s.is(item)));
  }
  /** The hall stock of this item any consumer but the builder may take. */
  public static int available(ServerLevel l,SettlementData.Entry e,Item item){var c=chest(l,e);return c==null?0:Math.max(0,LogisticsRoutes.count(c,s->s.is(item))-reserved(l,e,item));}
