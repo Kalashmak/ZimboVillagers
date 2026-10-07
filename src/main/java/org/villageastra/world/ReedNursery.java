@@ -19,6 +19,29 @@ public final class ReedNursery {
  static{for(int x=-RADIUS;x<=RADIUS;x++)for(int z=-RADIUS;z<=RADIUS;z++)if(x*x+z*z<=RADIUS*RADIUS)CELLS.add(new BlockPos(x,0,z));CELLS.sort(Comparator.comparingDouble(p->p.distSqr(BlockPos.ZERO)));}
  private ReedNursery(){}
  private static Path path(ServerLevel l,UUID village){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-reeds/"+village+".bin");}
+ private static void deferStock(ServerLevel l,UUID village){var file=path(l,village);var t=Files.exists(file)?NbtRecord.read(file):new CompoundTag();t.putLong("stockRetryAt",l.getGameTime()+24000);NbtRecord.write(file,t);}
+ public static UUID stockOperation(CompoundTag t){return Settlement.childId(t.getUUID("id"),"nursery_seed");}
+ /** Bootstrap from one unreserved seed already brought home, rather than demand
+  * another wild harvest just because the previous planting attempt was unavailable. */
+ public static CompoundTag stockRequest(ResidentEntity worker,SettlementData.Entry e){
+  var l=(ServerLevel)worker.level();if(worker.blockPosition().distSqr(e.center())>32*32||!planted(l,e.settlement().id()).isEmpty())return null;
+  var file=path(l,e.settlement().id());if(Files.exists(file)&&NbtRecord.read(file).getLong("stockRetryAt")>l.getGameTime())return null;
+  var hall=Workshops.hall(e);var stock=hall==null?null:LogisticsRoutes.chest(l,e,hall);if(stock==null||HallReserve.view(l,e,stock).countItem(Items.SUGAR_CANE)<1)return null;
+  var source=LogisticsRoutes.position(e,hall);var t=new CompoundTag();t.putUUID("id",UUID.randomUUID());t.putString("stage","nursery_seed");t.putBoolean("seedFromStock",true);t.putLong("seedSource",source.asLong());t.putLong("target",source.asLong());t.putLong("stand",source.east().asLong());t.put("before",NbtUtils.writeBlockState(Blocks.AIR.defaultBlockState()));return t;
+ }
+ /** Called only by the normal trip after the body physically reaches hall stock. */
+ public static void takeStock(ServerLevel l,SettlementData.Entry e,CompoundTag t,BlockPos source){
+  var operation=stockOperation(t);var seed=WorldJournal.recoverAmount(l,operation);
+  if(seed.isEmpty()&&!WorldJournal.exists(l,operation)&&source.asLong()==t.getLong("seedSource")){
+   var hall=Workshops.hall(e);var stock=hall==null?null:LogisticsRoutes.chest(l,e,hall);
+   if(stock!=null){var free=HallReserve.view(l,e,stock);for(int i=0;i<free.getContainerSize();i++)if(free.getItem(i).is(Items.SUGAR_CANE)){
+    seed=WorldJournal.takeAmount(l,operation,source,i,stock.getItem(i).copy(),1);break;
+   }}
+  }
+  if(seed.isEmpty()){if(!WorldJournal.exists(l,operation))t.putBoolean("complete",true);return;}
+  if(!seed.is(Items.SUGAR_CANE)||seed.getCount()!=1)throw new IllegalStateException("Invalid nursery seed withdrawal");
+  var cargo=new ListTag();cargo.add(seed.save(new CompoundTag()));t.put("cargo",cargo);t.putString("stage","carry");t.putInt("delivered",0);
+ }
  public static List<BlockPos> planted(ServerLevel l,UUID village){
   var file=path(l,village);var out=new ArrayList<BlockPos>();if(!Files.exists(file))return out;
   // Old records could count a paid upper segment as another plant. Keep the
@@ -78,7 +101,7 @@ public final class ReedNursery {
    // should not make every local nursery shore look unreachable from the mine.
    if(worker.blockPosition().distSqr(e.center())>32*32)return false;
    if(worker.tickCount%20!=0){worker.workStatus("seeking_materials");return true;}
-   var search=plan(worker,e,t);t.putBoolean("nurseryChecked",search!=Search.PENDING);save(worker,t);
+   var search=plan(worker,e,t);t.putBoolean("nurseryChecked",search!=Search.PENDING);if(search==Search.UNAVAILABLE)deferStock(l,e.settlement().id());save(worker,t);
    if(search==Search.PENDING){worker.getNavigation().stop();worker.workStatus("seeking_materials");return true;}
   }
   if(!t.contains("nurseryTarget"))return false;var target=BlockPos.of(t.getLong("nurseryTarget"));var stand=BlockPos.of(t.getLong("nurseryStand"));
@@ -87,7 +110,7 @@ public final class ReedNursery {
   if(WorldJournal.exists(l,receipt)){worker.workStatus("changed_target");return true;}
   double distance=worker.distanceToSqr(stand.getX()+.5,stand.getY(),stand.getZ()+.5);
   double remaining=Math.sqrt(distance);if(!t.contains("nurseryBest")||remaining+.5<t.getDouble("nurseryBest")){t.putDouble("nurseryBest",remaining);t.putInt("nurseryTravel",0);}
-  if(!safe(l,target)||!HarvestAccess.standing(l,stand,target)||planted(l,e.settlement().id()).size()>=CAPACITY||t.getInt("nurseryTravel")>2400){t.remove("nurseryTarget");t.remove("nurseryStand");save(worker,t);return false;}
+  if(!safe(l,target)||!HarvestAccess.standing(l,stand,target)||planted(l,e.settlement().id()).size()>=CAPACITY||t.getInt("nurseryTravel")>2400){deferStock(l,e.settlement().id());t.remove("nurseryTarget");t.remove("nurseryStand");save(worker,t);return false;}
   worker.displayWorkItem(seed);
   if(distance>.16){
    if(distance<2.25){worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(stand.getX()+.5,stand.getY(),stand.getZ()+.5,.8);}
