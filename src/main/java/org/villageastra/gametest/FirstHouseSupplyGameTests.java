@@ -57,17 +57,21 @@ public final class FirstHouseSupplyGameTests {
   } finally {npc.discard();HallUpgradeGoal.drop(l,s.id());SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
  }
  @GameTest(template="empty",batch="first_house_supply",timeoutTicks=200)
- public static void foresterMakesPaidWoodenReplacementWhileHouseReservesStone(GameTestHelper h) {
+ public static void foresterUsesThePaidStoneMaintenanceBufferWithoutForgivingConstruction(GameTestHelper h){replacement(h,true);}
+ @GameTest(template="empty",batch="first_house_supply",timeoutTicks=200)
+ public static void foresterMakesPaidWoodenReplacementWhenStoneIsAbsent(GameTestHelper h){replacement(h,false);}
+ private static void replacement(GameTestHelper h,boolean stone){
   var t=town(h);var l=h.getLevel();var s=t.e.settlement();
-  try {
-   HallUpgradeGoal.store(l,s.id(),project());t.chest.setItem(0,new ItemStack(Items.COBBLESTONE,3));
+  try{
+   HallUpgradeGoal.store(l,s.id(),project());if(stone)t.chest.setItem(0,new ItemStack(Items.COBBLESTONE,3));
    t.chest.setItem(1,new ItemStack(Items.BIRCH_PLANKS,3));t.chest.setItem(2,new ItemStack(Items.STICK,2));
-   var wants=WorkerSupplies.wants(l,t.e);
-   h.assertTrue(wants.stream().anyMatch(w->w.matches(new ItemStack(Items.WOODEN_AXE))),"A missing forestry tool requests a craftable wooden alternative");
-   for(int i=0;i<1000&&t.chest.countItem(Items.WOODEN_AXE)==0;i++)Workshops.advance(l,t.e,t.hall,l.getGameTime()+20L*i,wants);
-   h.assertTrue(t.chest.countItem(Items.WOODEN_AXE)==1,"Actual workshop funding, labor and output produce one replacement axe");
-   h.assertTrue(t.chest.countItem(Items.COBBLESTONE)==3&&t.chest.countItem(Items.BIRCH_PLANKS)==0&&t.chest.countItem(Items.STICK)==0,"Real wood and sticks are consumed; reserved construction stone is untouched");
-  } finally {HallUpgradeGoal.drop(l,s.id());SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+   var wants=WorkerSupplies.wants(l,t.e);var result=stone?Items.STONE_AXE:Items.WOODEN_AXE;
+   h.assertTrue(wants.stream().anyMatch(w->w.matches(new ItemStack(Items.WOODEN_AXE))),"Missing forestry tool retains its wooden fallback");
+   for(int i=0;i<1000&&t.chest.countItem(result)==0;i++)Workshops.advance(l,t.e,t.hall,l.getGameTime()+20L*i,wants);
+   h.assertTrue(t.chest.countItem(result)==1,"Actual workshop funding, labor and output produce the chosen replacement: "+Workshops.inspect(l,t.hall.id()));
+   h.assertTrue(t.chest.countItem(Items.COBBLESTONE)==0&&t.chest.countItem(Items.BIRCH_PLANKS)==(stone?3:0)&&t.chest.countItem(Items.STICK)==0,"Exactly three matching tool materials and two sticks are consumed");
+   var order=HallUpgradeGoal.inspect(l,s.id());h.assertTrue(order.getCompound("cost").getInt("minecraft:cobblestone")==49&&!order.getBoolean("funded"),"Maintenance never waives the construction bill");
+  }finally{HallUpgradeGoal.drop(l,s.id());SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
  }
  @GameTest(template="empty",batch="first_house_supply",timeoutTicks=200)
  public static void minerCanBootstrapStoneButCannotRequestWoodForGold(GameTestHelper h) {

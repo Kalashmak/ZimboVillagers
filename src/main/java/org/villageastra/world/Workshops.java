@@ -243,7 +243,7 @@ public final class Workshops {
  private static RecipeManager cachedManager;
  private static final Map<String,List<Job>> CACHE=new HashMap<>();
  /** Candidate jobs that produce the item in this workshop, without regard to stock; each is scaled to the wanted amount up to its recipe's batch
-  *  (custom 'batch', smelting_batch for cooking, one for crafting; AD-104 P2). */
+  *  (custom 'batch', smelting_batch for cooking, up to four for hall crafting and one elsewhere; AD-104 P2). */
  static synchronized List<Job> candidates(ServerLevel l,Spec spec,Item target,int wanted){
   var manager=l.getRecipeManager();if(manager!=cachedManager){CACHE.clear();cachedManager=manager;}
   var templates=CACHE.computeIfAbsent(spec.building()+"|"+spec.level()+"|"+BuiltInRegistries.ITEM.getKey(target),k->templates(l,spec,target));
@@ -273,7 +273,7 @@ public final class Workshops {
    var out=r.getResultItem(access);if(out.isEmpty()||!out.is(target)||r.isSpecial())continue;
    var inputs=group(r.getIngredients());if(inputs.isEmpty()||remainders(inputs))continue;
    if(r instanceof AbstractCookingRecipe cooking)result.add(new Job(r.getId().toString(),List.of(new Input(inputs.get(0).ingredient(),1)),cooking.getCookingTime(),null,0,List.of(out.copy()),Math.max(cooking.getCookingTime(),spec.labor()),1,SMELTING_BATCH));
-   else result.add(new Job(r.getId().toString(),inputs,0,null,0,List.of(out.copy()),spec.labor(),1,1));
+   else {int batch=spec.building().equals("town_hall")?Math.min(4,out.getMaxStackSize()/out.getCount()):1;result.add(new Job(r.getId().toString(),inputs,0,null,0,List.of(out.copy()),spec.labor(),1,Math.max(1,batch)));}
   }
   return List.copyOf(result);
  }
@@ -330,7 +330,7 @@ public final class Workshops {
  private static int groupEnd(List<Want> wants,int from){int end=from+1;while(end<wants.size()&&wants.get(end).need()==wants.get(from).need())end++;return end;}
  private static Job funded(ServerLevel l,Spec spec,Container chest,Job job,int bank,boolean protect){
   Job ready=supplied(chest,job,bank)?job:null;
-  if(ready==null&&job.units()>1&&(job.recipe().startsWith("custom:")||NaturalFurnace.recipe(l,job))){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)ready=scale(unit,Math.min(job.units(),fit));}
+  if(ready==null&&job.units()>1){var unit=unit(job);int fit=fit(chest,unit,bank);if(fit>=1)ready=scale(unit,Math.min(job.units(),fit));}
   if(ready!=null&&protect&&chest instanceof PlanInventory stock&&reversible(l,spec,unit(ready),stock))for(var in:ready.inputs())for(var option:in.ingredient().getItems())if(available(stock,in)-in.count()<stock.conversionKeep.getOrDefault(option.getItem(),0))return null;
   return ready;
  }
@@ -378,7 +378,7 @@ public final class Workshops {
    // unfunded forest of interchangeable wood recipes. Raw shortages are
    // published separately by leaves; reconsider when the gatherer supplies it.
    if(job!=template){boolean absent=false;for(int i=0;i<job.inputs().size();i++)if(job.inputs().get(i)!=template.inputs().get(i)&&available(chest,job.inputs().get(i))<job.inputs().get(i).count()/job.units()){absent=true;break;}if(absent)continue;}
-   // Start whole affordable units of custom work or vanilla smelting rather
+   // Start whole affordable units of an allowed recipe batch rather
    // than strand three paid inputs while waiting for a fourth. Unit costs,
    // fuel, labor and the maximum batch remain unchanged.
    if(depth>=(spec.building().equals("town_hall")?12:3))continue;
