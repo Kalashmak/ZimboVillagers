@@ -381,9 +381,11 @@ public final class HallUpgradeGoal extends Goal {
   boolean standing=l.getBlockState(floor).isFaceSturdy(l,floor,Direction.UP)&&Math.abs(worker.getY()-worker.blockPosition().getY())<.2;
   if(!worker.onGround()&&standing)worker.setOnGround(true);
   if(!worker.onGround()){lastStand="airborne at "+worker.blockPosition().toShortString()+" climb="+worker.onClimbable();return null;}
-  int paths=0,reach=0;
-  for(int i=0;i<Math.min(12,candidates.size());i++){var path=ConstructionRoutes.plan(worker,candidates.get(i));if(path!=null)paths++;if(path!=null&&path.canReach()){lastStand="stand="+candidates.get(i).toShortString()+" from="+worker.blockPosition().toShortString()+" tried="+i;return candidates.get(i);}}
-  lastStand="candidates="+candidates.size()+" paths="+paths+" reach="+reach+" ground="+worker.onGround()+" first="+(candidates.isEmpty()?"none":candidates.get(0).toShortString())+" at="+worker.blockPosition().toShortString()+"="+net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(l.getBlockState(worker.blockPosition()).getBlock()).getPath()+" climb="+worker.onClimbable();
+  // All legal work positions share one search frontier. Enclosed nearby cells
+  // must not hide a reachable stand beyond an arbitrary twelve-candidate cutoff.
+  var path=ConstructionRoutes.planAny(worker,new java.util.LinkedHashSet<>(candidates));
+  if(path!=null&&path.canReach()){var chosen=path.getTarget();lastStand="stand="+chosen.toShortString()+" from="+worker.blockPosition().toShortString()+" candidates="+candidates.size();return chosen;}
+  lastStand="candidates="+candidates.size()+" sharedSearch=true ground="+worker.onGround()+" first="+(candidates.isEmpty()?"none":candidates.get(0).toShortString())+" at="+worker.blockPosition().toShortString()+"="+net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(l.getBlockState(worker.blockPosition()).getBlock()).getPath()+" climb="+worker.onClimbable();
   return null;
  }
  /** A cell a worker can occupy: a scaffold only carries whoever comes from above, so from inside and below it is free space. */

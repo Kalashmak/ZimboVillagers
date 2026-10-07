@@ -24,4 +24,17 @@ public final class ConstructionRouteGameTests {
   });
   h.runAtTickTime(3800,()->h.assertTrue(false,"Builder did not return to site: "+npc.position()));
  }
+ @GameTest(template="empty",batch="construction_stand_candidates",timeoutTicks=500)
+ public static void builderChecksReachableStandsBeyondTheFirstTwelve(GameTestHelper h){
+  var l=h.getLevel();var base=h.absolutePos(new BlockPos(0,12,0));
+  for(int x=-7;x<=7;x++)for(int z=-7;z<=7;z++)for(int y=0;y<=4;y++){
+   boolean wall=(Math.abs(x)==3&&Math.abs(z)<=3||Math.abs(z)==3&&Math.abs(x)<=3)&&y>0;
+   l.setBlock(base.offset(x,y,z),(y==0||wall?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
+  }
+  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(base.getX()-5.5,base.getY()+1,base.getZ()+.5);npc.setOnGround(true);
+  var target=base.above();var stand=HallUpgradeGoal.stand(l,npc,target,new int[]{target.getY()});
+  h.assertTrue(stand!=null,"Reachable exterior stand must not be hidden by the first twelve enclosed candidates: "+HallUpgradeGoal.lastStand);
+  h.assertTrue(Math.abs(stand.getX()-base.getX())>3||Math.abs(stand.getZ()-base.getZ())>3,"Selected position must be outside sealed room");
+  var path=ConstructionRoutes.plan(npc,stand);h.assertTrue(path!=null&&path.canReach(),"Selected stand has a real path");h.succeed();
+ }
 }
