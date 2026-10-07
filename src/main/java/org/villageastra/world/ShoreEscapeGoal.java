@@ -30,14 +30,13 @@ public final class ShoreEscapeGoal extends Goal {
  /** Leave a low overhang horizontally before planning a floating route to shore.
   * Every sampled body box must be clear and remain over water; this never cuts terrain or lifts a body through a ceiling. */
  private Vec3 openWater(){
-  var l=resident.level();var foot=resident.blockPosition();double half=resident.getBbWidth()/2D;
-  var floating=new net.minecraft.world.phys.AABB(foot.getX()+.5-half,foot.getY()+.7,foot.getZ()+.5-half,foot.getX()+.5+half,foot.getY()+.7+resident.getBbHeight(),foot.getZ()+.5+half);
-  if(!l.getBlockCollisions(resident,floating).iterator().hasNext())return null;
+  var l=resident.level();var foot=resident.blockPosition();
+  if(clearWaterNode(resident,foot))return null;
   Vec3 best=null;double cost=Double.MAX_VALUE;
   for(int x=-4;x<=4;x++)for(int z=-4;z<=4;z++){
    var p=foot.offset(x,0,z);if(x*x+z*z>16||!l.hasChunkAt(p)||!l.getFluidState(p).is(FluidTags.WATER))continue;
    var goal=new Vec3(p.getX()+.5,resident.getY(),p.getZ()+.5);double distance=goal.distanceToSqr(resident.position());if(distance<.25||distance>=cost)continue;
-   if(l.getBlockCollisions(resident,floating.move(x,0,z)).iterator().hasNext())continue;
+   if(!clearWaterNode(resident,p))continue;
    boolean clear=true;int steps=(int)Math.ceil(Math.sqrt(distance)/.15);
    for(int i=1;i<=steps;i++){
     var delta=goal.subtract(resident.position()).scale(i/(double)steps);var point=resident.position().add(delta);var cell=BlockPos.containing(point);
@@ -50,8 +49,12 @@ public final class ShoreEscapeGoal extends Goal {
   if(!atWater()||resident.isPassenger()||resident.isSleeping()){anchor=null;still=0;return false;}
   if(resident.tickCount-sampled<20)return false;sampled=resident.tickCount;var now=resident.position();
   if(anchor==null||now.multiply(1,0,1).distanceToSqr(anchor.multiply(1,0,1))>.5625){anchor=now;still=0;}else still+=20;
-  if(still<200||resident.tickCount-attempt<200||resident.isEyeInFluid(FluidTags.WATER))return false;attempt=resident.tickCount;
+  boolean submerged=resident.isEyeInFluid(FluidTags.WATER),urgent=submerged&&resident.getAirSupply()<220;
+  // A roof can keep ordinary floating below the surface. Leave sideways while
+  // there is still air, instead of requiring an already dry head to start recovery.
+  if(still<(urgent?0:200)||resident.tickCount-attempt<(urgent?20:200))return false;attempt=resident.tickCount;
   swimExit=openWater();if(swimExit!=null){bank=null;path=null;return true;}
+  if(submerged)return false; // With no verified open column, ordinary swimming retains control.
   return chooseBank();
  }
  private boolean chooseBank(){

@@ -51,7 +51,7 @@ public final class ClayBankGameTests {
   int cursor=0;for(int x=-192;x<=192;x++)for(int z=-192;z<=192;z++){int d=x*x+z*z;if(d<1225||d==1225&&(x<35||x==35&&z<0))cursor++;}
   var scan=new CompoundTag();scan.putInt("surveyCursor",cursor);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),scan);
   h.assertTrue(HarvestAccess.standing(l,stand,target)&&HarvestAccess.visible(npc,stand,target)&&HarvestAccess.find(npc,target,320)!=null,"Shallow clay has an actual dry supported visible reversible native route");
-  h.runAtTickTime(240,()->h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).hasUUID("id"),"The dry bank must permit a normal demanded clay trip"));
+  h.runAtTickTime(240,()->h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).hasUUID("id"),"The dry bank must permit a normal demanded clay trip: ticks="+npc.tickCount+" state="+NaturalSupplyGoal.inspect(l,npc.getUUID())+" position="+npc.position()+" ticking="+l.isPositionEntityTicking(npc.blockPosition())));
   h.onEachTick(()->{
    h.assertTrue(!npc.isInWater()&&!npc.isUnderWater()&&npc.getHealth()==npc.getMaxHealth(),"The gathering body never enters water or loses health");
    var t=NaturalSupplyGoal.inspect(l,npc.getUUID());
