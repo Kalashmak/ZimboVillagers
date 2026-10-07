@@ -7,6 +7,7 @@ import net.minecraft.world.phys.Vec3;
 public final class PitEscapeGoal extends Goal {
  private final ResidentEntity resident;private BlockPos exit,anchor;private Vec3 last;private int still,checks,escapeTicks,escapeLimit;
  private boolean atAnchor;
+ private BlockPos recoveryTarget,recoveryOrigin,returnedAnchor,returnedLedge,returnedTarget;
  private record Route(BlockPos anchor,BlockPos exit){}
  public PitEscapeGoal(ResidentEntity resident){this.resident=resident;setFlags(EnumSet.of(Flag.MOVE,Flag.JUMP));}
  /** Only ankle/waist-deep water on a solid floor with an open dry column above, never a submerged ascent. */
@@ -79,7 +80,17 @@ public final class PitEscapeGoal extends Goal {
   // Repeated jumps against a wall are motion, but not progress out of a pit. Keep one horizontal
   // anchor until the resident actually leaves it; small collision nudges must not reset the timer.
   if(last!=null&&now.multiply(1,0,1).distanceToSqr(last.multiply(1,0,1))<.5625)still+=20;else{still=0;last=now;}
-  if(still<200)return false;var route=route(resident);if(route==null)return false;anchor=route.anchor();exit=route.exit();return true;}
+  if(still<200)return false;
+  var path=resident.getNavigation().getPath();
+  // A native partial route can undo a successful climb without invoking controlled descent.
+  // Only the same failed destination and a return to the same lower starting floor prove this loop.
+  if(returnedLedge!=null&&path!=null&&!path.canReach()&&path.isDone()&&path.getTarget().equals(returnedTarget)
+    &&resident.onGround()&&resident.blockPosition().distSqr(returnedAnchor)<=4&&resident.getY()<returnedLedge.getY()){
+   RecoveryLedges.remember(resident,returnedLedge);returnedLedge=null;
+  }
+  var route=route(resident);if(route==null)return false;anchor=route.anchor();exit=route.exit();
+  // Capture before GoalSelector stops the displaced job and clears its navigation.
+  recoveryTarget=path!=null&&!path.canReach()?path.getTarget():null;return true;}
  @Override public boolean canContinueToUse(){
   if(exit==null||escapeTicks>=escapeLimit||resident.isInWaterOrBubble()&&!shallow(resident))return false;
   if(resident.distanceToSqr(Vec3.atBottomCenterOf(exit))>.04)return true;
@@ -90,7 +101,7 @@ public final class PitEscapeGoal extends Goal {
   var next=route(resident);if(next==null||next.exit().getY()<=exit.getY())return false;
   anchor=next.anchor();exit=next.exit();atAnchor=false;escapeLimit=Math.min(2400,escapeLimit+160);return true;
  }
- @Override public void start(){escapeTicks=0;atAnchor=false;escapeLimit=resident.distanceToSqr(Vec3.atBottomCenterOf(anchor))>16?1200:160;resident.getNavigation().stop();resident.workStatus("escaping_pit");}
+ @Override public void start(){recoveryOrigin=resident.blockPosition();escapeTicks=0;atAnchor=false;escapeLimit=resident.distanceToSqr(Vec3.atBottomCenterOf(anchor))>16?1200:160;resident.getNavigation().stop();resident.workStatus("escaping_pit");}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){escapeTicks++;
   double horizontal=resident.position().multiply(1,0,1).distanceToSqr(Vec3.atBottomCenterOf(anchor).multiply(1,0,1));
@@ -120,5 +131,9 @@ public final class PitEscapeGoal extends Goal {
   else if(resident.getY()<exit.getY()+.05)resident.setDeltaMovement(0,.18,0);
   else resident.setDeltaMovement(delta.x*.18,0,delta.z*.18);
   resident.fallDistance=0;}
- @Override public void stop(){exit=null;anchor=null;still=0;resident.setDeltaMovement(Vec3.ZERO);}
+ @Override public void stop(){
+  if(exit!=null&&recoveryTarget!=null&&resident.distanceToSqr(Vec3.atBottomCenterOf(exit))<.16){
+   returnedAnchor=recoveryOrigin;returnedLedge=exit;returnedTarget=recoveryTarget;
+  }
+  recoveryTarget=null;exit=null;anchor=null;still=0;resident.setDeltaMovement(Vec3.ZERO);}
 }
