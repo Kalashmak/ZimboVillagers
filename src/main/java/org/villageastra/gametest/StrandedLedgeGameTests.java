@@ -35,13 +35,13 @@ public final class StrandedLedgeGameTests {
   var target=base.offset(12,9,0);
   npc.goalSelector.addGoal(5,new Goal(){
    {setFlags(EnumSet.of(Flag.MOVE));}public boolean canUse(){return true;}public boolean requiresUpdateEveryTick(){return true;}
-   public void tick(){if(npc.tickCount%20==0)npc.getNavigation().moveTo(target.getX()+.5,target.getY(),target.getZ()+.5,.8);}
+   public void tick(){if(npc.tickCount%20==0)npc.getNavigation().moveTo(npc.getNavigation().createPath(target,0),.8);}
    public void stop(){npc.getNavigation().stop();}
   });
   h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Ledge chunk ready")).thenExecute(()->l.addFreshEntity(npc));
   h.onEachTick(()->{if(npc.onGround()&&npc.position().distanceToSqr(Vec3.atBottomCenterOf(target))<1){
    h.assertTrue(npc.getHealth()==npc.getMaxHealth(),"Descent preserves health");npc.discard();PhysicalFixtureChunks.release(l,held);h.succeed();
   }});
-  h.runAtTickTime(1600,()->{String why="Carrier stranded: "+npc.position()+" ticks="+npc.tickCount+" goals="+npc.runningGoals();npc.discard();PhysicalFixtureChunks.release(l,held);h.assertTrue(false,why);});
+  h.runAtTickTime(1600,()->{String why="Carrier stranded: "+npc.position()+" target="+target+" base="+base+" ticks="+npc.tickCount+" goals="+npc.runningGoals()+" path="+npc.getNavigation().getPath();npc.discard();PhysicalFixtureChunks.release(l,held);h.assertTrue(false,why);});
  }
 }

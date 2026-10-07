@@ -110,6 +110,15 @@ public final class PitEscapeGoal extends Goal {
   atAnchor=true;
   // Cross fully onto the ledge before ordinary navigation resumes. At its edge the node
   // evaluator still starts in the hollow and can immediately send the resident back down.
-  resident.getNavigation().stop();if(resident.getY()<exit.getY()+.05)resident.setDeltaMovement(0,.18,0);else{var delta=Vec3.atBottomCenterOf(exit).subtract(resident.position());resident.setDeltaMovement(delta.x*.18,0,delta.z*.18);}resident.fallDistance=0;}
+  resident.getNavigation().stop();var delta=Vec3.atBottomCenterOf(exit).subtract(resident.position());
+  // Once the whole body is over its support, let gravity finish the landing.
+  // Reapplying ascent just above the floor can otherwise hover beyond the arrival
+  // tolerance until the recovery timeout, holding every ordinary work goal idle.
+  double landingMargin=Math.min(.2,(1D-resident.getBbWidth())/2D);
+  if(resident.getY()>=exit.getY()&&Math.abs(delta.x)<landingMargin&&Math.abs(delta.z)<landingMargin)
+   resident.setDeltaMovement(delta.x*.18,Math.min(0,resident.getDeltaMovement().y),delta.z*.18);
+  else if(resident.getY()<exit.getY()+.05)resident.setDeltaMovement(0,.18,0);
+  else resident.setDeltaMovement(delta.x*.18,0,delta.z*.18);
+  resident.fallDistance=0;}
  @Override public void stop(){exit=null;anchor=null;still=0;resident.setDeltaMovement(Vec3.ZERO);}
 }

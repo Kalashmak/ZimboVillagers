@@ -89,7 +89,13 @@ public final class CargoCustody {
     else {worker.getNavigation().stop();worker.setDeltaMovement(Math.max(-.12,Math.min(.12,dx)),worker.onClimbable()?-.2:worker.getDeltaMovement().y,Math.max(-.12,Math.min(.12,dz)));}return;
    }
 
-   if(worker.distanceToSqr(stock.getX()+1.5,stock.getY(),stock.getZ()+.5)>6.25){worker.getNavigation().moveTo(stock.getX()+1.5,stock.getY(),stock.getZ()+.5,.8);return;}
+   if(worker.distanceToSqr(stock.getX()+1.5,stock.getY(),stock.getZ()+.5)>6.25){
+    // A reassigned miner still carries the old tools through the same real cave.
+    // Retain the dry expedition route and its recovery policy instead of replacing
+    // it with a short ordinary path that cannot reach the surface rim.
+    if(worker.onGround()||worker.isInWaterOrBubble())worker.getNavigation().moveTo(ResourceReturnRoute.plan(worker,stock.east()),.8);
+    return;
+   }
    worker.getNavigation().stop();
    if(!WorldJournal.deposit(level,Settlement.childId(id,"return/"+index),stock,item)){worker.workStatus("return_stock_full");return;}
    t.putInt("index",index+1);save(server,t);return;
