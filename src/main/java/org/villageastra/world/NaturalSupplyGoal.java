@@ -152,6 +152,8 @@ public final class NaturalSupplyGoal extends Goal {
   // another selector pass must not immediately replenish an exhausted budget.
   long surveyStarted=System.nanoTime(),surveyDeadline=surveyStarted+Math.max(0L,5_000_000L-surveySpentNanos),surveyPlans=surveyPlanStart;
   try(var sensing=HarvestRouteCache.survey(worker)){
+  if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
+    &&knownLoose(l,e,wanted,reserved,surveyDeadline,surveyPlans))return true;
   if(quarry&&nearbyQuarry(l,e,quarryDemand,reserved,surveyDeadline,surveyPlans))return true;
   if(System.nanoTime()<surveyDeadline&&HarvestRouteCache.stats(worker).plans()-surveyPlans<SURVEY_PLANS
     &&quarry&&resumeFace(l,e,quarryDemand,reserved))return true;
@@ -195,6 +197,38 @@ public final class NaturalSupplyGoal extends Goal {
   }
   state.putBoolean("looseResumeChecked",true);state.remove("looseResumeCursor");save();
   return false;
+ }
+ private UUID sharedLooseOwner,sharedLooseReceipt;private int sharedLooseCell,sharedLooseResident;private long sharedLooseRetry;
+ private final Map<UUID,Long> sharedLooseMisses=new HashMap<>();
+ /** A colleague's committed loose harvest is a lead, not stock or a reserved route.
+  * Job metadata alone never proves a deposit. Terrain, demand, safety and travel are checked anew. */
+ private boolean knownLoose(ServerLevel l,SettlementData.Entry e,Set<Item> wanted,Set<BlockPos> reserved,long deadline,long plans){
+  long now=l.getGameTime();if(now<sharedLooseRetry)return false;
+  var residents=e.settlement().residents().stream().map(Resident::id).filter(id->!id.equals(worker.getUUID())).sorted().toList();
+  sharedLooseMisses.entrySet().removeIf(x->x.getValue()<=now);
+  for(int visited=0;visited<residents.size();visited++){
+   if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){surveyPending=true;return false;}
+   if(sharedLooseResident>=residents.size())sharedLooseResident=0;var owner=residents.get(sharedLooseResident);
+   var old=inspect(l,owner);
+   if(!old.hasUUID("id")||!old.getBoolean("complete")||old.getBoolean("quarry")||!old.contains("target")||!old.contains("before")){sharedLooseResident++;continue;}
+   var id=old.getUUID("id");if(sharedLooseMisses.containsKey(id)){sharedLooseResident++;continue;}
+   var material=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),old.getCompound("before"));var previous=BlockPos.of(old.getLong("target"));
+   if(!LooseHarvestAccess.loose(material)||!mayYield(material,wanted)||Math.abs(previous.getX()-e.center().getX())>ROUTE_RANGE||Math.abs(previous.getZ()-e.center().getZ())>ROUTE_RANGE){sharedLooseResident++;continue;}
+   var receipt=WorldJournal.inspectCommitted(l,id);
+   if(receipt==null||!receipt.getString("kind").equals("block")||receipt.getLong("pos")!=previous.asLong()||!receipt.getCompound("before").equals(old.getCompound("before"))){sharedLooseResident++;continue;}
+   if(!id.equals(sharedLooseReceipt)||!owner.equals(sharedLooseOwner)){sharedLooseOwner=owner;sharedLooseReceipt=id;sharedLooseCell=0;}
+   if(!ResourceExpedition.survey(worker,previous))return false;
+   var positions=new ArrayList<BlockPos>();for(var p:BlockPos.betweenClosed(previous.offset(-4,-2,-4),previous.offset(4,2,4)))positions.add(p.immutable());positions.sort(Comparator.comparingDouble(p->p.distSqr(previous)));
+   for(;sharedLooseCell<positions.size();sharedLooseCell++){
+    if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){surveyPending=true;return false;}
+    var pos=positions.get(sharedLooseCell);if(!l.hasChunkAt(pos)||reserved.contains(pos))continue;var before=l.getBlockState(pos);
+    if(!before.is(material.getBlock())||!safe(l,pos)||Block.getDrops(before,l,pos,null,worker,ItemStack.EMPTY).stream().noneMatch(stack->wanted.contains(stack.getItem())))continue;
+    var choice=LooseHarvestAccess.find(worker,pos,wanted,reserved,ROUTE_RANGE,(int)Math.max(0,SURVEY_PLANS-(HarvestRouteCache.stats(worker).plans()-plans)));
+    if(choice!=null){sharedLooseOwner=null;sharedLooseReceipt=null;sharedLooseCell=0;return begin(choice.target(),choice.stand(),l.getBlockState(choice.target()),false);}
+   }
+   sharedLooseMisses.put(id,now+1200);while(sharedLooseMisses.size()>128)sharedLooseMisses.remove(sharedLooseMisses.keySet().iterator().next());sharedLooseResident++;sharedLooseOwner=null;sharedLooseReceipt=null;sharedLooseCell=0;
+  }
+  sharedLooseRetry=now+100;return false;
  }
  /** Consider a completed short face once before the general survey. This starts
   * a new loan and job; the previous cargo and receipts remain completed. */
