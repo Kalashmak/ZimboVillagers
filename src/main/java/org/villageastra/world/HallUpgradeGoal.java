@@ -627,7 +627,9 @@ public final class HallUpgradeGoal extends Goal {
    double value=cell.distSqr(goal);if(value<score){score=value;best=cell;}}
   return best;
  }
+ private final DoorwayClearance doorwayClearance=new DoorwayClearance();
  private void tickBuilding(ServerLevel l,UUID id){
+  if(!helper&&doorwayClearance.tick(worker,state,id,reachSq))return;
   var operations=state.getList("ops",Tag.TAG_COMPOUND);int index=state.getInt("index");
   // Finished operations keep their place in the chain; the pointer only moves over them.
   while(index<operations.size()&&operations.getCompound(index).getBoolean("done"))index++;
