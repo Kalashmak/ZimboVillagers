@@ -31,7 +31,7 @@ public final class ResourceWorkGoal extends Goal {
     private int idleCalls,oreCheck=-100;
     /** AD-104 P2 (balance/farmer.json): the items the farmer carries before he goes home; how far from the last plot he worked he still sows
      *  and reaps (a 9x9 module is 11.3 blocks corner to corner, and he stands up to 2.5 from a plot); the one-second calls he waits with a
-     *  batch and nothing to do; the ticks before dusk he takes it home; the spare seeds the farm chest keeps вЂ” the rest stays in the soil. */
+     *  batch and nothing to do; the ticks before dusk he takes it home; the spare seeds the farm chest keeps — the rest stays in the soil. */
     public static final int BATCH,REACH,WAIT_CALLS,EVENING,SEED_KEEP;
     static{
         com.google.gson.JsonObject o;
@@ -129,7 +129,7 @@ public final class ResourceWorkGoal extends Goal {
     }
     private void save(){try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();NbtIo.write(state,new DataOutputStream(bytes));AtomicRecord.write(file,bytes.toByteArray());}catch(IOException e){throw new IllegalStateException(e);}}
     private void status(String value){worker.workStatus(value);if(!state.getString("status").equals(value)){state.putString("status",value);save();if(Boolean.getBoolean("villageastra.resourceSmoke")||Boolean.getBoolean("villageastra.deepMineSmoke")||Boolean.getBoolean("villageastra.farmSmoke")||Boolean.getBoolean("villageastra.foresterProbe"))com.mojang.logging.LogUtils.getLogger().info("ASTRA_WORK {} {} at {}",miner?"miner":farmer?"farmer":"forester",value,worker.blockPosition());}}
-    /** AD-079: the miner's own shaft is a stair of steps in a walled trench, and no single route out of it satisfies the navigator вЂ”
+    /** AD-079: the miner's own shaft is a stair of steps in a walled trench, and no single route out of it satisfies the navigator —
      *  it hands back a path that is finished where the miner already stands. Inside its own shaft the miner therefore walks tread by
      *  tread by itself, the way the builder climbs its ladder, and outside it the ordinary route takes over again. */
     private BlockPos workPos(int x,int y,int z){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());return BuildingPlacement.at(e,e.settlement().workplace(worker.getUUID()),x,y,z);}
@@ -179,7 +179,7 @@ public final class ResourceWorkGoal extends Goal {
                 &&level.getBlockState(at.below()).isFaceSturdy(level,at.below(),net.minecraft.core.Direction.UP))return at;}
         return about;
     }
-    /** Where a forester stands to fell a tree: a free cell beside its foot (any cell of a 2x2 foot), the one nearest him вЂ” heading for the
+    /** Where a forester stands to fell a tree: a free cell beside its foot (any cell of a 2x2 foot), the one nearest him — heading for the
      *  trunk itself sends the path to the closest a path can come to a solid log. */
     private BlockPos trunkSide(BlockPos foot){
         var level=(ServerLevel)worker.level();BlockPos best=null;double score=Double.MAX_VALUE;
@@ -191,8 +191,8 @@ public final class ResourceWorkGoal extends Goal {
             double s=at.distSqr(worker.blockPosition());if(s<score){score=s;best=at;}}
         return best==null?foot:best;
     }
-    /** The cell beside a chest a worker can really stand in. Buildings change shape вЂ” AD-074 put the mine's shaft where the miner
-     *  used to stand вЂ” so the side is read from the world instead of always being the eastern one. */
+    /** The cell beside a chest a worker can really stand in. Buildings change shape — AD-074 put the mine's shaft where the miner
+     *  used to stand — so the side is read from the world instead of always being the eastern one. */
     private BlockPos beside(BlockPos chest){
         var level=(ServerLevel)worker.level();
         for(var side:List.of(chest.east(),chest.north(),chest.south(),chest.west())){
@@ -233,7 +233,7 @@ public final class ResourceWorkGoal extends Goal {
         // AD-122: a miner who has begun a block works it every tick, like a player holding the mouse button; walking and everything else keep the one-second call.
         // With a batch in hand he turns to the next cell of his drive at once, and starts a block the tick he stands at it.
         boolean face=miner&&state!=null&&(state.getString("stage").equals("dig")&&(state.getInt("labor")>0||atFace())||state.getString("stage").equals("choose")&&!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty());
-        // AD-122 (owner): below the lot the miner walks every tick, as he digs вЂ” a push once a second left him crawling up the stair.
+        // AD-122 (owner): below the lot the miner walks every tick, as he digs — a push once a second left him crawling up the stair.
         face|=miner&&base!=null&&worker.getY()-base.getY()<-.5;
         if(!withoutPlayers&&worker.tickCount%20!=0&&!face)return;
         ServerLevel level=(ServerLevel)worker.level();String stage=state.getString("stage");UUID id=state.getUUID("operation");
@@ -283,13 +283,13 @@ public final class ResourceWorkGoal extends Goal {
             if(tool.isEmpty()){if(state.contains("toolSource")){state.remove("toolSource");save();return;}status("missing_tool");return;}
             state.remove("toolSource");state.remove("handFelling");state.remove("requiredToolState");state.put("tool",tool.save(new CompoundTag()));state.putString("stage",state.getBoolean("resumeSupport")?"support_fetch":"choose");state.remove("resumeSupport");state.putUUID("operation",UUID.randomUUID());save();return;
         }
-        // AD-131: the forester's own round вЂ” wild trees round his hut, replanting, trips (ForestWork).
+        // AD-131: the forester's own round — wild trees round his hut, replanting, trips (ForestWork).
         if(!miner&&!farmer){forest(level,stage,id);return;}
         if(miner&&MineSealing.active(state)){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());MineSealing.tick(level,e.settlement().workplace(worker.getUUID()),state,worker,stock,beside(stock),minerAccess(),this::near,this::save,this::status,level.getGameTime());return;}
         if(stage.equals("support_fetch")){
             if(!near(beside(stock)))return;
             if(restockLights(level,id))return;
-            // AD-112: as many logs as the beam MineDrive gave вЂ” the stair's width, or one for a gallery.
+            // AD-112: as many logs as the beam MineDrive gave — the stair's width, or one for a gallery.
             int width=MineWork.beam(state).count(),fetched=state.getInt("support_fetched");
             if(fetched>=width-state.getInt("support_placed")){state.putString("stage","support_place");save();return;}
             UUID take=MineWork.timberId(state,id,fetched);
@@ -321,8 +321,8 @@ public final class ResourceWorkGoal extends Goal {
             }save();return;
         }
         if(stage.equals("light")){
-            // AD-122 (owner): the light due first, hung in the top cell above the walking headroom вЂ” a lantern from the roof, or a torch on the
-            // wall вЂ” under its own journal id and paid from the lights he carries in the same record write; a cell it cannot take is passed by.
+            // AD-122 (owner): the light due first, hung in the top cell above the walking headroom — a lantern from the roof, or a torch on the
+            // wall — under its own journal id and paid from the lights he carries in the same record write; a cell it cannot take is passed by.
             var due=state.getIntArray("lightsDue");int held=state.getInt("lightsHeld");
             if(due.length<8||held<1){state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());save();return;}
             BlockPos at=workPos(due[0],due[1],due[2]);if(!near(workPos(due[3],due[4],due[5])))return;
@@ -416,7 +416,7 @@ public final class ResourceWorkGoal extends Goal {
             state.put("tool",tool.save(new CompoundTag()));state.putString("stage",tool.isEmpty()?"tool":"choose");state.putUUID("operation",UUID.randomUUID());save();return;
         }
         if(stage.equals("replant")){
-            // AD-104 P2: a plot is sown from a seed of the batch вЂ” the one just reaped at once, where the farmer stands. The seed is spent in the
+            // AD-104 P2: a plot is sown from a seed of the batch — the one just reaped at once, where the farmer stands. The seed is spent in the
             // same record write that leaves this stage, so a replay after a crash finds the sowing by its id and spends the seed once.
             UUID placement=Settlement.childId(id,"replant");BlockPos target=BlockPos.of(state.getLong("target"));var crop=FarmCrops.pending(state);
             boolean sown=WorldJournal.recoverExisting(level,placement)!=null;
@@ -433,7 +433,7 @@ public final class ResourceWorkGoal extends Goal {
         if(stage.equals("choose")){
             BlockPos target=null;
             if(miner){
-                // AD-112: MineDrive picks the cell вЂ” the stair down to the floor of the mine's working level, then its galleries.
+                // AD-112: MineDrive picks the cell — the stair down to the floor of the mine's working level, then its galleries.
                 // AD-122: a full batch, a worn-out pick, the evening or an interruption send what he carries to the chest before the next cell.
                 if(state.contains("stairStep")){beginStairs(level);return;}
                 if(lightReady()){state.putString("stage","light");state.putUUID("operation",UUID.randomUUID());save();return;}
@@ -448,7 +448,7 @@ public final class ResourceWorkGoal extends Goal {
                 var block=level.getBlockState(target);
                 // An unsafe gallery cell (not ground, a block entity, a fluid in it or beside it) ends that gallery: the drive turns to the other side.
                 if(MineWork.gallery(state)&&(!MineWork.galleryFloor(level,mineEntry,mine,state,next.cell())||MineWork.unsafeGallery(level,target))){MineWork.blocked(state);save();return;}
-                // An open cell the drive passes; one that asks for a beam sends the batch to the chest first вЂ” the timber is fetched from the hall after.
+                // An open cell the drive passes; one that asks for a beam sends the batch to the chest first — the timber is fetched from the hall after.
                 if(block.isAir()||MineWork.builtLining(level,mineEntry,mine,target,state)){if(MineWork.gallery(state))MineWork.claim(level,mineEntry,mine,state);advanceMine();afterCell(level);return;}
                 // Only recognized soil, stone and ore; reject containers, structural wood and fluids.
                 if(!MineWork.diggable(level,mineEntry,mine,target,state)){
@@ -540,7 +540,7 @@ public final class ResourceWorkGoal extends Goal {
             if(miner){if(MineWork.gallery(state)){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());MineWork.claim(level,e,e.settlement().workplace(worker.getUUID()),state);}else noteArea(state.getInt("step"));}
             state.putUUID("lastHarvest",id);
             if(farmer){
-                // AD-104 P2: reaping a crop wears no hoe вЂ” vanilla wears a tool only on a block that takes time to break; tilling still does. The
+                // AD-104 P2: reaping a crop wears no hoe — vanilla wears a tool only on a block that takes time to break; tilling still does. The
                 // loot joins the batch, and a crop's plot is sown again at once from its own seed, under this operation (stage replant).
                 ListTag carried=carry(state.getList("cargo",Tag.TAG_COMPOUND),loot,before,state.contains("seedAllowance")?state.getInt("seedAllowance"):-1);
                 state.put("cargo",carried);state.remove("seedAllowance");state.putInt("reaped",state.getInt("reaped")+1);idleCalls=0;
@@ -690,7 +690,7 @@ public final class ResourceWorkGoal extends Goal {
     private void fellTree(ServerLevel level,SettlementData.Entry e,org.villageastra.domain.Settlement.Building hut,int lv,UUID id,ItemStack axe){
         ItemStack tool=axe;final ItemStack cutter=axe.copy();
         var logs=state.getLongArray("tree");var befores=state.getList("treeBefore",Tag.TAG_COMPOUND);var leaves=state.getLongArray("treeLeaves");
-        // AD-131: the tree he began comes down whole, and the axe breaks on the last log it can take (as a player's does) вЂ” a trunk left
+        // AD-131: the tree he began comes down whole, and the axe breaks on the last log it can take (as a player's does) — a trunk left
         // half standing has no foot on soil and no crown left, so no forester would ever find it again.
         int usable=tool.isEmpty()?(state.getBoolean("handFelling")?Integer.MAX_VALUE:0):tool.getMaxDamage()-tool.getDamageValue();var loot=new ArrayList<ItemStack>();int[] felled={0};
         if(usable<=0){for(var k:List.of("tree","treeBefore","treeLeaves","labor","base"))state.remove(k);uncrack();
@@ -798,9 +798,9 @@ public final class ResourceWorkGoal extends Goal {
             while(!left.isEmpty()){var part=left.split(left.getMaxStackSize());out.add(part);}}
         var tag=new ListTag();for(var s:out)tag.add(s.save(new CompoundTag()));return tag;}
     private void finishPlant(){state.remove("plantSource");state.remove("plantPlacement");state.remove("sapling");state.putString("stage","choose");state.putUUID("operation",UUID.randomUUID());save();}
-    /** AD-112: one cell of the drive done вЂ” MineDrive moves it on under the floor its target was chosen with. */
+    /** AD-112: one cell of the drive done — MineDrive moves it on under the floor its target was chosen with. */
     private void advanceMine(){MineWork.step(state);}
-    /** AD-122: after a cell of the drive вЂ” the stairs of a finished step first, then its beam (with the batch taken home first, as the
+    /** AD-122: after a cell of the drive — the stairs of a finished step first, then its beam (with the batch taken home first, as the
      *  timber is fetched from the hall), a batch that is due, or the next cell. */
     private void afterCell(ServerLevel level){
         if(state.contains("stairStep")&&carryingStone()){beginStairs(level);return;}
@@ -817,7 +817,7 @@ public final class ResourceWorkGoal extends Goal {
         var local=item.equals("minecraft:torch")?Blocks.WALL_TORCH.defaultBlockState().setValue(WallTorchBlock.FACING,net.minecraft.core.Direction.fromDelta(-wallX,0,-wallZ)):Blocks.LANTERN.defaultBlockState().setValue(LanternBlock.HANGING,true);
         return BuildingPlacement.state(local,mine.rotation());
     }
-    /** AD-122: at the hall stock the miner takes lights up to LIGHTS_CARRIED вЂ” lanterns first, then torches, one kind at a time вЂ” once an
+    /** AD-122: at the hall stock the miner takes lights up to LIGHTS_CARRIED — lanterns first, then torches, one kind at a time — once an
      *  operation, under its own journal id, booked in the same record write. True: this call went on it. */
     /** A tool this worker works with (and cuts the block it waits for). */
     private boolean fitsTool(ItemStack item){
@@ -852,7 +852,7 @@ public final class ResourceWorkGoal extends Goal {
         state.putString("stage","stair");state.putUUID("operation",UUID.randomUUID());save();
     }
     private void endStairs(ServerLevel level){for(var key:List.of("stairStep","stairPlaced","stairItem","stairTaken","stairTakeRound"))state.remove(key);afterCell(level);}
-    /** AD-122: a strike at the block вЂ” the swing, the crack of this share of the break time, the hit sound. */
+    /** AD-122: a strike at the block — the swing, the crack of this share of the break time, the hit sound. */
     private void crack(ServerLevel level,BlockPos target,BlockState rock,int labor,int ticks){
         if(cracking!=null&&!cracking.equals(target))uncrack();cracking=target;
         worker.swing(net.minecraft.world.InteractionHand.MAIN_HAND);MinerSpeed.progress(level,worker,target,rock,labor,ticks);
@@ -864,7 +864,7 @@ public final class ResourceWorkGoal extends Goal {
      *  takes three calls at I and two at IV, and V doubles IV. */
     public static int fellingLabor(int level){return org.villageastra.domain.CoreEffects.value("forester","felling",level);}
     /** AD-104 P2: a call of the farmer with a batch in hand. The batch goes home first when it is full, when the hoe is gone, or in the evening
-     *  (so no batch sleeps in the record). Then he sows an empty plot near him from the batch, else reaps the nearest ripe plot near him вЂ”
+     *  (so no batch sleeps in the record). Then he sows an empty plot near him from the batch, else reaps the nearest ripe plot near him —
      *  that plot is returned for the usual checks. A ripe plot only beyond reach, or a minute with nothing to do, sends the batch home too.
      *  "Near" is REACH from the last plot he worked, so a whole module is one round. Null: this call is done. */
     private BlockPos batch(ServerLevel level,SettlementData.Entry entry,List<BlockPos> plots,org.villageastra.server.FarmPolicies policies){
@@ -891,13 +891,13 @@ public final class ResourceWorkGoal extends Goal {
         return farmer&&count(cargo,Items.WHEAT)>=HandBread.WHEAT_PER_UNIT&&HandBread.open(level,entry)
             &&HandBread.wheatAvailable(level,entry)<HandBread.WHEAT_PER_UNIT*HandBread.UNITS_PER_JOB;
     }
-    /** AD-104 P2: the batch goes home вЂ” every stack into the farm chest in one visit, under a fresh operation. */
+    /** AD-104 P2: the batch goes home — every stack into the farm chest in one visit, under a fresh operation. */
     private void startDelivery(){if(miner){state.putBoolean("advanced",true);interrupted=false;}state.putString("stage","deliver");state.putInt("delivered",0);state.putUUID("operation",UUID.randomUUID());idleCalls=0;save();}
     /** A ripe plot that cannot be worked shows why; for a farmer with a batch in hand it is also a call with nothing to do (AD-104 P2), so the batch still goes home. */
     private void unfit(String reason){if(miner&&carrying()){deliverUndug();return;}if(farmer&&!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty()&&++idleCalls>=WAIT_CALLS)startDelivery();else status(reason);}
     /** AD-122: whether the miner carries dug blocks. */
     private boolean carrying(){return !state.getList("cargo",Tag.TAG_COMPOUND).isEmpty();}
-    /** AD-122: the miner's batch goes to the chest now вЂ” full, the pick worn out, the evening or the night, or after an interruption. */
+    /** AD-122: the miner's batch goes to the chest now — full, the pick worn out, the evening or the night, or after an interruption. */
     private boolean batchDue(){long day=Math.floorMod(dayTime.getAsLong(),24000L);
         return count(state.getList("cargo",Tag.TAG_COMPOUND),null)>=MINER_BATCH||ItemStack.of(state.getCompound("tool")).isEmpty()||day>=SleepGoal.DUSK-MINER_EVENING&&day<SleepGoal.DAWN||interrupted;}
     /** AD-122: the batch goes to the chest before a cell chosen but not dug; its beam is noted again when the cell is chosen after the delivery. */
@@ -910,10 +910,10 @@ public final class ResourceWorkGoal extends Goal {
         var entry=SettlementData.get(worker.getServer()).entry(worker.settlementId());
         try{return entry==null?null:org.villageastra.server.FarmPolicies.get(worker.getServer()).at(entry,pos);}catch(IllegalArgumentException notAPlot){return null;}
     }
-    /** AD-104 P2: the seed a reaping gives besides its food вЂ” wheat's and beetroot's. A carrot or a potato is its own seed and food, so none is left behind. */
+    /** AD-104 P2: the seed a reaping gives besides its food — wheat's and beetroot's. A carrot or a potato is its own seed and food, so none is left behind. */
     static Item spareSeed(BlockState before){return before.is(Blocks.WHEAT)?Items.WHEAT_SEEDS:before.is(Blocks.BEETROOTS)?Items.BEETROOT_SEEDS:null;}
     /** AD-104 P2: one reaping's loot joins the batch, merged by item into stacks of one slot at most. Of the crop's spare seed only allowance
-     *  are carried (-1: all of it); the rest stays in the soil вЂ” the harvest receipt keeps the whole vanilla loot. */
+     *  are carried (-1: all of it); the rest stays in the soil — the harvest receipt keeps the whole vanilla loot. */
     static ListTag carry(ListTag cargo,List<ItemStack> loot,BlockState before,int allowance){
         var held=stacks(cargo);Item spare=spareSeed(before);int left=allowance;
         for(ItemStack drop:loot){

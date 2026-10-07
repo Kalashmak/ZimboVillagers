@@ -42,7 +42,7 @@ public final class LogisticsRoutes {
   if(b.type().equals("farm")){if(item.is(Items.SUGAR_CANE))return 1;if(item.is(Items.CARROT)||item.is(Items.POTATO))return 4;if(item.is(Items.WHEAT_SEEDS)||item.is(Items.BEETROOT_SEEDS))return 8;}
   if(item.is(net.minecraft.tags.ItemTags.LOGS)){if(b.type().equals("mine"))return 8;if(b.type().equals("forester")&&b.level()>=ForestBalance.SAW_FROM)return ForestBalance.LOG_KEEP;}return 0;}
  private static boolean output(ItemStack s){return s.is(net.minecraft.tags.ItemTags.LOGS)||Set.of(Items.COBBLESTONE,Items.COBBLED_DEEPSLATE,Items.RAW_IRON,Items.RAW_COPPER,Items.RAW_GOLD,Items.COAL,Items.DIAMOND,Items.REDSTONE,Items.LAPIS_LAZULI,Items.EMERALD,Items.WHEAT,Items.CARROT,Items.POTATO,Items.BEETROOT,Items.SUGAR_CANE,
-  // AD-130: the earth the miner digs out is the hall's stock too вЂ” the barn's upper fields are laid of it (with the quarry's and the roads' spoil).
+  // AD-130: the earth the miner digs out is the hall's stock too — the barn's upper fields are laid of it (with the quarry's and the roads' spoil).
   Items.DIRT).contains(s.getItem());}
  private static boolean room(OwnedChestEntity c,ItemStack item){for(int i=0;i<c.getContainerSize();i++){var current=c.getItem(i);if(current.isEmpty()||ItemStack.isSameItemSameTags(current,item)&&current.getCount()+item.getCount()<=Math.min(current.getMaxStackSize(),c.getMaxStackSize()))return true;}return false;}
  private static Route find(ServerLevel l,SettlementData.Entry e,Settlement.Building dest,Demand demand){return find(l,e,dest,demand,LOAD);}
