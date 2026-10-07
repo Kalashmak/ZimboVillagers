@@ -20,9 +20,34 @@ public final class ResourceExpedition {
  }
  private static final TicketType<UUID> TICKET=TicketType.create("villageastra_resource_trip",Comparator.comparing(UUID::toString),100);
  public static void hold(ResidentEntity npc){if(npc.level() instanceof ServerLevel l)l.getChunkSource().addRegionTicket(TICKET,npc.chunkPosition(),3,npc.getUUID());}
- private record Trip(ServerLevel level,boolean test,long renewed){}
+ private record Trip(ServerLevel level,boolean test,long renewed,long stalledSince,long chunk){}
  private static final Map<UUID,Trip> MOVING=new HashMap<>();
- public static void follow(ResidentEntity npc,boolean test){MOVING.put(npc.getUUID(),new Trip((ServerLevel)npc.level(),test,npc.getServer().getTickCount()));hold(npc);}
+ public static void follow(ResidentEntity npc,boolean test){MOVING.put(npc.getUUID(),new Trip((ServerLevel)npc.level(),test,npc.getServer().getTickCount(),-1,npc.chunkPosition().toLong()));hold(npc);}
+ /** A late lower-status callback can leave a ready holder tracked but not ticking.
+  * Reconcile only a sustained disagreement on the current, fully ready native holder.
+  * This sends the native notification; it neither ticks the body nor completes a future. */
+ private static Trip renewed(ResidentEntity npc,Trip trip,long now){
+  var l=trip.level();var cp=npc.chunkPosition();long key=cp.toLong(),since=-1;
+  if(!TouchLoad.ticking(l,npc.blockPosition())){
+   since=trip.chunk()==key&&trip.stalledSince()>=0?trip.stalledSince():now;
+   if(now-since>=100){
+    var map=l.getChunkSource().chunkMap;var holder=map.getVisibleChunkIfPresent(key);
+    if(holder!=null&&holder==map.getUpdatingChunkIfPresent(key)
+      &&holder.getFullStatus()==FullChunkStatus.ENTITY_TICKING&&map.getDistanceManager().inEntityTickingRange(key)){
+     var future=holder.getEntityTickingChunkFuture();
+     if(future.isDone()&&!future.isCompletedExceptionally()&&!future.isCancelled()){
+      var ready=future.getNow(null);
+      if(ready!=null&&ready.left().filter(c->c.getPos().equals(cp)).isPresent()){
+       map.onFullChunkStatusChange(cp,FullChunkStatus.ENTITY_TICKING);
+       com.mojang.logging.LogUtils.getLogger().info("ZimboVillagers restored expedition chunk status: resident={} chunk={}",npc.getUUID(),cp);
+       since=now;
+      }
+     }
+    }
+   }
+  }
+  return new Trip(l,trip.test(),now,since,key);
+ }
  /** Read-only probe diagnostic; no loading or change to saved cargo. */
  public static String status(ResidentEntity npc){
   var l=(ServerLevel)npc.level();var trip=MOVING.get(npc.getUUID());
@@ -48,7 +73,7 @@ public final class ResourceExpedition {
    if(!(l.getEntity(en.getKey()) instanceof ResidentEntity npc)||!npc.isAlive()||npc.settlementId()==null){it.remove();continue;}
    var e=SettlementData.get(server).entry(npc.settlementId());
    if(e==null||!e.dimension().equals(l.dimension().location().toString())||!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))&&!HomeNeighborhood.recovery(npc)){it.remove();continue;}
-   hold(npc);en.setValue(new Trip(l,trip.test(),server.getTickCount()));
+   hold(npc);en.setValue(renewed(npc,trip,server.getTickCount()));
   }
  }
  public static void clear(){MOVING.clear();}
