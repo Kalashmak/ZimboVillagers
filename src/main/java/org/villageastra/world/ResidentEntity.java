@@ -198,8 +198,12 @@ public final class ResidentEntity extends PathfinderMob {
                     }
                     @Override public net.minecraft.world.level.pathfinder.BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter blocks,int x,int y,int z,net.minecraft.world.entity.Mob mob){
                         var state=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y,z));
+                        // Vanilla labels pointed dripstone as open despite its solid tapered collision shape.
+                        // A return route must go around the column instead of entering it or cutting between two.
+                        if(state.is(net.minecraft.world.level.block.Blocks.POINTED_DRIPSTONE))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
                         if(state.is(net.minecraft.world.level.block.Blocks.BUBBLE_COLUMN)&&state.getValue(net.minecraft.world.level.block.BubbleColumnBlock.DRAG_DOWN))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
                         var below=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y-1,z));
+                        if(below.is(net.minecraft.world.level.block.Blocks.POINTED_DRIPSTONE))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
                         if(state.isAir()&&below.is(net.minecraft.world.level.block.Blocks.BUBBLE_COLUMN)&&below.getValue(net.minecraft.world.level.block.BubbleColumnBlock.DRAG_DOWN))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
                         return super.getBlockPathType(blocks,x,y,z,mob);
                     }

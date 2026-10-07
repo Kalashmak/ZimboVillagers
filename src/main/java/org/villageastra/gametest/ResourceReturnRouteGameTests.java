@@ -100,4 +100,20 @@ public final class ResourceReturnRouteGameTests {
   h.runAtTickTime(2200,()->{String why="No safe physical return: "+npc.position()+" ticks="+npc.tickCount;clean.run();h.assertTrue(false,why);});
  }
 
+ @GameTest(template="empty",batch="return_dripstone_corner",timeoutTicks=1600)
+ public static void returningBodyGoesAroundNarrowStalagmiteDiagonal(GameTestHelper h){
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+163840,150,at.getZ());
+  var held=PhysicalFixtureChunks.force(l,base,-7,4,-7,4);
+  for(int x=-7;x<=4;x++)for(int z=-7;z<=4;z++)for(int y=0;y<=5;y++)l.setBlock(base.offset(x,y,z),(y==0||y==5||x==-7||x==4||z==-7||z==4?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
+  var stem=Blocks.POINTED_DRIPSTONE.defaultBlockState().setValue(PointedDripstoneBlock.TIP_DIRECTION,net.minecraft.core.Direction.UP);
+  for(var foot:List.of(base.offset(-1,1,0),base.offset(0,1,-1)))for(int y=0;y<3;y++)l.setBlock(foot.above(y),stem.setValue(PointedDripstoneBlock.THICKNESS,y==0?net.minecraft.world.level.block.state.properties.DripstoneThickness.BASE:y==1?net.minecraft.world.level.block.state.properties.DripstoneThickness.FRUSTUM:net.minecraft.world.level.block.state.properties.DripstoneThickness.TIP),2);
+  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(base.getX()+.5,base.getY()+1,base.getZ()+.5);npc.setOnGround(true);var target=base.offset(-5,1,-5);
+  npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);
+  npc.goalSelector.addGoal(5,new Goal(){{setFlags(EnumSet.of(Flag.MOVE));}public boolean canUse(){return true;}public boolean requiresUpdateEveryTick(){return true;}public void tick(){if(npc.tickCount%20==0&&npc.onGround())npc.getNavigation().moveTo(ResourceReturnRoute.plan(npc,target),.8);}});
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Corner fixture ready")).thenExecute(()->l.addFreshEntity(npc));
+  Runnable clean=()->{npc.discard();PhysicalFixtureChunks.release(l,held);};
+  h.onEachTick(()->{if(npc.onGround()&&npc.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(target))<=5){h.assertTrue(npc.getHealth()==npc.getMaxHealth(),"Carrier walks around sharp columns into the existing delivery reach without injury");clean.run();h.succeed();}});
+  h.runAtTickTime(1400,()->{String why="Body stuck at narrow diagonal: "+npc.position()+" bodyTicks="+npc.tickCount;var path=npc.getNavigation().getPath();if(path!=null){why+=" next="+path.getNextNodeIndex();for(int i=0;i<path.getNodeCount();i++)why+=" "+path.getNodePos(i).subtract(base);}clean.run();h.assertTrue(false,why);});
+ }
+
 }
