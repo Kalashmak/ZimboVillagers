@@ -105,7 +105,7 @@ public final class PitEscapeGoal extends Goal {
    // Navigation considers a waypoint reached before the body is at its centre. Finish the
    // last stride explicitly so the upward motion starts under the verified clear column.
    if(horizontal<2.25){resident.getNavigation().stop();resident.getMoveControl().setWantedPosition(anchor.getX()+.5,anchor.getY(),anchor.getZ()+.5,.8);}
-   else{var path=resident.routeTo(anchor,0,64);if(path!=null&&path.canReach())resident.getNavigation().moveTo(new ResourceReturnRoute.ReturnPath(path),.8);}return;
+   else{var path=resident.routeToRecoveryAnchor(anchor);if(path!=null&&path.canReach())resident.getNavigation().moveTo(path,.8);}return;
   }
   atAnchor=true;
   // Cross fully onto the ledge before ordinary navigation resumes. At its edge the node
