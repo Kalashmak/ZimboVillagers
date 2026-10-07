@@ -12,7 +12,7 @@ public final class ShallowPitGameTests {
  @GameTest(template="empty",batch="shore_safety")
  public static void gathererLeavesWaterBarriersAndFallingColumnsIntact(GameTestHelper h){
   var l=h.getLevel();var at=h.absolutePos(new BlockPos(5,4,5));
-  for(var block:List.of(Blocks.SAND,Blocks.GRAVEL,Blocks.CLAY)){
+  for(var block:List.of(Blocks.SAND,Blocks.GRAVEL)){
    l.setBlock(at,block.defaultBlockState(),2);l.setBlock(at.above(),Blocks.AIR.defaultBlockState(),2);
    l.setBlock(at.east(),Blocks.WATER.defaultBlockState(),2);
    h.assertTrue(!NaturalSupplyGoal.safe(l,at),"Do not open a side water barrier: "+block);
@@ -22,6 +22,12 @@ public final class ShallowPitGameTests {
    h.assertTrue(NaturalSupplyGoal.safe(l,at),"Water below a dry shore block does not flow upward");
    l.setBlock(at.below(),Blocks.STONE.defaultBlockState(),2);
   }
+  // Shallow clay has a separate dry-bank harvest policy; sand and gravel still cannot open water barriers.
+  l.setBlock(at,Blocks.CLAY.defaultBlockState(),2);l.setBlock(at.above(),Blocks.WATER.defaultBlockState(),2);l.setBlock(at.above(2),Blocks.AIR.defaultBlockState(),2);
+  h.assertTrue(NaturalSupplyGoal.safe(l,at),"One shallow water layer permits surveying clay; physical dry-bank access is checked separately");
+  l.setBlock(at.above(2),Blocks.WATER.defaultBlockState(),2);
+  h.assertTrue(!NaturalSupplyGoal.safe(l,at),"Deep underwater clay remains unavailable");
+  l.setBlock(at.above(2),Blocks.AIR.defaultBlockState(),2);
   l.setBlock(at,Blocks.SAND.defaultBlockState(),2);l.setBlock(at.above(),Blocks.SAND.defaultBlockState(),2);
   h.assertTrue(!NaturalSupplyGoal.safe(l,at)&&NaturalSupplyGoal.safe(l,at.above()),"Cut a loose column from its top without causing untracked falling blocks");h.succeed();
  }
