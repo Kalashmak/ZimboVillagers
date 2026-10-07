@@ -8,7 +8,7 @@ import net.minecraft.world.level.pathfinder.Path;
 import net.minecraft.world.phys.Vec3;
 /** A stalled swimmer takes a short, reachable bank before retrying the distant work route. */
 public final class ShoreEscapeGoal extends Goal {
- private final ResidentEntity resident;private Vec3 anchor;private int sampled=-20,still,attempt=-200,elapsed;private BlockPos bank;private Path path;private Vec3 swimExit;private final Map<BlockPos,Integer> recentBanks=new LinkedHashMap<>(),unreachableBanks=new LinkedHashMap<>();
+ private final ResidentEntity resident;private Vec3 anchor;private int sampled=-20,still,attempt=-200,elapsed,lastWater=-1000;private BlockPos bank;private Path path;private Vec3 swimExit;private final Map<BlockPos,Integer> recentBanks=new LinkedHashMap<>(),unreachableBanks=new LinkedHashMap<>();
  public ShoreEscapeGoal(ResidentEntity resident){this.resident=resident;setFlags(EnumSet.of(Flag.MOVE));}
  public static boolean dryBank(ResidentEntity r,BlockPos p){var l=r.level();
   return l.hasChunkAt(p)&&l.getFluidState(p).isEmpty()&&l.getFluidState(p.above()).isEmpty()&&l.getFluidState(p.below()).isEmpty()
@@ -46,7 +46,10 @@ public final class ShoreEscapeGoal extends Goal {
   }return best;
  }
  @Override public boolean canUse(){
-  if(!atWater()||resident.isPassenger()||resident.isSleeping()){anchor=null;still=0;return false;}
+  if(resident.isPassenger()||resident.isSleeping()){anchor=null;still=0;return false;}
+  // A short hop above a shallow current is not an escape: keep observing the same stalled swimmer.
+  if(!atWater()){if(resident.tickCount-lastWater>40){anchor=null;still=0;}return false;}
+  lastWater=resident.tickCount;
   if(resident.tickCount-sampled<20)return false;sampled=resident.tickCount;var now=resident.position();
   if(anchor==null||now.multiply(1,0,1).distanceToSqr(anchor.multiply(1,0,1))>.5625){anchor=now;still=0;}else still+=20;
   boolean submerged=resident.isEyeInFluid(FluidTags.WATER),urgent=submerged&&resident.getAirSupply()<220;
