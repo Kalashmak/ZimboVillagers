@@ -78,7 +78,7 @@ public final class ShoreEscapeGoal extends Goal {
  public static boolean landed(ResidentEntity r,BlockPos bank){return !r.isInWaterOrBubble()&&r.onGround()&&dryBank(r,bank)&&r.distanceToSqr(Vec3.atBottomCenterOf(bank))<=.04;}
  @Override public boolean canContinueToUse(){if(swimExit!=null)return elapsed<2400&&atWater()&&!resident.isPassenger()&&!resident.isSleeping();return bank!=null&&elapsed<2400&&!resident.isPassenger()&&!resident.isSleeping()&&dryBank(resident,bank)&&!landed(resident,bank);}
  @Override public void tick(){elapsed++;resident.workStatus("walking");
-  if(swimExit!=null){resident.getMoveControl().setWantedPosition(swimExit.x,resident.getY(),swimExit.z,.8);if(elapsed%20==0&&resident.position().multiply(1,0,1).distanceToSqr(swimExit.multiply(1,0,1))<.01&&clearWaterNode(resident,resident.blockPosition())&&chooseBank()){swimExit=null;resident.getNavigation().moveTo(path,.8);}return;}
+  if(swimExit!=null){resident.swimToward(new Vec3(swimExit.x,resident.getY(),swimExit.z),.8);if(elapsed%20==0&&resident.position().multiply(1,0,1).distanceToSqr(swimExit.multiply(1,0,1))<.01&&clearWaterNode(resident,resident.blockPosition())&&chooseBank()){swimExit=null;resident.getNavigation().moveTo(path,.8);}return;}
   // Navigation can finish its last node with the body still in water beside the bank.
   if(resident.distanceToSqr(Vec3.atBottomCenterOf(bank))<4){resident.getMoveControl().setWantedPosition(bank.getX()+.5,bank.getY(),bank.getZ()+.5,.8);}
   else if(elapsed%40==0){var next=resident.routeTo(bank,0,48);if(next!=null&&next.canReach()&&clearSwimPath(resident,next))resident.getNavigation().moveTo(next,.8);}

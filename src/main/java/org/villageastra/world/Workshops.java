@@ -139,8 +139,14 @@ public final class Workshops {
   if(hall!=null&&HallUpgradeGoal.pending(l,e.settlement().id())){
    var state=HallUpgradeGoal.fundingView(l,e.settlement().id());var chest=LogisticsRoutes.chest(l,e,hall);
    if(!state.getBoolean("funded")&&chest!=null){var cost=state.getCompound("cost");
-    for(var key:cost.getAllKeys().stream().sorted().toList()){var item=item(key);int held=0;for(var raw:state.getList("cargo",Tag.TAG_COMPOUND)){var s=ItemStack.of((CompoundTag)raw);if(s.is(item))held+=s.getCount();}
-     int missing=cost.getInt(key)-held-LogisticsRoutes.count(chest,s->s.is(item));if(missing>0)result.add(new Want(Ingredient.of(item),missing,hall.id(),LogisticsRoutes.NEED_BUILD));}}
+    // Count each physical stack once, rather than decode the entire paid cargo
+    // again for every item in a large estimate. Rebuild on every call so a
+    // same-tick withdrawal or delivery remains visible without cache invalidation.
+    var available=new HashMap<Item,Integer>();
+    for(var raw:state.getList("cargo",Tag.TAG_COMPOUND)){var s=ItemStack.of((CompoundTag)raw);if(!s.isEmpty())available.merge(s.getItem(),s.getCount(),Integer::sum);}
+    for(int slot=0;slot<chest.getContainerSize();slot++){var s=chest.getItem(slot);if(!s.isEmpty())available.merge(s.getItem(),s.getCount(),Integer::sum);}
+    for(var key:cost.getAllKeys().stream().sorted().toList()){var item=item(key);
+     int missing=cost.getInt(key)-available.getOrDefault(item,0);if(missing>0)result.add(new Want(Ingredient.of(item),missing,hall.id(),LogisticsRoutes.NEED_BUILD));}}
   }
   // AD-136 (CF3): the level-I research the mayor ordered paid — what its price still lacks, to the hall.
   add(result,LogisticsRoutes.NEED_RESEARCH,org.villageastra.server.BookResearch.wants(l,e,id->!prepareCrafts||!id.equals("engineering.1")));

@@ -33,8 +33,13 @@ public final class ShoreEscapeGameTests {
  public static void swimmerPrefersTheOpenBankToAShelfInsideTheFloodedCave(GameTestHelper h){run(h,true);}
  @GameTest(template="empty",batch="shore_overhang",timeoutTicks=3600)
  public static void swimmerLeavesLowOverhangBeforeApproachingDryBank(GameTestHelper h){run(h,false,true);}
+ @GameTest(template="empty",batch="shore_jump_recovery",timeoutTicks=3600)
+ public static void failedBankJumpCanTurnBackToOpenWater(GameTestHelper h){run(h,false,true,true);}
  private static void run(GameTestHelper h,boolean cave){run(h,cave,false);}
  private static void run(GameTestHelper h,boolean cave,boolean overhang){
+  run(h,cave,overhang,false);
+ }
+ private static void run(GameTestHelper h,boolean cave,boolean overhang,boolean failedJump){
   var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+(overhang?49152:cave?45056:40960),160,at.getZ());var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
   for(int x=(base.getX()-14)>>4;x<=(base.getX()+14)>>4;x++)for(int z=(base.getZ()-14)>>4;z<=(base.getZ()+14)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);}
   for(int x=-13;x<=13;x++)for(int z=-13;z<=13;z++)for(int y=-4;y<=7;y++)l.setBlock(base.offset(x,y,z),(y==-4||x<=-4&&y<=5||z>=8&&y<=0?Blocks.STONE:y<=0?Blocks.WATER:Blocks.AIR).defaultBlockState(),2);
@@ -45,7 +50,7 @@ public final class ShoreEscapeGameTests {
   h.assertTrue(l.noCollision(npc),"Fixture starts with the whole body clear of the high bank");
   // The work route has exhausted its path against the high bank; ordinary floating alone cannot choose another shore.
   npc.goalSelector.removeAllGoals(g->!Set.of("FloatGoal","PitEscapeGoal","ShoreEscapeGoal").contains(g.getClass().getSimpleName()));npc.targetSelector.removeAllGoals(g->true);
-  npc.goalSelector.addGoal(5,new Goal(){{setFlags(EnumSet.of(Flag.MOVE));}public boolean canUse(){return true;}});
+  npc.goalSelector.addGoal(5,new Goal(){{setFlags(EnumSet.of(Flag.MOVE));}public boolean canUse(){return true;}public void tick(){if(failedJump)npc.getMoveControl().setWantedPosition(base.getX()-3.2,base.getY()+1,base.getZ()+.5,.8);}});
   h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(base),"Entity chunk ready")).thenExecute(()->l.addFreshEntity(npc));
   h.onEachTick(()->{h.assertTrue(npc.isAlive(),"Swimmer must stay alive");if(npc.getZ()>=base.getZ()+8&&npc.getY()>=base.getY()+1&&npc.onGround()&&!npc.isInWaterOrBubble()&&!npc.runningGoals().contains("ShoreEscapeGoal")){
    h.assertTrue(l.getBlockState(base.offset(-4,2,0)).is(Blocks.STONE)&&l.getBlockState(base).is(Blocks.WATER),"Recovery neither cuts the cliff nor fills the lake");

@@ -84,6 +84,7 @@ public final class ResidentEntity extends PathfinderMob {
     public void bootstrapNatural(boolean value){bootstrapNatural=value;}
     public ResidentEntity(EntityType<? extends PathfinderMob> type, Level level) {
         super(type, level);
+        moveControl=new ResidentMovement();
         setPersistenceRequired();
         setCanPickUpLoot(false);
         configure(getNavigation());
@@ -91,6 +92,16 @@ public final class ResidentEntity extends PathfinderMob {
         setPathfindingMalus(net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_OTHER,24F);
     }
     private static final float PATH_BUDGET=4F;
+    private final class ResidentMovement extends net.minecraft.world.entity.ai.control.MoveControl {
+        ResidentMovement(){super(ResidentEntity.this);}
+        void swimTo(net.minecraft.world.phys.Vec3 target,double speed){
+            // A failed bank jump never lands under a low roof. The verified
+            // horizontal escape must be allowed to steer before onGround.
+            if(isInWaterOrBubble()&&operation==Operation.JUMPING)operation=Operation.WAIT;
+            setWantedPosition(target.x,target.y,target.z,speed);
+        }
+    }
+    void swimToward(net.minecraft.world.phys.Vec3 target,double speed){((ResidentMovement)moveControl).swimTo(target,speed);}
     private static void configure(net.minecraft.world.entity.ai.navigation.PathNavigation nav) {
         if (nav instanceof net.minecraft.world.entity.ai.navigation.GroundPathNavigation navigation) {
             navigation.setCanOpenDoors(true);

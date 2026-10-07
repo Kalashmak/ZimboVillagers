@@ -226,7 +226,13 @@ public final class ResourceWorkGoal extends Goal {
         var route=worker.getNavigation().getPath();
         boolean finalTreeStride=!miner&&!farmer&&!faceReach&&distance<=6.25&&route!=null&&route.canReach()&&worker.getNavigation().isDone();
         if(precise&&distance<2.25||finalTreeStride){if(!finalTreeStride)worker.getNavigation().stop();worker.getMoveControl().setWantedPosition(pos.getX()+.5,feetY,pos.getZ()+.5,.8);}
-        else if(worker.tickCount%20==0)worker.getNavigation().moveTo(pos.getX()+.5,feetY,pos.getZ()+.5,!miner&&!farmer?ForestBalance.walkSpeed(hutLevel()):.8);
+        else if(worker.tickCount%20==0){
+            // A reached accuracy-one route can finish outside the final steering
+            // radius. Reissuing it keeps the same completed native path forever.
+            // Ore and seal work require the exact foot cell before working.
+            if(precise)worker.getNavigation().moveTo(worker.getNavigation().createPath(BlockPos.containing(pos.getX()+.5,feetY,pos.getZ()+.5),0),.8);
+            else worker.getNavigation().moveTo(pos.getX()+.5,feetY,pos.getZ()+.5,!miner&&!farmer?ForestBalance.walkSpeed(hutLevel()):.8);
+        }
         status(!miner&&!farmer&&state.getString("stage").equals("dig")?"walking_to_tree":"walking");return false;
     }
     @Override public void tick(){

@@ -136,6 +136,27 @@ public final class BuildReserveGameTests {
   h.succeed();
  }
 
+ @GameTest(template="empty",batch="construction_demand",timeoutTicks=100)
+ public static void splitCargoAndSameTickTransfersKeepOnlyTheRealShortfall(GameTestHelper h){
+  var t=town(h,0);
+  try{
+   var named=new ItemStack(Items.LANTERN,2);named.setHoverName(net.minecraft.network.chat.Component.literal("Stored lanterns"));
+   var state=project(Map.of(Items.LANTERN,8,Items.COBBLESTONE,12),new ItemStack(Items.LANTERN),named,new ItemStack(Items.COBBLESTONE,3));
+   t.chest.setItem(0,new ItemStack(Items.LANTERN,2));t.chest.setItem(1,new ItemStack(Items.COBBLESTONE,4));queue(t,state);
+   java.util.function.Function<Item,Integer> demand=item->Workshops.wants(t.l,t.e).stream().filter(w->w.need()==LogisticsRoutes.NEED_BUILD&&w.destination().equals(t.hall.id())&&w.matches(new ItemStack(item))).mapToInt(Workshops.Want::count).sum();
+   h.assertTrue(demand.apply(Items.LANTERN)==3&&demand.apply(Items.COBBLESTONE)==5,"Split cargo and live stock cover their own materials, including named stacks");
+   h.assertTrue(builderTakes(t,state,Items.LANTERN,2).getCount()==2,"The builder really withdraws two lanterns");
+   h.assertTrue(demand.apply(Items.LANTERN)==3,"Moving paid stock into cargo in the same tick neither loses nor duplicates coverage");
+   t.chest.setItem(0,new ItemStack(Items.LANTERN,3));
+   h.assertTrue(demand.apply(Items.LANTERN)==0&&demand.apply(Items.COBBLESTONE)==5,"A same-tick delivery closes only its own shortfall");
+   t.chest.setItem(0,ItemStack.EMPTY);
+   h.assertTrue(demand.apply(Items.LANTERN)==3,"Removing unwithdrawn stock immediately restores demand");
+   state.putBoolean("funded",true);queue(t,state);
+   h.assertTrue(demand.apply(Items.LANTERN)==0&&demand.apply(Items.COBBLESTONE)==0,"Funded construction no longer requests its estimate");
+  }finally{done(t);}
+  h.succeed();
+ }
+
  @GameTest(template="empty",timeoutTicks=100) public static void twoProjectsNeverCountTwice(GameTestHelper h){
   var a=town(h,0);var b=town(h,6);
   try{
