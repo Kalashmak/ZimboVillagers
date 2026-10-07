@@ -12,6 +12,24 @@ import org.villageastra.world.QuarryKnowledge;
 /** Discovery is derived from committed harvests; no stock or terrain is replayed by rebuilding it. */
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class QuarryKnowledgeGameTests {
+ @GameTest(template="empty",batch="quarry_knowledge_new_harvest",timeoutTicks=2400)
+ public static void completedHistoryLearnsNewMineHarvestOnlyAfterCommit(GameTestHelper h){
+  var l=h.getLevel();QuarryKnowledge.clear(l.getServer());QuarryKnowledge.stats(l.getServer());
+  h.startSequence().thenWaitUntil(()->h.assertTrue(QuarryKnowledge.stats(l.getServer()).complete(),"Existing history finishes first"))
+   .thenExecute(()->{
+    var p=h.absolutePos(new BlockPos(5,2,5)).offset(1179648,0,0);var first=UUID.randomUUID();var second=UUID.randomUUID();
+    l.setBlock(p,Blocks.ANDESITE.defaultBlockState(),2);l.setBlock(p.east(20),Blocks.IRON_ORE.defaultBlockState(),2);
+    WorldJournal.harvest(l,first,p,Blocks.ANDESITE.defaultBlockState(),new ItemStack(Items.STONE_PICKAXE));
+    h.assertTrue(QuarryKnowledge.sites(l).stream().anyMatch(site->site.receipt().equals(first)),"A new ordinary mine harvest is learned after historical recovery completed");
+    WorldJournal.batch(l,()->{
+     WorldJournal.harvest(l,second,p.east(20),Blocks.IRON_ORE.defaultBlockState(),new ItemStack(Items.STONE_PICKAXE));
+     h.assertTrue(QuarryKnowledge.sites(l).stream().noneMatch(site->site.receipt().equals(second)),"Uncommitted batch teaches no discovery");return null;
+    });
+    h.assertTrue(QuarryKnowledge.sites(l).stream().anyMatch(site->site.receipt().equals(second)),"Batch commit teaches its confirmed discovery");
+    int sites=QuarryKnowledge.stats(l.getServer()).sites();WorldJournal.recoverExisting(l,first);
+    h.assertTrue(QuarryKnowledge.stats(l.getServer()).sites()==sites&&l.getBlockState(p).isAir()&&l.getBlockState(p.east(20)).isAir(),"Recovery duplicates neither knowledge nor actual mined blocks");QuarryKnowledge.clear(l.getServer());
+   }).thenSucceed();
+ }
  @GameTest(template="empty",batch="quarry_knowledge_maintenance",timeoutTicks=400)
  public static void requestedRecoveryContinuesWithoutAWorkerGoal(GameTestHelper h){
   var l=h.getLevel();var p=h.absolutePos(new BlockPos(5,2,5)).offset(1048576,0,0);l.setBlock(p,Blocks.ANDESITE.defaultBlockState(),2);var id=UUID.randomUUID();

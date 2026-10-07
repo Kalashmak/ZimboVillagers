@@ -28,7 +28,7 @@ public final class WorldJournal {
             if(--batchDepth==0&&!PENDING.isEmpty()){
                 try{
                     level.getChunkSource().save(true);crashBoundary(level,"after_chunk_flush");
-                    for(var p:PENDING){var intent=(CompoundTag)p[1];intent.putBoolean("committed",true);write((Path)p[0],intent);}
+                    for(var p:PENDING){var intent=(CompoundTag)p[1];intent.putBoolean("committed",true);write((Path)p[0],intent);org.villageastra.world.QuarryKnowledge.remember(level.getServer(),intent);}
                 }catch(IOException|RuntimeException error){
                     var wrapped=error instanceof RuntimeException r?r:new IllegalStateException("Astra world journal blocked a batch commit",error);
                     if(failure!=null)failure.addSuppressed(wrapped);else throw wrapped;
@@ -251,7 +251,7 @@ public final class WorldJournal {
             // Conservative durability boundary outside a batch.
             level.getChunkSource().save(true);
             crashBoundary(level,"after_chunk_flush");
-            if(!intent.getBoolean("committed")) {intent.putBoolean("committed",true);write(file,intent);}
+            if(!intent.getBoolean("committed")) {intent.putBoolean("committed",true);write(file,intent);org.villageastra.world.QuarryKnowledge.remember(level.getServer(),intent);}
             return intent;
         } catch(IOException error) { throw new IllegalStateException("Astra world journal blocked operation "+id,error); }
     }
