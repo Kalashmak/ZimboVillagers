@@ -19,10 +19,16 @@ public final class MineProspectingGameTests {
  @GameTest(template="empty",batch="mine_distant_floor_exchange",timeoutTicks=5000)
  public static void minerReachesPaidFloorOreAtTheEndOfALongGallery(GameTestHelper h){floorExchange(h,true,true);}
  private static void floorExchange(GameTestHelper h,boolean sameGallery){floorExchange(h,sameGallery,false);}
- private static void floorExchange(GameTestHelper h,boolean sameGallery,boolean distant){
+ @GameTest(template="empty",batch="mine_floor_route_reload",timeoutTicks=5000)
+ public static void floorOrePlanningRechecksAnUnloadedGapInTheCompletedRoute(GameTestHelper h){floorExchange(h,true,true,true);}
+ private static void floorExchange(GameTestHelper h,boolean sameGallery,boolean distant){floorExchange(h,sameGallery,distant,false);}
+ @GameTest(template="empty",batch="mine_side_floor_exchange",timeoutTicks=1800)
+ public static void minerReplacesExposedSideFoundationWithoutOpeningAPit(GameTestHelper h){floorExchange(h,true,false,false,true);}
+ private static void floorExchange(GameTestHelper h,boolean sameGallery,boolean distant,boolean gap){floorExchange(h,sameGallery,distant,gap,false);}
+ private static void floorExchange(GameTestHelper h,boolean sameGallery,boolean distant,boolean gap,boolean lateral){
   int end=distant?198:16,oreX=distant?186:6,length=distant?192:6;
   var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());
-  var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*8,96,old.e.center().getZ()*8));data.add(e);
+  var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*8+(gap?2097152:0),96,old.e.center().getZ()*8));data.add(e);
   var t=new ResearchV2Town.Town(old.l,e,old.s,old.shop);ResearchV2Town.lay(t.l,e,t.shop,"mine");t.l.setBlock(e.center().offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
   var base=BuildingPlacement.origin(e,t.shop);var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();
   for(int x=base.getX()>>4;x<=(base.getX()+end)>>4;x++)for(int z=(base.getZ()+3)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,t.s.id());chunks.add(cp);}
@@ -30,13 +36,26 @@ public final class MineProspectingGameTests {
   for(int x=0;x<=end;x++)for(int z=3;z<=10;z++)for(int y=-2;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
   for(int x=2;x<=(distant?196:10);x++)for(int z=4;z<=8;z++){int foot=z<=5?1:z<=7?0:-1;for(int y=foot;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.AIR.defaultBlockState(),2);}
   var stock=LogisticsRoutes.position(e,t.shop);t.l.setBlock(stock,VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var chest=(net.minecraft.world.Container)t.l.getBlockEntity(stock);chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
-  var ore=BuildingPlacement.at(e,t.shop,oreX,sameGallery?-2:-1,sameGallery?8:7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+  var ore=BuildingPlacement.at(e,t.shop,oreX,sameGallery?-2:-1,lateral?9:sameGallery?8:7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);if(lateral){t.l.setBlock(ore.above(),Blocks.AIR.defaultBlockState(),2);t.l.setBlock(ore.above(2),Blocks.AIR.defaultBlockState(),2);}
   t.s.noteMine(t.shop.id(),32,3,5,0);t.s.noteMine(t.shop.id(),new MineArea.Gallery(0,MineDrive.EAST,length));t.s.noteMine(t.shop.id(),new MineArea.Gallery(1,MineDrive.EAST,length));
   var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:lantern",2);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);
   var hall=LogisticsRoutes.chest(t.l,e,Workshops.hall(e));hall.setItem(0,new ItemStack(Items.COAL,8));hall.setItem(1,new ItemStack(Items.STICK,8));
   var npc=VillageAstra.RESIDENT.get().create(t.l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));
   var start=BuildingPlacement.at(e,t.shop,10,-1,8);npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);npc.setOnGround(true);npc.setNoAi(true);
   var state=MineWork.read(t.l,t.shop);state.putInt("width",3);state.putInt("height",5);state.putInt("descent",0);state.putInt("step",33);state.putInt("floorStep",32);state.putInt("extentStep",32);state.putInt("stairAudit",33);state.putInt("side",MineDrive.DONE);state.putString("stage","choose");state.putUUID("worker",npc.getUUID());state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
+  if(gap){
+   var missing=base.offset(96,-1,8);
+   for(var cp:chunks)if(cp.x>=(base.getX()+48)>>4&&cp.x<=(base.getX()+144)>>4)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());
+   h.startSequence().thenWaitUntil(()->h.assertTrue(!t.l.hasChunkAt(missing),"Released middle route chunks unload naturally"))
+    .thenExecute(()->h.assertTrue(!HarvestAccess.reversible(npc.routeTo(BuildingPlacement.at(e,t.shop,oreX,-1,8),0,NaturalSupplyGoal.ROUTE_RANGE)),"An unloaded corridor has no complete native route"))
+    .thenWaitUntil(()->h.assertTrue(t.l.getGameTime()%100==0&&MineOreWork.begin(npc,e,t.shop,state),"Mine planner must eventually recheck a real route after a chunk gap"))
+    .thenExecute(()->{
+     h.assertTrue(t.l.hasChunkAt(missing)&&HarvestAccess.reversible(npc.routeTo(MineOreWork.stand(state),0,NaturalSupplyGoal.ROUTE_RANGE)),"The loaded corridor has a reversible native route");
+     h.assertTrue(chest.countItem(Items.COBBLESTONE)==2&&t.l.getBlockState(ore).is(Blocks.IRON_ORE)&&ItemStack.of(state.getCompound("tool")).getDamageValue()==0,"Planning neither spends stone nor mines ore");
+     com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MINE_ROUTE_RELOAD VERIFIED unloadedGap={} target={} stoneUnspent=2",missing,ore);
+     npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);
+    }).thenSucceed();return;
+  }
   chest.clearContent();h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"No floor job without actual replacement stone");chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
   state.put("tool",new ItemStack(Items.WOODEN_PICKAXE).save(new CompoundTag()));h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"Insufficient pick never selects floor iron");state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
   t.l.setBlock(ore.north(),Blocks.WATER.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"Paid stone does not permit exposing water");t.l.setBlock(ore.north(),Blocks.STONE.defaultBlockState(),2);

@@ -63,7 +63,13 @@ public final class MineOreWork {
  private static boolean floor(MineArea a,BlockPos p){
   int x=p.getX(),y=p.getY(),z=p.getZ(),left=a.width()==1?3:2,right=a.width()==1?3:4;
   int row=z-7;if(row>=0&&row<=a.lastStep()&&x>=left&&x<=right&&y<=-row-a.descent())return true;
-  for(var g:a.galleries()){int from=g.side()==MineDrive.EAST?right+1:left-g.length(),to=g.side()==MineDrive.EAST?right+g.length():left-1;if(z==7+g.step()&&x>=from&&x<=to&&y<=-g.step()-a.descent())return true;}
+  for(var g:a.galleries()){
+   int from=g.side()==MineDrive.EAST?right+1:left-g.length(),to=g.side()==MineDrive.EAST?right+g.length():left-1;
+   int lateral=Math.abs(z-7-g.step()),foot=-g.step()-a.descent();
+   // The exposed foundation immediately beside a gallery also supports its edge.
+   // Replace it with paid stone, even when no parallel gallery reaches this far.
+   if(x>=from&&x<=to&&(lateral==0&&y<=foot||lateral==1&&y<foot))return true;
+  }
   return false;
  }
  public static boolean begin(ResidentEntity npc,SettlementData.Entry e,Settlement.Building mine,CompoundTag t){
