@@ -74,10 +74,15 @@ public final class SleepGoal extends Goal {
     // Keep a usable route instead of repeating a long search every twenty ticks.
     repath=100;
     if(nav.isDone()||nav.getTargetPos()==null||!nav.getTargetPos().equals(bed)){
-     var route=resident.routeTo(bed,1,HOME_REACH);
-     if(route!=null&&route.canReach())nav.moveTo(route,.7);
+     var route=ResourceReturnRoute.plan(resident,bed);
+     if(route!=null)nav.moveTo(route,.7);
     }
-   }else{repath=20;nav.moveTo(bed.getX()+.5,bed.getY(),bed.getZ()+.5,.7);}
+   }else{
+    repath=20;
+    // Even a nearby bed can be above a deep natural hollow. A partial ordinary
+    // route never enables the verified deep-cave recovery used on return trips.
+    nav.moveTo(ResourceReturnRoute.plan(resident,bed),.7);
+   }
   }
  }
  @Override public void stop(){

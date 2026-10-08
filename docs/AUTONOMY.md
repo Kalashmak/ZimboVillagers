@@ -307,3 +307,9 @@ When a miner has an unmet quarry demand after exhausting the ordinary drive, eve
 A rejected surface no longer makes a cave floor underneath it eligible for a new building. The local survey may pass through a canopy, but cannot pass through solid terrain, a roof or fluid to find lower ground. The mayor rechecks a loaded proposal's actual surface before approving it.
 
 Travel to a proposed site requires a complete reversible native route. A rejected site advances the village's survey cursor instead of repeatedly sending the mayor to the same dangerous ledge. Approval still requires the mayor's physical arrival; this change neither places a building remotely nor modifies terrain or stock. Tests cover a canopy above a cave, rejection of a downward route and continued walking to a safe flat site.
+
+### Returning to workshops and beds from caves
+
+Workshop commuters use the existing dry, climbable return planner. The route retains its recovery policy during navigation, allowing a resident in a deep dry hollow to walk to a verified climbing wall. Workshop repathing occurs every twenty body ticks instead of every tick. Close enough to work, the resident still needs a clear view of the station and the same paid ingredients and labor.
+
+Night returns use that policy for nearby and distant beds. The 320-block home limit, night schedule, assigned bed and occupied-bed checks remain in place. Physical tests verify returning from a nine-block hollow to finish the same paid crafting job, reaching one's own nearby and distant bed, preserving health and terrain, and walking around a wall on a distant return. These checks do not prove recovery from every cave or full autonomous village progression.

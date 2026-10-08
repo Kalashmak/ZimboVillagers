@@ -6,7 +6,7 @@ import net.minecraft.world.item.ItemStack;
 import org.villageastra.server.SettlementData;
 /** AD-029: the assigned worker walks to the workshop chest and advances the durable job only while standing there. */
 public final class WorkshopGoal extends Goal {
- private final ResidentEntity worker;private final boolean withoutPlayers;private final java.util.function.LongSupplier jobClock;private int lastCheck=-100;private boolean useful,yielded;
+ private final ResidentEntity worker;private final boolean withoutPlayers;private final java.util.function.LongSupplier jobClock;private int lastCheck=-100,repath;private boolean useful,yielded;
  public WorkshopGoal(ResidentEntity worker){this(worker,false);}
  /** For GameTests, which have no player online. */
  public WorkshopGoal(ResidentEntity worker,boolean withoutPlayers){this(worker,withoutPlayers,()->SettlementData.get(worker.getServer()).clock().ticks());}
@@ -41,7 +41,7 @@ public final class WorkshopGoal extends Goal {
   if(worker.tickCount%40<2){var e=entry();var l=(ServerLevel)worker.level();if(bakes(l,e,workplace(e)))return false;}
   return true;
  }
- @Override public void start(){yielded=false;}
+ @Override public void start(){yielded=false;repath=0;}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){
   var e=entry();if(e==null)return;var l=(ServerLevel)worker.level();var b=workplace(e);var job=Workshops.inspect(l,b.id());if(!NaturalFurnace.claim(l,b,job,worker.getUUID())){
@@ -52,7 +52,12 @@ public final class WorkshopGoal extends Goal {
   // Renovation may put a temporary wall between the worker and a nearby chest/furnace.
   // Being within arm's reach is not permission to take or deliver materials through that wall.
   var sight=l.clip(new net.minecraft.world.level.ClipContext(worker.getEyePosition(),net.minecraft.world.phys.Vec3.atCenterOf(pos),net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,worker));
-  if(worker.distanceToSqr(pos.getX()+1.5,pos.getY(),pos.getZ()+.5)>6.25||sight.getType()!=net.minecraft.world.phys.HitResult.Type.MISS&&!sight.getBlockPos().equals(pos)){worker.getNavigation().moveTo(pos.getX()+1.5,pos.getY(),pos.getZ()+.5,.8);worker.workStatus("walking");return;}
+  if(worker.distanceToSqr(pos.getX()+1.5,pos.getY(),pos.getZ()+.5)>6.25||sight.getType()!=net.minecraft.world.phys.HitResult.Type.MISS&&!sight.getBlockPos().equals(pos)){
+   // A workshop commuter can also be returning from a natural cave. Retain
+   // the dry, climbable return policy so pit recovery can inspect its real rim.
+   if(--repath<=0){repath=20;worker.getNavigation().moveTo(ResourceReturnRoute.plan(worker,pos.offset(1,0,0)),.8);}
+   worker.workStatus("walking");return;
+  }
   worker.getNavigation().stop();if(worker.tickCount%20!=0)return;
   if(b.type().equals("town_hall")&&HallPacking.advance(l,e,jobClock.getAsLong())){worker.workStatus("working");return;}
   var status=Workshops.advance(l,e,b,jobClock.getAsLong(),Workshops.wants(l,e),worker.getUUID());worker.workStatus(status);
