@@ -44,7 +44,7 @@ public final class WorkshopGoal extends Goal {
  @Override public void start(){yielded=false;repath=0;}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){
-  var e=entry();if(e==null)return;var l=(ServerLevel)worker.level();var b=workplace(e);var job=Workshops.inspect(l,b.id());if(!NaturalFurnace.claim(l,b,job,worker.getUUID(),jobClock.getAsLong())){
+  var e=entry();if(e==null)return;var l=(ServerLevel)worker.level();var b=workplace(e);var job=Workshops.inspect(l,b.id());if(!NaturalFurnace.availableTo(l,b,job,worker.getUUID(),jobClock.getAsLong())){
    // Another worker holds this smelting job: this one lets the goal go instead of standing in it for good (it kept a second hall worker
    // "walking" all day, out of reach of every other goal of priority 6, hand bread included). canUse skips such a job (work()).
    worker.getNavigation().stop();yielded=true;useful=false;lastCheck=worker.tickCount;return;}var pos=NaturalFurnace.workPosition(l,e,b,job);
@@ -58,6 +58,9 @@ public final class WorkshopGoal extends Goal {
    if(--repath<=0){repath=20;worker.getNavigation().moveTo(ResourceReturnRoute.plan(worker,pos.offset(1,0,0)),.8);}
    worker.workStatus("walking");return;
   }
+  // Reserving a new order requires the same physical arrival and sight as its first take.
+  // A distant commuter must not lock stock work away from a colleague already here.
+  if(!NaturalFurnace.claim(l,b,job,worker.getUUID(),jobClock.getAsLong())){worker.getNavigation().stop();yielded=true;useful=false;lastCheck=worker.tickCount;return;}
   worker.getNavigation().stop();if(worker.tickCount%20!=0)return;
   if(b.type().equals("town_hall")&&HallPacking.advance(l,e,jobClock.getAsLong())){worker.workStatus("working");return;}
   var status=Workshops.advance(l,e,b,jobClock.getAsLong(),Workshops.wants(l,e),worker.getUUID());worker.workStatus(status);
