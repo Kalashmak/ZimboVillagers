@@ -14,7 +14,7 @@ public final class SchoolGoal extends Goal {
   if(!(resident.level() instanceof ServerLevel l)||!test&&l.getServer().getPlayerCount()==0||resident.settlementId()==null||resident.escortPlayer()!=null)return null;
   var e=SettlementData.get(l.getServer()).entry(resident.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return null;
   var r=e.settlement().resident(resident.getUUID());if(r==null||!r.alive())return null;
-  if(r.profession()==Profession.TEACHER){var b=e.settlement().workplace(r.id());return b!=null&&b.type().equals("school")&&Population.mayWork(r)?LogisticsRoutes.position(e,b):null;}
+  if(r.profession()==Profession.TEACHER){var b=e.settlement().workplace(r.id());return b!=null&&b.type().equals("school")&&Population.mayWork(r)&&!CargoCustody.pending(l.getServer(),r.id())?LogisticsRoutes.position(e,b):null;}
   return childStation(l,e,r);
  }
  /** A daytime journey to a physically present teacher is a child's duty, including outside its home neighborhood. */
