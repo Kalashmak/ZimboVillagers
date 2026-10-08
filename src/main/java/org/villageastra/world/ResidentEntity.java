@@ -231,7 +231,8 @@ public final class ResidentEntity extends PathfinderMob {
                             net.minecraft.world.level.pathfinder.Node sideB, net.minecraft.world.level.pathfinder.Node diagonal) {
                         if (sideA != null && sideA.type == net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_OTHER
                                 || sideB != null && sideB.type == net.minecraft.world.level.pathfinder.BlockPathTypes.DANGER_OTHER) return false;
-                        return super.isDiagonalValid(from, sideA, sideB, diagonal);
+                        return super.isDiagonalValid(from, sideA, sideB, diagonal)
+                            && ResidentStepClearance.diagonalAscent(ResidentEntity.this,level,from,diagonal);
                     }
                 };
                 nodeEvaluator.setCanPassDoors(true);
