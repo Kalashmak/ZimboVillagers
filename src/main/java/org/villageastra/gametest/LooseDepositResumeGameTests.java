@@ -33,15 +33,23 @@ public final class LooseDepositResumeGameTests {
  public static void secondExhaustedRingFindsDepositWithinTheExistingRouteLimit(GameTestHelper h){exercise(h,6);}
  @GameTest(template="empty",batch="supply_search_expansion",timeoutTicks=1200)
  public static void exhaustedMaximumRingDoesNotWidenBeyondTheRouteLimit(GameTestHelper h){exercise(h,7);}
+ @GameTest(template="empty",batch="loose_surface_priority",timeoutTicks=1200)
+ public static void newSandDemandDoesNotWaitForDeepMineralSurveyToWrap(GameTestHelper h){exercise(h,8);}
  private static void exercise(GameTestHelper h,int mode){
-  boolean flooded=mode==1;
+  boolean flooded=mode==1,expansion=mode>=5&&mode<=7;
   var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+589824+mode*65536,120,at.getZ());
   var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
-  int depositDistance=mode>=5?193+(mode-5)*64:25;
-  for(int x=(base.getX()-18)>>4;x<=(base.getX()+(mode>=5?depositDistance+28:53))>>4;x++)for(int z=(base.getZ()-18)>>4;z<=(base.getZ()+20)>>4;z++){
+  int depositDistance=expansion?193+(mode-5)*64:25;
+  for(int x=(base.getX()-18)>>4;x<=(base.getX()+(expansion?depositDistance+28:53))>>4;x++)for(int z=(base.getZ()-18)>>4;z<=(base.getZ()+20)>>4;z++){
    var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);
   }
   for(int x=-6;x<=depositDistance+11;x++)for(int z=-6;z<=6;z++)for(int y=-3;y<=6;y++)l.setBlock(base.offset(x,y,z),y<=0?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
+  // The first three equal-distance columns of the next ring are not the
+  // prepared east corridor. Cap their random terrain so this expansion test
+  // measures the intended fourth column, not unrelated generated sand banks.
+  if(expansion)for(var p:List.of(base.offset(-depositDistance,0,0),base.offset(0,0,-depositDistance),base.offset(0,0,depositDistance))){
+   l.getChunk(p.getX()>>4,p.getZ()>>4);for(int y=0;y<=12;y++)l.setBlock(p.above(y),Blocks.STONE.defaultBlockState(),2);
+  }
   var ore=base.offset(depositDistance,1,0);l.setBlock(ore,Blocks.SAND.defaultBlockState(),2);
   var reachable=mode==4?base.offset(28,1,0):ore;
   if(mode==4){
@@ -60,7 +68,8 @@ public final class LooseDepositResumeGameTests {
   var project=new CompoundTag();var id=UUID.randomUUID();project.putUUID("id",id);project.putUUID("project",id);project.putString("kind","building");project.putString("design","home");project.putLong("origin",base.offset(40,0,20).asLong());var cost=new CompoundTag();cost.putInt("minecraft:sand",1);project.put("cost",cost);project.put("cargo",new ListTag());project.put("ops",new ListTag());HallUpgradeGoal.store(l,s.id(),project);
   var npc=VillageAstra.RESIDENT.get().create(l);var person=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);s.admit(person,home);npc.bind(s.id(),s.resident(person.id()));npc.moveTo(base.getX()+2.5,121,base.getZ()+2.5);npc.setOnGround(true);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);l.addFreshEntity(npc);
   var old=new CompoundTag();var previous=UUID.randomUUID();old.putUUID("id",previous);old.putBoolean("complete",true);old.putBoolean("quarry",false);old.putString("stage","carry");old.putLong("target",ore.west().asLong());old.put("before",NbtUtils.writeBlockState(Blocks.SAND.defaultBlockState()));old.putInt("surveyCursor",385*385-1);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),old);
-  if(mode>=5){old.remove("target");old.remove("before");int radius=mode==5?192:mode==6?256:320;old.putInt("surveyRadius",radius);old.putInt("surveyCursor",(radius*2+1)*(radius*2+1)-1);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),old);}
+  if(expansion){old.remove("target");old.remove("before");int radius=mode==5?192:mode==6?256:320;old.putInt("surveyRadius",radius);old.putInt("surveyCursor",(radius*2+1)*(radius*2+1)-1);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),old);}
+  if(mode==8){old.remove("target");old.remove("before");old.putInt("surveyRadius",320);old.putInt("surveyCursor",300000);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),old);}
   if(flooded)l.setBlock(ore.east(),Blocks.WATER.defaultBlockState(),2);
   if(mode==2)l.setBlock(ore,Blocks.STONE.defaultBlockState(),2);
   if(mode==3){cost.remove("minecraft:sand");cost.putInt("minecraft:clay_ball",1);project.put("cost",cost);HallUpgradeGoal.store(l,s.id(),project);}
@@ -72,9 +81,9 @@ public final class LooseDepositResumeGameTests {
    h.assertTrue(chest.countItem(Items.SAND)==0&&l.getBlockState(ore).is(Blocks.SAND),"Bounded sensing neither harvests nor delivers the outside deposit");
    npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();return;
   }
-  if(mode>=5){
+  if(expansion){
    int expectedRadius=mode==5?256:320;int prefix=mode==5?385*385:513*513;
-   h.startSequence().thenWaitUntil(()->h.assertTrue(supply.canUse(),"Exhausted nearby survey must find the real sand in its next outer ring"))
+   h.startSequence().thenWaitUntil(()->h.assertTrue(supply.canUse(),"Outer survey: ticks="+npc.tickCount+" state="+NaturalSupplyGoal.inspect(l,npc.getUUID())))
     .thenExecute(()->{
      var selected=NaturalSupplyGoal.inspect(l,npc.getUUID());
      h.assertTrue(BlockPos.of(selected.getLong("target")).equals(ore)&&selected.getInt("surveyRadius")==expectedRadius&&selected.getInt("surveyCursor")>=prefix,"Widening preserves the old search prefix and selects the outer deposit");
@@ -86,14 +95,14 @@ public final class LooseDepositResumeGameTests {
      npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);
     }).thenSucceed();return;
   }
-  if(mode!=0&&mode!=4){
+  if(mode!=0&&mode!=4&&mode!=8){
    h.assertTrue(!supply.canUse(),"Unsafe, vanished or unneeded remembered sand cannot start a new trip");
    h.assertTrue(NaturalSupplyGoal.inspect(l,npc.getUUID()).getBoolean("looseResumeChecked")== (mode!=3),"Only a deposit for current demand is checked, at most once per completed trip");
    h.assertTrue(l.getBlockState(ore).is(mode==2?Blocks.STONE:Blocks.SAND)&&chest.countItem(Items.SAND)==0&&chest.getItem(0).getDamageValue()==3&&chest.countItem(Items.COBBLESTONE)==3,"No free harvest, borrowed tool, wear or replayed cargo");
    npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.setChunkForced(cp.x,cp.z,false);h.succeed();return;
   }
   var job=new UUID[1];var selectedTarget=new BlockPos[1];
-  h.startSequence().thenWaitUntil(()->h.assertTrue(supply.canUse(),"Known remaining sand must be considered before the distant saved survey cursor"))
+  h.startSequence().thenWaitUntil(()->h.assertTrue(supply.canUse(),"Loose deposit search: ticks="+npc.tickCount+" state="+NaturalSupplyGoal.inspect(l,npc.getUUID())))
    .thenExecute(()->{
   var selected=NaturalSupplyGoal.inspect(l,npc.getUUID());job[0]=selected.getUUID("id");
   selectedTarget[0]=BlockPos.of(selected.getLong("target"));
