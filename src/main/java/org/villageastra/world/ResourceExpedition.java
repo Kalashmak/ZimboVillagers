@@ -55,13 +55,25 @@ public final class ResourceExpedition {
    +" now="+l.getServer().getTickCount()+" chunk="+npc.chunkPosition()+" feetChunk="+new net.minecraft.world.level.ChunkPos(npc.blockPosition())
    +" entityTicking="+TouchLoad.ticking(l,npc.blockPosition())+" registered="+(l.getEntity(npc.getUUID())==npc);
  }
+ /** Assigned workers at a visited village's loaded edge cannot start their own lease.
+  * Use actual player proximity, not a lease-powered center, to avoid keeping abandoned villages awake. */
+ private static boolean localWorker(ResidentEntity npc,boolean test){
+  var l=(ServerLevel)npc.level();var e=SettlementData.get(l.getServer()).entry(npc.settlementId());
+  if(e==null||!e.dimension().equals(l.dimension().location().toString())||npc.escortPlayer()!=null
+    ||npc.blockPosition().distSqr(e.center())>HomeNeighborhood.RECOVERY_REACH*HomeNeighborhood.RECOVERY_REACH)return false;
+  var r=e.settlement().resident(npc.getUUID());
+  if(r==null||!r.alive()||r.profession()==null||e.settlement().workplace(r.id())==null)return false;
+  if(test)return TouchLoad.ticking(l,e.center());
+  var cp=new net.minecraft.world.level.ChunkPos(e.center());int reach=l.getServer().getPlayerList().getSimulationDistance();
+  return l.players().stream().anyMatch(p->Math.abs(p.chunkPosition().x-cp.x)<=reach&&Math.abs(p.chunkPosition().z-cp.z)<=reach);
+ }
  /** A loaded saved body at the non-ticking view edge cannot run its goal to enroll itself after restart. */
  public static void recoverLoaded(ServerLevel l,boolean test){
   if(!test&&l.getServer().getPlayerCount()==0)return;
   var data=SettlementData.get(l.getServer());
   for(var entity:l.getAllEntities())if(entity instanceof ResidentEntity npc&&npc.isAlive()&&npc.settlementId()!=null&&!MOVING.containsKey(npc.getUUID())){
    var e=data.entry(npc.settlementId());var record=e==null?null:e.settlement().resident(npc.getUUID());
-   if(record!=null&&record.alive()&&e.dimension().equals(l.dimension().location().toString())&&(NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))||HomeNeighborhood.recovery(npc)))follow(npc,test);
+   if(record!=null&&record.alive()&&e.dimension().equals(l.dimension().location().toString())&&(NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))||HomeNeighborhood.recovery(npc)||localWorker(npc,test)))follow(npc,test);
   }
  }
  /** Server-owned renewal also reaches a worker waiting for an asynchronous chunk transition. */
@@ -72,7 +84,7 @@ public final class ResourceExpedition {
    if(l.getServer()!=server||!trip.test()&&server.getPlayerCount()==0){it.remove();continue;}
    if(!(l.getEntity(en.getKey()) instanceof ResidentEntity npc)||!npc.isAlive()||npc.settlementId()==null){it.remove();continue;}
    var e=SettlementData.get(server).entry(npc.settlementId());
-   if(e==null||!e.dimension().equals(l.dimension().location().toString())||!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))&&!HomeNeighborhood.recovery(npc)){it.remove();continue;}
+   if(e==null||!e.dimension().equals(l.dimension().location().toString())||!NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,npc.getUUID()))&&!HomeNeighborhood.recovery(npc)&&!localWorker(npc,trip.test())){it.remove();continue;}
    hold(npc);en.setValue(renewed(npc,trip,server.getTickCount()));
   }
  }

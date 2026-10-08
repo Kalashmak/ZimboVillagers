@@ -6,7 +6,7 @@ import net.minecraft.world.entity.ai.goal.Goal;
 import org.villageastra.server.SettlementData;
 /** Idle walks stay near home; a returning resident still walks every block. */
 public final class HomeNeighborhood extends Goal {
- public static final int RADIUS=24,RETURN_DISTANCE=SleepGoal.HOME_REACH,RECOVERY_REACH=320;
+ public static final int RADIUS=24,RETURN_DISTANCE=96,RECOVERY_REACH=320;
  private final ResidentEntity npc;private BlockPos target;private int repath;
  public HomeNeighborhood(ResidentEntity npc){this.npc=npc;setFlags(EnumSet.of(Flag.MOVE));}
  public static BlockPos anchor(ResidentEntity npc){
