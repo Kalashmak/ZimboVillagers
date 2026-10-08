@@ -205,7 +205,7 @@ public final class Population {
  /** Labor office: every unassigned adult takes the most needed implemented job (builder, porter, food, school, workshops). */
  public static boolean assign(SettlementData.Entry e){return assign(e,1);}
  /** World-aware staffing entry point; legacy callers retain their ordinary labor-office pass. */
- public static boolean assign(ServerLevel l,SettlementData.Entry e,int builders){boolean changed=assign(e,builders);changed=EducationStaffing.tick(l,e)||changed;changed=KitchenRelief.tick(l,e)||changed;return ResourceStaffing.tick(l,e)||changed;}
+ public static boolean assign(ServerLevel l,SettlementData.Entry e,int builders){boolean changed=assign(e,builders);changed=EducationStaffing.tick(l,e)||changed;changed=KitchenRelief.tick(l,e)||changed;changed=ResourceIllnessRelief.tick(l,e)||changed;return ResourceStaffing.tick(l,e)||changed;}
  /** AD-153: with the builders the hall posts by the construction research (ResearchKnobs.builders: 1, then 2/2/4/6/8/10). The first builder
   *  comes before any other post, the others after every workplace has its first worker; research is never unlearned, so none is let go. */
  public static boolean assign(SettlementData.Entry e,int builders){
