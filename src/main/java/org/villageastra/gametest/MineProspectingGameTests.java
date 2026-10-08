@@ -89,15 +89,27 @@ public final class MineProspectingGameTests {
  public static void unmetOreDemandContinuesBeyondFourSurveySections(GameTestHelper h){extension(h,4);}
  @GameTest(template="empty",batch="mine_twelve_section_survey",timeoutTicks=2400)
  public static void unmetOreDemandCanContinueBeyondEightCompletedSections(GameTestHelper h){extension(h,8);}
- private static void extension(GameTestHelper h,int sections){
+ @GameTest(template="empty",batch="mine_gallery_floor_seal",timeoutTicks=2400)
+ public static void paidPlugSupportsTheNextGalleryColumnBeforeAnyExcavation(GameTestHelper h){extension(h,1,true,false);}
+ @GameTest(template="empty",batch="mine_gallery_floor_seal",timeoutTicks=2400)
+ public static void waterBlockedPartialGalleryCanResumeAfterPaidFoundationRepair(GameTestHelper h){extension(h,1,true,true);}
+ private static void extension(GameTestHelper h,int sections){extension(h,sections,false,false);}
+ private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial){
   var f=town(h,true);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
-  int initial=CoreEffects.mine().galleryLength()*sections;
+  int initial=CoreEffects.mine().galleryLength()*sections+(partial?1:0);
   var base=BuildingPlacement.origin(t.e,t.shop);var forced=PhysicalFixtureChunks.force(t.l,base,0,initial+31,0,z+3);
   for(int x=2;x<=initial+30;x++)for(int dz=-2;dz<=2;dz++)for(int dy=-1;dy<=6;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z+dz),Blocks.STONE.defaultBlockState(),2);
   for(int x=4;x<5+initial;x++)for(int dy=0;dy<5;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z),Blocks.AIR.defaultBlockState(),2);
   t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,initial));
   state.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,floor).toArray());state.putString("stage","choose");
   var ore=BuildingPlacement.at(t.e,t.shop,6+initial,y+1,z);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+  var plug=BuildingPlacement.at(t.e,t.shop,5+initial,y-1,z);var sealSeen=new UUID[1];
+  if(waterFloor){
+   t.l.setBlock(plug,Blocks.WATER.defaultBlockState(),2);
+   var hallBuilding=Workshops.hall(t.e);var hallStock=LogisticsRoutes.chest(t.l,t.e,hallBuilding);var material=new ItemStack(Items.COBBLESTONE);hallStock.setItem(2,material);
+   var paid=org.villageastra.persistence.WorldJournal.takeAmount(t.l,UUID.randomUUID(),LogisticsRoutes.position(t.e,hallBuilding),2,material,1);h.assertTrue(paid.getCount()==1&&hallStock.getItem(2).isEmpty(),"Foundation material is really withdrawn before this trip");
+   var carried=new ListTag();carried.add(paid.save(new CompoundTag()));state.put("cargo",carried);
+  }
   h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,state),"Unmet real ore demand resumes a fully worked gallery instead of idling forever");
   h.assertTrue(state.getInt("floorStep")==floor&&state.getInt("run")==initial,"Existing depth and paid gallery endpoint are retained");
   MineWork.write(t.l,t.shop,state);var saved=MineWork.read(t.l,t.shop);var next=MineWork.next(t.l,t.e,t.shop,saved);
@@ -105,8 +117,19 @@ public final class MineProspectingGameTests {
   var start=BuildingPlacement.at(t.e,t.shop,3+initial,y,z);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);f.npc.setNoAi(false);f.npc.onlyGoals(g->false,6,new ResourceWorkGoal(f.npc,true,()->6000));boolean[] started={false};
   h.onEachTick(()->{
    if(!started[0]){if(TouchLoad.ticking(t.l,f.npc.blockPosition()))started[0]=t.l.addFreshEntity(f.npc);return;}
-   var work=MineWork.read(t.l,t.shop);int iron=ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON);
+   var work=MineWork.read(t.l,t.shop);
+   if(waterFloor){
+    if(MineSealing.active(work))sealSeen[0]=work.getUUID("operation");
+    if(t.l.getBlockState(plug).is(Blocks.WATER))h.assertTrue(t.l.getBlockState(plug.above()).is(Blocks.STONE),"The unsupported next column remains unexcavated until its water is plugged");
+   }
+   int iron=ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON);
    if(iron==0)return;
+   if(waterFloor){
+    h.assertTrue(sealSeen[0]!=null&&t.l.getBlockState(plug).is(Blocks.COBBLESTONE),"A real paid plug supports the new column");
+    var receipt=org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,Settlement.childId(sealSeen[0],"seal_place"));h.assertTrue(receipt!=null&&receipt.getCompound("before").getString("Name").equals("minecraft:water"),"Water replacement has a committed placement receipt");
+    h.assertTrue(ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==8,"One carried stone was spent before eight actual stone drops; none invented or doubled");
+    h.assertTrue(!f.npc.isInWaterOrBubble()&&f.npc.getHealth()==f.npc.getMaxHealth(),"The miner stays dry and healthy");
+   }
    h.assertTrue(iron==1&&t.l.getBlockState(ore).isAir(),"Native mining yields exactly the real ore block");
    h.assertTrue(ItemStack.of(work.getCompound("tool")).getDamageValue()>=5&&f.npc.tickCount>20,"Stone and ore require ordinary tool wear and body ticks");
    h.assertTrue(t.s.mineAreas().get(t.shop.id()).lastStep()==floor&&t.s.mineAreas().get(t.shop.id()).galleries().stream().anyMatch(g->g.step()==floor&&g.side()==MineDrive.EAST&&g.length()>initial),"Only actually excavated extension is claimed, without deeper stairs");
@@ -128,6 +151,15 @@ public final class MineProspectingGameTests {
    t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,n));t.l.setBlock(face.north(),Blocks.WATER.defaultBlockState(),2);
    h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"A wet face is never opened for more ore");t.l.setBlock(face.north(),Blocks.STONE.defaultBlockState(),2);t.l.setBlock(support,Blocks.AIR.defaultBlockState(),2);
    h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"A new section needs actual floor support");t.l.setBlock(support,Blocks.STONE.defaultBlockState(),2);
+   var cell=new MineDrive.Cell(5+n,y+4,z);
+   t.l.setBlock(support,Blocks.LAVA.defaultBlockState(),2);
+   h.assertTrue(MineSealing.galleryFloorFace(t.l,t.e,t.shop,state,cell)==null&&!MineProspecting.begin(t.l,t.e,t.shop,state),"Lava below a gallery is never a repairable foundation");
+   t.l.setBlock(support,Blocks.WATER.defaultBlockState(),2);t.l.setBlock(support.above(),Blocks.WATER.defaultBlockState(),2);
+   h.assertTrue(MineSealing.galleryFloorFace(t.l,t.e,t.shop,state,cell)==null,"A flooded foot cannot become a dry foundation job");
+   t.l.setBlock(support.above(),Blocks.STONE.defaultBlockState(),2);
+   h.assertTrue(MineSealing.galleryFloorFace(t.l,t.e,t.shop,state,cell).equals(support.above()),"Only pure water below dry recognized stone is repairable");
+   var unpaid=state.copy();h.assertTrue(MineSealing.beginFloor(t.l,t.e,t.shop,unpaid,cell)&&unpaid.getString("stage").equals("seal_fetch")&&unpaid.getList("cargo",Tag.TAG_COMPOUND).isEmpty(),"Missing material creates a paid fetch request without a free plug");
+   h.assertTrue(t.l.getBlockState(support).is(Blocks.WATER),"Planning leaves the water in place");t.l.setBlock(support,Blocks.STONE.defaultBlockState(),2);
    var other=new Settlement(UUID.randomUUID());other.addBuilding(new Settlement.Building(UUID.randomUUID(),"home",0,0,0));var data=SettlementData.get(t.l.getServer());data.add(new SettlementData.Entry(other,t.e.dimension(),face));
    try{h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"A longer gallery cannot cut another building");}finally{data.remove(other.id());}
    var chest=LogisticsRoutes.chest(t.l,t.e,t.shop);chest.setItem(0,new ItemStack(Items.RAW_IRON,64));

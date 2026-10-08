@@ -38,23 +38,25 @@ public final class MineProspecting {
   t.putInt("extentStep",Math.max(area.lastStep(),t.getInt("extentStep")));t.putInt("step",next+1);t.putInt("cell",0);t.putInt("side",MineDrive.EAST);t.putInt("run",0);t.putInt("galleryOf",next);
   t.putString("stage","choose");t.putUUID("operation",UUID.randomUUID());t.remove("access");t.remove("beam");return true;
  }
- /** Continue only a completed section, never retry a face previously stopped by
-  * water or missing support. No ore is created or selected through the rock. */
+ /** Continue completed sections, or a partial section whose water foundation
+  * can be repaired with paid material. No ore is selected through the rock. */
  private static boolean extend(ServerLevel l,SettlementData.Entry e,Settlement.Building mine,CompoundTag t,MineArea area,int limit){
   int section=CoreEffects.mine().galleryLength();
-  var ordered=area.galleries().stream().filter(g->g.step()<=limit&&g.length()%section==0&&g.length()<MineArea.maxGalleryLength())
+  var ordered=area.galleries().stream().filter(g->g.step()<=limit&&g.length()<MineArea.maxGalleryLength())
    .sorted(Comparator.comparingInt(MineArea.Gallery::length).thenComparing(Comparator.comparingInt(MineArea.Gallery::step).reversed()).thenComparingInt(MineArea.Gallery::side)).toList();
   for(var g:ordered){
-   int length=g.length()+section,left=area.width()==1?3:2,right=area.width()==1?3:4;
+   int length=(g.length()/section+1)*section,left=area.width()==1?3:2,right=area.width()==1?3:4;
    var endpoint=BuildingPlacement.at(e,mine,g.side()==MineDrive.EAST?right+length:left-length,-g.step()-area.descent(),7+g.step());
    // Keep the entire new section inside the village's supported worker territory,
    // including a little room to stand beside a face or turn back.
    int reach=NaturalSupplyGoal.ROUTE_RANGE-4;if(endpoint.distSqr(e.center())>(double)reach*reach)continue;
-   var candidate=t.copy();candidate.putInt("floorStep",g.step());candidate.putInt("step",g.step()+1);candidate.putInt("cell",0);candidate.putInt("side",g.side());candidate.putInt("run",g.length());candidate.putInt("prospectLength",g.length()+section);
+   var candidate=t.copy();candidate.putInt("floorStep",g.step());candidate.putInt("step",g.step()+1);candidate.putInt("cell",0);candidate.putInt("side",g.side());candidate.putInt("run",g.length());candidate.putInt("prospectLength",length);
    var next=MineDrive.next(MineWork.drive(candidate),g.step(),MineWork.shape(candidate));var pos=MineWork.at(e,mine,next.cell());
-   if(!l.hasChunkAt(pos)||org.villageastra.server.OwnershipEvents.protectedBlock(l,pos,b->!b.id().equals(mine.id()))||!MineWork.galleryFloor(l,e,mine,candidate,next.cell())||MineWork.unsafeGallery(l,pos)||!MineWork.diggable(l,e,mine,pos,candidate))continue;
+   boolean repairable=MineSealing.galleryFloorFace(l,e,mine,candidate,next.cell())!=null;
+   if(g.length()%section!=0&&!repairable)continue;
+   if(!l.hasChunkAt(pos)||org.villageastra.server.OwnershipEvents.protectedBlock(l,pos,b->!b.id().equals(mine.id()))||!MineWork.galleryFloor(l,e,mine,candidate,next.cell())&&!repairable||MineWork.unsafeGallery(l,pos)||!MineWork.diggable(l,e,mine,pos,candidate))continue;
    t.putInt("prospectFloor",g.step());t.putInt("prospectLimit",limit);t.putInt("floorStep",g.step());t.putInt("step",g.step()+1);t.putInt("cell",0);t.putInt("side",g.side());t.putInt("run",g.length());t.putInt("galleryOf",g.step());
-   t.putInt("prospectLength",g.length()+section);t.putBoolean("prospectExtension",true);t.putInt("extentStep",Math.max(area.lastStep(),t.getInt("extentStep")));
+   t.putInt("prospectLength",length);t.putBoolean("prospectExtension",true);t.putInt("extentStep",Math.max(area.lastStep(),t.getInt("extentStep")));
    t.putString("stage","choose");t.putUUID("operation",UUID.randomUUID());t.remove("access");t.remove("beam");return true;
   }
   return false;

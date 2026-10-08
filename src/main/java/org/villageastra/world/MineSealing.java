@@ -9,6 +9,7 @@ import net.minecraft.world.Container;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.Blocks;
 import org.villageastra.domain.Settlement;
+import org.villageastra.domain.MineDrive;
 import org.villageastra.persistence.WorldJournal;
 import org.villageastra.server.*;
 
@@ -28,6 +29,18 @@ public final class MineSealing {
  }
  public static boolean begin(ServerLevel l,Settlement.Building mine,CompoundTag t,BlockPos face){
   if(MineWork.gallery(t))return false;var p=candidate(l,mine,face);if(p==null)return false;
+  return start(t,face,p);
+ }
+ /** Only water immediately below a dry, recognized gallery face can be repaired. */
+ public static BlockPos galleryFloorFace(ServerLevel l,SettlementData.Entry e,Settlement.Building mine,CompoundTag t,MineDrive.Cell cell){
+  var face=BuildingPlacement.at(e,mine,cell.x(),-t.getInt("floorStep")-t.getInt("descent"),cell.z());
+  if(!l.hasChunkAt(face)||!l.getFluidState(face).isEmpty()||OwnershipEvents.protectedBlock(l,face,b->!b.id().equals(mine.id())))return null;
+  var water=candidate(l,mine,face);return face.below().equals(water)?face:null;
+ }
+ public static boolean beginFloor(ServerLevel l,SettlementData.Entry e,Settlement.Building mine,CompoundTag t,MineDrive.Cell cell){
+  var face=galleryFloorFace(l,e,mine,t,cell);return face!=null&&start(t,face,face.below());
+ }
+ private static boolean start(CompoundTag t,BlockPos face,BlockPos p){
   clear(t);t.putLong("sealFace",face.asLong());t.putLong("sealAt",p.asLong());t.putString("stage",held(t).isEmpty()?"seal_fetch":"seal_place");t.putUUID("operation",UUID.randomUUID());return true;
  }
  /** Reconstruct payment before any restart/death snapshot; the flags make repeated recovery harmless. */
