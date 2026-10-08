@@ -22,7 +22,7 @@ public final class WorkshopGoal extends Goal {
  private boolean work(){
   var e=entry();if(e==null)return false;var l=(ServerLevel)worker.level();var b=workplace(e);
   if(bakes(l,e,b))return false;
-  var t=Workshops.inspect(l,b.id());if(!NaturalFurnace.availableTo(l,b,t,worker.getUUID()))return false;if(!t.isEmpty()&&!t.getString("stage").equals("idle"))return true;
+  var t=Workshops.inspect(l,b.id());if(!NaturalFurnace.availableTo(l,b,t,worker.getUUID(),jobClock.getAsLong()))return false;if(!t.isEmpty()&&!t.getString("stage").equals("idle"))return true;
   // AD-104 P2: the station's fuel bank counts, so a bakery whose bank covers the bake starts without a fuel item in the chest.
   var chest=LogisticsRoutes.chest(l,e,b);if(chest==null)return false;var wants=Workshops.wants(l,e);
   if(Workshops.plan(l,e,b,chest,wants)!=null)return true;
@@ -44,7 +44,7 @@ public final class WorkshopGoal extends Goal {
  @Override public void start(){yielded=false;repath=0;}
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){
-  var e=entry();if(e==null)return;var l=(ServerLevel)worker.level();var b=workplace(e);var job=Workshops.inspect(l,b.id());if(!NaturalFurnace.claim(l,b,job,worker.getUUID())){
+  var e=entry();if(e==null)return;var l=(ServerLevel)worker.level();var b=workplace(e);var job=Workshops.inspect(l,b.id());if(!NaturalFurnace.claim(l,b,job,worker.getUUID(),jobClock.getAsLong())){
    // Another worker holds this smelting job: this one lets the goal go instead of standing in it for good (it kept a second hall worker
    // "walking" all day, out of reach of every other goal of priority 6, hand bread included). canUse skips such a job (work()).
    worker.getNavigation().stop();yielded=true;useful=false;lastCheck=worker.tickCount;return;}var pos=NaturalFurnace.workPosition(l,e,b,job);

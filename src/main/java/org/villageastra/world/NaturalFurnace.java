@@ -20,27 +20,39 @@ public final class NaturalFurnace {
  private static void save(ServerLevel l,Settlement.Building b,CompoundTag t){NbtRecord.write(Workshops.path(l,b.id()),t);}
  private static String missing(ServerLevel l,Settlement.Building b,CompoundTag t,Ingredient ingredient,int count){var list=new ListTag();var in=new CompoundTag();in.putString("ingredient",ingredient.toJson().toString());in.putInt("count",count);list.add(in);t.put("needs",list);save(l,b,t);return "workshop_missing_inputs";}
  private static UUID op(CompoundTag t,String suffix){return Settlement.childId(t.getUUID("id"),suffix);}
- /** A sick colleague can leave a cooking furnace to another eligible worker,
-  * only while all paid goods remain in the furnace and no output take exists. */
- public static boolean availableTo(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){
+ /** An eligible colleague can collect a sick worker's cooking furnace, or begin a
+  * stale job whose stranded owner has not taken any goods. Paid custody stays exclusive. */
+ public static boolean availableTo(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){return availableTo(l,b,t,worker,SettlementData.get(l.getServer()).clock().ticks());}
+ public static boolean availableTo(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker,long now){
   if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle")||!t.hasUUID("worker")||t.getUUID("worker").equals(worker))return true;
-  if(!t.getString("stage").equals("smelt_wait")||!t.hasUUID("id")||!t.contains("furnace")
+  boolean untouched=t.getString("stage").equals("smelt_raw")&&t.hasUUID("id")&&now-t.getLong("lastTick")>=2400
+    &&t.getInt("withdrawals")==0&&t.getInt("fuels")==0&&t.getInt("output")==0&&t.getLong("labor")==0
+    &&t.getList("paid",Tag.TAG_COMPOUND).isEmpty()&&!t.contains("furnace")&&!WorldJournal.exists(l,op(t,"smelt/raw/0"));
+  if(!untouched&&(!t.getString("stage").equals("smelt_wait")||!t.hasUUID("id")||!t.contains("furnace"))
     ||!ItemStack.of(t.getCompound("carried")).isEmpty()||WorldJournal.exists(l,op(t,"smelt/output")))return false;
   if(!(l.getEntity(t.getUUID("worker")) instanceof ResidentEntity old)||!old.isAlive()||old.escortPlayer()!=null
     ||CargoCustody.pending(l.getServer(),old.getUUID())||old.settlementId()==null)return false;
   var e=SettlementData.get(l.getServer()).entry(old.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;
   var r=e.settlement().resident(old.getUUID());var replacement=e.settlement().resident(worker);
   var post=e.settlement().workplace(worker);if(post==null&&replacement!=null&&replacement.profession()==null)post=Workshops.hall(e);
-  if(r==null||!r.alive()||!r.sick()||Population.mayWork(r)||!Workshops.eligible(r,b)||!Workshops.eligible(replacement,b)||!Population.mayWork(replacement)
+  if(r==null||!r.alive()||(!untouched&&(!r.sick()||Population.mayWork(r)))||!Workshops.eligible(r,b)||!Workshops.eligible(replacement,b)||!Population.mayWork(replacement)
     ||post==null||!post.id().equals(b.id())||CargoCustody.pending(l.getServer(),worker))return false;
   if(!(l.getEntity(worker) instanceof ResidentEntity helper)||!helper.isAlive()||helper.escortPlayer()!=null||!old.settlementId().equals(helper.settlementId()))return false;
   var oldPost=e.settlement().workplace(old.getUUID());if(oldPost==null&&r.profession()==null)oldPost=Workshops.hall(e);
   if(oldPost==null||!oldPost.id().equals(b.id()))return false;
+  if(untouched){
+   var route=old.getNavigation().getPath();var pos=Workshops.station(e,b);
+   if(old.distanceToSqr(pos.getCenter())<=64||route==null||route.canReach()||helper.isSleeping()||!helper.onGround()
+     ||helper.distanceToSqr(pos.getX()+1.5,pos.getY(),pos.getZ()+.5)>6.25)return false;
+   var sight=l.clip(new net.minecraft.world.level.ClipContext(helper.getEyePosition(),pos.getCenter(),net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,helper));
+   return sight.getType()==net.minecraft.world.phys.HitResult.Type.MISS||sight.getBlockPos().equals(pos);
+  }
   var at=BlockPos.of(t.getLong("furnace"));return l.hasChunkAt(at)&&l.getBlockEntity(at) instanceof FurnaceBlockEntity f
     &&f.getPersistentData().hasUUID("AstraSmeltJob")&&f.getPersistentData().getUUID("AstraSmeltJob").equals(t.getUUID("id"));
  }
- public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){
-  if(!availableTo(l,b,t,worker))return false;
+ public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){return claim(l,b,t,worker,SettlementData.get(l.getServer()).clock().ticks());}
+ public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker,long now){
+  if(!availableTo(l,b,t,worker,now))return false;
   if(!t.getBoolean("physicalSmelt")||t.getString("stage").equals("idle")||t.hasUUID("worker")&&t.getUUID("worker").equals(worker))return true;
   t.putUUID("worker",worker);save(l,b,t);return true;
  }
