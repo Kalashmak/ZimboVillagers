@@ -24,6 +24,17 @@ public final class PitEscapeGoal extends Goal {
   var foot=r.blockPosition();for(var b:e.settlement().buildings()){
    if(b.type().equals("mine"))continue;var origin=BuildingPlacement.origin(e,b);var size=BuildingPlacement.size(b.type(),b.rotation());
    if(foot.getY()>origin.getY()&&foot.getX()>=origin.getX()&&foot.getX()<origin.getX()+size[0]&&foot.getZ()>=origin.getZ()&&foot.getZ()<origin.getZ()+size[1])return true;
+  }
+  // A paid building already has physical floors before its final registration.
+  // Treat those floors like finished architecture, so pit recovery cannot undo
+  // the builder's controlled descent by climbing straight back onto the roof.
+  if(HallUpgradeGoal.exists(l,r.settlementId())){
+   var project=HallUpgradeGoal.headerView(l,r.settlementId());
+   if(BuildingOrders.isBuilding(project)&&project.getBoolean("funded")&&!project.getBoolean("complete")
+     &&project.getInt("progress")>0&&!BuildingBlueprints.base(project.getString("design")).equals("mine")){
+    var origin=BlockPos.of(project.getLong("origin"));var size=BuildingPlacement.size(project.getString("design"),project.getInt("rotation"));
+    if(foot.getY()>origin.getY()&&foot.getX()>=origin.getX()&&foot.getX()<origin.getX()+size[0]&&foot.getZ()>=origin.getZ()&&foot.getZ()<origin.getZ()+size[1])return true;
+   }
   }return false;
  }
  private static Route route(ResidentEntity r){
