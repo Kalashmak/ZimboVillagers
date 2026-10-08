@@ -60,10 +60,13 @@ public final class MineOreWork {
   for(var g:area.galleries())for(int run=0;g.step()<=limit&&run<g.length();run++){
    int x=g.side()==MineDrive.EAST?(area.width()==1?4:5)+run:(area.width()==1?2:1)-run,y=-g.step()-area.descent(),z=7+g.step();
    var stand=BuildingPlacement.at(e,mine,x,y,z);if(!standing(l,stand))continue;var eye=Vec3.atBottomCenterOf(stand).add(0,npc.getEyeHeight(),0);
-   for(int dy=0;dy<=height;dy++)for(var side:new Direction[]{Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST,Direction.UP}){
-    var local=new BlockPos(x,y+dy,z).relative(side);if(side==Direction.UP&&dy!=height-1||side==Direction.EAST&&g.side()==MineDrive.EAST&&run<g.length()-1||side==Direction.WEST&&g.side()==MineDrive.WEST&&run<g.length()-1)continue;
+   // Exposed floor ore is worked from the adjacent foot cell, with the same paid
+   // support exchange as a shared gallery floor. Never remove the worker's footing.
+   for(int dy=-1;dy<=height;dy++)for(var side:new Direction[]{Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST,Direction.UP}){
+    var local=new BlockPos(x,y+dy,z).relative(side);if(side==Direction.UP&&dy!=height-1||dy>=0&&(side==Direction.EAST&&g.side()==MineDrive.EAST&&run<g.length()-1||side==Direction.WEST&&g.side()==MineDrive.WEST&&run<g.length()-1))continue;
     var p=BuildingPlacement.at(e,mine,local.getX(),local.getY(),local.getZ());var b=l.getBlockState(p);
     boolean support=floor(area,local);
+    if(dy<0&&(!support||local.getY()<-limit-area.descent()))continue;
     if(!MineOutcrops.wanted(b,wanted)||support&&!stoneAvailable||!area.contains(local.getX(),local.getY(),local.getZ(),0)||org.villageastra.server.OwnershipEvents.protectedBlock(l,p,bld->!bld.id().equals(mine.id()))||!safe(l,p,tool)||!visible(l,npc,eye,p)||support&&stand.below().equals(p))continue;
     double distance=npc.distanceToSqr(Vec3.atBottomCenterOf(stand));if(distance>=best)continue;
     if(support&&(queries++>=4||!HarvestAccess.reversible(HarvestRouteCache.plan(npc,stand,128))))continue;

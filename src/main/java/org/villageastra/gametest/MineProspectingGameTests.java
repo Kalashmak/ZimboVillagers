@@ -13,7 +13,10 @@ import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class MineProspectingGameTests {
  @GameTest(template="empty",batch="mine_floor_exchange",timeoutTicks=1800)
- public static void minerPaysStoneAndExchangesFloorOreWithoutOpeningSupport(GameTestHelper h){
+ public static void minerPaysStoneAndExchangesFloorOreWithoutOpeningSupport(GameTestHelper h){floorExchange(h,false);}
+ @GameTest(template="empty",batch="mine_flat_floor_exchange",timeoutTicks=1800)
+ public static void minerExchangesIronBelowTheSameGalleryFromAnAdjacentStand(GameTestHelper h){floorExchange(h,true);}
+ private static void floorExchange(GameTestHelper h,boolean sameGallery){
   var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());
   var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*8,96,old.e.center().getZ()*8));data.add(e);
   var t=new ResearchV2Town.Town(old.l,e,old.s,old.shop);ResearchV2Town.lay(t.l,e,t.shop,"mine");t.l.setBlock(e.center().offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
@@ -23,7 +26,7 @@ public final class MineProspectingGameTests {
   for(int x=0;x<=16;x++)for(int z=3;z<=10;z++)for(int y=-2;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
   for(int x=2;x<=10;x++)for(int z=4;z<=8;z++){int foot=z<=5?1:z<=7?0:-1;for(int y=foot;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.AIR.defaultBlockState(),2);}
   var stock=LogisticsRoutes.position(e,t.shop);t.l.setBlock(stock,VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var chest=(net.minecraft.world.Container)t.l.getBlockEntity(stock);chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
-  var ore=BuildingPlacement.at(e,t.shop,6,-1,7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+  var ore=BuildingPlacement.at(e,t.shop,6,sameGallery?-2:-1,sameGallery?8:7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
   t.s.noteMine(t.shop.id(),32,3,5,0);t.s.noteMine(t.shop.id(),new MineArea.Gallery(0,MineDrive.EAST,6));t.s.noteMine(t.shop.id(),new MineArea.Gallery(1,MineDrive.EAST,6));
   var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:lantern",2);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);
   var hall=LogisticsRoutes.chest(t.l,e,Workshops.hall(e));hall.setItem(0,new ItemStack(Items.COAL,8));hall.setItem(1,new ItemStack(Items.STICK,8));
