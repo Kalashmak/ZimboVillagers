@@ -771,7 +771,16 @@ public final class ResourceWorkGoal extends Goal {
         for(int index=state.getInt("delivered");index<cargo.size();index++){
             ItemStack item=ItemStack.of(cargo.getCompound(index));
             var delivery=Settlement.childId(id,"delivery/"+index);
-            if(overflow&&!WorldJournal.exists(level,delivery)&&!forestOverflowRoom(level,destination,item)){status("output_full");return;}
+            if(overflow&&!WorldJournal.exists(level,delivery)&&!forestOverflowRoom(level,destination,item)){
+                // Overflow is a destination for the remaining stack, not a permanent
+                // binding for the whole mixed load. Porters or planting may have
+                // freed space at the hut while the forester walked to the hall.
+                // An existing receipt still owns its original destination.
+                if(!destination.equals(output)&&forestRoom(level,output,item)){
+                    state.remove("forestDeliveryAt");save();status("walking");return;
+                }
+                status("output_full");return;
+            }
             if(!WorldJournal.deposit(level,delivery,destination,item)){
                 if(!overflow&&!WorldJournal.exists(level,delivery)&&!stock.equals(output)&&forestOverflowRoom(level,stock,item)){
                     state.putLong("forestDeliveryAt",stock.asLong());save();
