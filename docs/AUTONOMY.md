@@ -301,3 +301,9 @@ Couriers take the smallest suitable stack first so a short parcel can actually f
 When a miner has an unmet quarry demand after exhausting the ordinary drive, every other fresh twenty-tick search window starts with the saved general survey cursor. Other windows keep the existing nearby and remembered-deposit searches first. Both orders share the same five-millisecond allowance, four native plans and finite column allowance; a costly individual native query still completes before yielding. The choice and exact cursor/depth survive goal reloads.
 
 `mineral_survey_fairness` prepares an exhausted mine, a real previously delivered sand block, a remaining sand order and covered accessible iron. The resident must discover, mine and physically deliver the iron and the remaining sand with the same genuinely worn loaned pick. Fluid boundaries, roofs, ordinary labor and reversible travel remain checked. This is a focused scheduling check, not a measurement of total village development speed.
+
+### Surface sites and safe mayor travel
+
+A rejected surface no longer makes a cave floor underneath it eligible for a new building. The local survey may pass through a canopy, but cannot pass through solid terrain, a roof or fluid to find lower ground. The mayor rechecks a loaded proposal's actual surface before approving it.
+
+Travel to a proposed site requires a complete reversible native route. A rejected site advances the village's survey cursor instead of repeatedly sending the mayor to the same dangerous ledge. Approval still requires the mayor's physical arrival; this change neither places a building remotely nor modifies terrain or stock. Tests cover a canopy above a cave, rejection of a downward route and continued walking to a safe flat site.

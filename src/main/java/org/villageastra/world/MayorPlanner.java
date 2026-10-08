@@ -176,10 +176,14 @@ public final class MayorPlanner {
  public static BlockPos siteGround(ServerLevel l,BlockPos c){
   if(!l.hasChunkAt(c))return null;
   int top=l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,c.getX(),c.getZ())-1;
+  boolean covered=false;
   for(int y=top;y>=Math.max(l.getMinBuildHeight(),top-64);y--){
    var p=new BlockPos(c.getX(),y,c.getZ());var s=l.getBlockState(p);
    boolean soil=s.is(net.minecraft.tags.BlockTags.DIRT)||s.is(net.minecraft.tags.BlockTags.BASE_STONE_OVERWORLD)||s.is(net.minecraft.tags.BlockTags.SAND)||s.is(net.minecraft.world.level.block.Blocks.GRAVEL)||s.is(net.minecraft.world.level.block.Blocks.SNOW_BLOCK);
-   if(soil&&s.isFaceSturdy(l,p,net.minecraft.core.Direction.UP)&&s.getFluidState().isEmpty()&&l.getBlockState(p.above()).canBeReplaced()&&l.getBlockState(p.above(2)).canBeReplaced()&&l.getFluidState(p.above()).isEmpty()&&l.getFluidState(p.above(2)).isEmpty())return p;
+   if(!covered&&soil&&s.isFaceSturdy(l,p,net.minecraft.core.Direction.UP)&&s.getFluidState().isEmpty()&&l.getBlockState(p.above()).canBeReplaced()&&l.getBlockState(p.above(2)).canBeReplaced()&&l.getFluidState(p.above()).isEmpty()&&l.getFluidState(p.above(2)).isEmpty())return p;
+   // A rejected terrain surface covers every lower cave floor. Canopy alone
+   // may be crossed, but never solid soil, rock, roofs or fluid.
+   if(!s.canBeReplaced()&&!s.is(net.minecraft.tags.BlockTags.LOGS)&&!s.is(net.minecraft.tags.BlockTags.LEAVES)||!s.getFluidState().isEmpty())covered=true;
   }
   return null;
  }
@@ -238,6 +242,10 @@ public final class MayorPlanner {
   if(BuildingOrders.HOUSING.contains(BuildingBlueprints.base(design))&&BuildingWood.choose(l,e,design).isEmpty())return null;
   var site=site(l,e,design);if(site==null)return null;
   var proposal=new Proposal(design,site,"shortage");PROPOSALS.put(s.id(),proposal);return proposal;
+ }
+ /** Rejected walking sites advance the bounded survey instead of repeating the same unsafe candidate. */
+ public static boolean abandonSite(UUID village,Proposal expected){
+  if(PROPOSALS.get(village)!=expected)return false;PROPOSALS.remove(village);CURSOR.merge(village,1,Integer::sum);return true;
  }
  /** Called by the mayor standing at the site: re-survey and approve through the same paid queue as a player order. */
  public static String approveAtSite(ServerLevel l,SettlementData.Entry e,ResidentEntity mayor){
