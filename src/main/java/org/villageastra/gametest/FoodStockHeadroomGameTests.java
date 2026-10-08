@@ -9,6 +9,7 @@ import org.villageastra.VillageAstra;
 import org.villageastra.domain.Settlement;
 import org.villageastra.server.SettlementData;
 import org.villageastra.world.*;
+import org.villageastra.persistence.WorldJournal;
 
 /** Abundant grain must leave storage room for construction, without blocking explicit needs. */
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
@@ -41,6 +42,22 @@ public final class FoodStockHeadroomGameTests {
   dest.setItem(0,ItemStack.EMPTY);var route=LogisticsRoutes.choose(l,e,hall,at);h.assertTrue(route!=null&&route.source().id().equals(hall.id())&&route.destination().id().equals(farm.id())&&route.item().is(Items.WHEAT),"Free loaded farm receives only actual surplus grain");
   for(int slot=0;slot<16;slot++)stock.setItem(slot,new ItemStack(Items.DIRT,64));for(int slot=0;slot<4;slot++)stock.setItem(slot,new ItemStack(Items.WHEAT,64));
   h.assertTrue(LogisticsRoutes.choose(l,e,hall,at)==null&&stock.countItem(Items.WHEAT)==256,"Four staple stacks remain for village meals");SettlementData.get(l.getServer()).remove(s.id());h.succeed();
+ }
+
+ @GameTest(template="empty",batch="bulk_stock_recovery",timeoutTicks=200)
+ public static void fullHallCanExportRealSurplusInsteadOfBlockingPaidBread(GameTestHelper h){
+  var l=h.getLevel();var at=h.absolutePos(new BlockPos(2,3,2));var s=new Settlement(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),at);
+  var hall=new Settlement.Building(UUID.randomUUID(),"town_hall",0,0,0);var mine=new Settlement.Building(UUID.randomUUID(),"mine",20,0,0);s.addBuilding(hall);s.addBuilding(mine);SettlementData.get(l.getServer()).add(e);
+  for(var b:s.buildings())l.setBlock(LogisticsRoutes.position(e,b),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
+  var stock=LogisticsRoutes.chest(l,e,hall);stock.expandHall();var dest=LogisticsRoutes.chest(l,e,mine);
+  for(int slot=0;slot<108;slot++)stock.setItem(slot,new ItemStack(Items.COBBLESTONE,64));stock.setItem(107,new ItemStack(Items.COBBLESTONE,8));
+  var route=LogisticsRoutes.choose(l,e,hall,at);h.assertTrue(route!=null&&route.source().id().equals(hall.id())&&route.destination().id().equals(mine.id())&&route.item().is(Items.COBBLESTONE)&&route.item().getCount()==8,"Smallest surplus stack leaves the full hall first");
+  var take=UUID.randomUUID();var held=WorldJournal.takeAmount(l,take,LogisticsRoutes.position(e,hall),107,stock.getItem(107).copy(),8);h.assertTrue(held.getCount()==8&&WorldJournal.deposit(l,Settlement.childId(take,"put"),LogisticsRoutes.position(e,mine),held),"Real withdrawal and deposit conserve the parcel");
+  h.assertTrue(WorldJournal.deposit(l,UUID.randomUUID(),LogisticsRoutes.position(e,hall),new ItemStack(Items.BREAD,2))&&stock.countItem(Items.BREAD)==2,"Paid bread can occupy the physically freed slot");
+  for(int slot=0;slot<dest.getContainerSize();slot++)dest.setItem(slot,new ItemStack(Items.DIRT,64));h.assertTrue(LogisticsRoutes.choose(l,e,hall,at)==null,"Full destination never accepts an overflow route");
+  for(int slot=0;slot<dest.getContainerSize();slot++)dest.setItem(slot,ItemStack.EMPTY);
+  var project=new CompoundTag();var id=UUID.randomUUID();project.putUUID("id",id);project.putUUID("project",id);project.putString("design","home");project.putLong("origin",at.offset(60,0,0).asLong());var cost=new CompoundTag();cost.putInt("minecraft:cobblestone",stock.countItem(Items.COBBLESTONE));project.put("cost",cost);project.put("cargo",new ListTag());project.put("ops",new ListTag());HallUpgradeGoal.store(l,s.id(),project);
+  h.assertTrue(LogisticsRoutes.choose(l,e,hall,at)==null,"All committed construction stock remains protected");HallUpgradeGoal.drop(l,s.id());SettlementData.get(l.getServer()).remove(s.id());h.succeed();
  }
 
 }

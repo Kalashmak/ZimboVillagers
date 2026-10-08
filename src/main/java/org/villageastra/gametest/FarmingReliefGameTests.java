@@ -87,4 +87,30 @@ public final class FarmingReliefGameTests {
   }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}
   h.succeed();
  }
+ @GameTest(template="empty",batch="bulk_food_recovery",timeoutTicks=200)
+ public static void hungryCourierClearsPaidBreadInsteadOfBeingReassignedToAnotherHungryFarm(GameTestHelper h){
+  var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  try{
+   for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Body registered");}
+   var hall=Workshops.hall(e);var mine=s.buildings().stream().filter(b->b.type().equals("mine")).findFirst().orElseThrow();for(var b:List.of(hall,mine))l.setBlock(LogisticsRoutes.position(e,b),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
+   var stock=LogisticsRoutes.chest(l,e,hall);stock.expandHall();stock.setItem(0,new ItemStack(Items.WHEAT,HandBread.WHEAT_PER_UNIT));
+   var courier=s.residents().stream().filter(r->r.profession()==Profession.PORTER).findFirst().orElseThrow();var body=(ResidentEntity)l.getEntity(courier.id());
+   for(int tick=0;tick<=HandBread.BREAD_PER_UNIT*HandBread.LABOR_PER_BREAD+100;tick+=20)HandBread.advance(l,e,courier.id(),tick);
+   h.assertTrue(stock.countItem(Items.BREAD)>0,"Real grain became real bread");
+   // A second paid unit waits behind the full stock.
+   stock.clearContent();stock.setItem(0,new ItemStack(Items.WHEAT,HandBread.WHEAT_PER_UNIT));
+   long now=10000;HandBread.advance(l,e,courier.id(),now);for(int turn=1;turn<=3;turn++)HandBread.advance(l,e,courier.id(),now+turn*20);
+   for(int slot=0;slot<108;slot++)stock.setItem(slot,new ItemStack(Items.COBBLESTONE,64));stock.setItem(107,new ItemStack(Items.COBBLESTONE,8));
+   for(int tick=80;tick<=HandBread.BREAD_PER_UNIT*HandBread.LABOR_PER_BREAD+200;tick+=20)HandBread.advance(l,e,courier.id(),now+tick);
+   h.assertTrue(HandBread.inspect(l,s.id()).getString("stage").equals("output")&&stock.countItem(Items.BREAD)==0,"Actually paid and baked bread is blocked by full stock");
+   for(var r:s.residents())if(!r.id().equals(courier.id()))r.fallIll();courier.missedMeal(1);courier.missedMeal(2);
+   h.assertTrue(CargoCustody.mayStartFoodTransport(body),"Hungry courier can clear non-food bulk for paid emergency bread");
+   FarmingRelief.tick(l,e);h.assertTrue(courier.profession()==Profession.PORTER,"Emergency food courier is kept instead of becoming another stopped farmer");
+   var at=LogisticsRoutes.position(e,hall);body.moveTo(at.getX()+1.5,at.getY(),at.getZ()+.5);PorterWork.step(body);PorterWork.step(body);
+   h.assertTrue(stock.getItem(107).isEmpty()&&PorterWork.cargo(l,PorterWork.inspect(l,courier.id())).getCount()==8,"Courier really withdrew eight surplus blocks");
+   h.assertTrue(CargoCustody.mayStartFoodTransport(body),"Hunger does not abandon the paid non-food recovery parcel");at=LogisticsRoutes.position(e,mine);body.moveTo(at.getX()+1.5,at.getY(),at.getZ()+.5);PorterWork.step(body);
+   h.assertTrue(LogisticsRoutes.chest(l,e,mine).countItem(Items.COBBLESTONE)==8,"Actual parcel reaches the mine exactly once");HandBread.advance(l,e,courier.id(),now+5000);h.assertTrue(stock.countItem(Items.BREAD)==HandBread.BREAD_PER_UNIT,"Original paid bread finally fits");
+  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+ }
+
 }

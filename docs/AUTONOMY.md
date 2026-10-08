@@ -287,3 +287,11 @@ python tools/analyze_autonomy.py docs/runs/natural-growth-seed28.log --output do
 ## Возвращение к укрепляемому основанию
 
 Поход за материалом или домой может выгрузить чанк укрепляемой галереи. Такая выгрузка больше не отменяет выбранное укрепление: известное место и его соседи загружаются в пределах рабочего радиуса и общего бюджета. При отказе бюджета сохраняются тот же идентификатор работы, оплаченный груз и стадия. После загрузки по-прежнему проверяются вода, опора, чужая территория и физическая дальность работы. Проверка с двумя настоящими выгрузками подтвердила однократное списание одного блока и установку по исходной квитанции после обычного времени работы. Прошли 165 модульных и 17 игровых тестов.
+
+### Recovery when bulk stock blocks food
+
+The town hall keeps twelve empty slots as headroom. When fewer remain, couriers may return surplus logs, saplings and sticks to a loaded forester store, or surplus excavation materials to a loaded mine store. They keep four stacks of logs/cobblestone and one stack of other eligible bulk, plus construction, tool and existing transport reservations. Full destination stores refuse the route.
+
+Couriers take the smallest suitable stack first so a short parcel can actually free a slot. A hungry courier may finish this recovery for already baked emergency bread and is retained by farming relief. Every withdrawal and delivery uses the ordinary durable inventory journal. A destination that fills during travel sends the paid parcel through custody instead of discarding it.
+
+`bulk_stock_recovery` and `bulk_food_recovery` verify an actual withdrawal, delivery and bread deposit, with full-destination and construction-reservation guards. These checks cover the storage recovery; they do not establish that a new village reaches every terminal building.

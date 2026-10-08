@@ -25,6 +25,7 @@ public final class FarmingRelief {
     .filter(r->r.profession()==null||r.profession()==Profession.FORESTER||r.profession()==Profession.MINER
      ||r.profession()==Profession.PORTER||r.profession()==Profession.BUILDER&&(spareBuilder||foodEmergency))
     .filter(r->l.getEntity(r.id()) instanceof ResidentEntity n&&n.escortPlayer()==null&&!CargoCustody.pending(l.getServer(),r.id()))
+    .filter(r->r.profession()!=Profession.PORTER||!PorterWork.foodEmergency((ResidentEntity)l.getEntity(r.id())))
     // A stocked village with another working farm can wait for its supply trip.
     // Keep transport available too; starvation or loss of the last farmer still
     // uses the ordinary immediate custody handover below.

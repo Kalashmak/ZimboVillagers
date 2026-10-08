@@ -112,12 +112,37 @@ public final class LogisticsRoutes {
   }
   return null;
  }
+ /** Return crowded hall bulk to its producer without spending project or maintenance stock. */
+ static boolean bulkDestination(Settlement.Building b,ItemStack item){
+  if(item.hasTag())return false;
+  if(b.type().equals("forester"))return item.is(net.minecraft.tags.ItemTags.LOGS)||item.is(net.minecraft.tags.ItemTags.SAPLINGS)||item.is(Items.STICK);
+  return b.type().equals("mine")&&Set.of(Items.COBBLESTONE,Items.COBBLED_DEEPSLATE,Items.ANDESITE,Items.DIORITE,Items.GRANITE,Items.TUFF,Items.DIRT,Items.GRAVEL,Items.RAW_COPPER).contains(item.getItem());
+ }
+ static Route bulkOverflow(ServerLevel l,SettlementData.Entry e,BlockPos from,int load,Predicate<Route> accept){
+  var hall=Workshops.hall(e);var c=hall==null?null:chest(l,e,hall);if(c==null)return null;
+  int empty=0;for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).isEmpty())empty++;
+  if(empty>=SURPLUS_EMPTY_RESERVE)return null;
+  var slots=new ArrayList<Integer>();for(int i=0;i<c.getContainerSize();i++)if(!c.getItem(i).isEmpty())slots.add(i);
+  slots.sort(Comparator.comparingInt(i->c.getItem(i).getCount()));
+  var stores=e.settlement().buildings().stream().filter(b->Set.of("forester","mine").contains(b.type()));
+  if(from!=null)stores=stores.sorted(Comparator.comparingDouble(b->position(e,b).distSqr(from)));
+  for(var dest:stores.toList()){
+   var target=chest(l,e,dest);if(target==null)continue;
+   for(int slot:slots){var stack=c.getItem(slot);if(!bulkDestination(dest,stack))continue;
+    int keep=stack.is(net.minecraft.tags.ItemTags.LOGS)||stack.is(Items.COBBLESTONE)||stack.is(Items.COBBLED_DEEPSLATE)?256:64;
+    int free=count(c,x->ItemStack.isSameItemSameTags(x,stack))-keep-HallReserve.reserved(l,e,stack.getItem())-ToolSupplyReserve.quantity(l,e,stack.getItem())-PorterWork.reserved(l,e,hall.id(),x->ItemStack.isSameItemSameTags(x,stack),false);
+    int amount=Math.min(load,Math.min(free,stack.getCount()));if(amount<=0)continue;var item=stack.copyWithCount(amount);
+    if(!room(target,item))continue;var route=new Route(hall,dest,item);if(accept==null||accept.test(route))return route;
+   }
+  }return null;
+ }
  private static boolean mineral(ItemStack item){return Workshops.mined(item.getItem())||Set.of(Items.SANDSTONE,Items.RED_SANDSTONE,Items.SAND,Items.RED_SAND).contains(item.getItem());}
  /** AD-147: the next route of a warehouse's courier by need (see NEED_*): {@code from} the courier's place (null: sources by id), {@code load} the
   *  most one leg takes, {@code accept} what a cart leg must fit (null: anything). */
  public static Route byNeed(ServerLevel l,SettlementData.Entry e,Settlement.Building stock,BlockPos from,int load,Predicate<Route> accept){
   var wants=Workshops.wants(l,e);Route r;
   if((r=grainOverflow(l,e,from,load,accept))!=null)return r;
+  if((r=bulkOverflow(l,e,from,load,accept))!=null)return r;
   if((r=wants(l,e,wants,NEED_BUILD,from,load,accept))!=null)return r;
   if((r=wants(l,e,wants,NEED_SUPPLY,from,load,accept))!=null)return r;
   if((r=constructionInputs(l,e,wants,from,load,accept))!=null)return r;
@@ -164,6 +189,7 @@ public final class LogisticsRoutes {
   if(WarehouseStore.is(post))return byNeed(l,e,post,from,load,null);
   if(SmithyDelivery.post(post))return SmithyDelivery.route(l,e,post,load);
   var recovery=grainOverflow(l,e,from,load,null);if(recovery!=null)return recovery;
+  recovery=bulkOverflow(l,e,from,load,null);if(recovery!=null)return recovery;
   // AD-029: approved construction materials to the hall, then inputs published by workshops, then other workshop products.
   for(var want:Workshops.wants(l,e)){var dest=e.settlement().buildings().stream().filter(b->b.id().equals(want.destination())).findFirst().orElse(null);if(dest==null)continue;var c=chest(l,e,dest);if(c==null)continue;
    var route=find(l,e,dest,new Demand("want",want::matches,want.count()+count(c,want::matches)),load);if(route!=null)return route;}

@@ -36,11 +36,13 @@ public final class PorterWork {
    var dest=e.settlement().buildings().stream().filter(b->b.id().equals(t.getUUID("destination"))).findFirst().orElse(null);
    if(dest!=null&&Set.of("town_hall","warehouse").contains(dest.type())&&Population.nutrition(item)>0)return true;
    if(source!=null&&dest!=null&&source.type().equals("town_hall")&&dest.type().equals("farm")&&item.is(net.minecraft.world.item.Items.WHEAT))return true;
+   if(source!=null&&dest!=null&&source.type().equals("town_hall")&&LogisticsRoutes.bulkDestination(dest,item))return true;
    if(!t.getString("stage").equals("fetch")||WorldJournal.exists(l,operation(t,"take")))return false;
   }
   var bread=HandBread.inspect(l,e.settlement().id());
   return bread.getString("stage").equals("output")&&bread.getInt("output")==0&&bread.getInt("bread")>0
-      &&LogisticsRoutes.grainOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null;
+      &&(LogisticsRoutes.grainOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null
+        ||LogisticsRoutes.bulkOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null);
  }
  public static boolean eligible(ResidentEntity w,boolean withoutPlayers){if(!(w.level() instanceof ServerLevel l)||!w.isAlive()||w.settlementId()==null||w.escortPlayer()!=null||l.getServer().getPlayerCount()==0&&!withoutPlayers)return false;var e=SettlementData.get(l.getServer()).entry(w.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;var r=e.settlement().resident(w.getUUID());var b=e.settlement().workplace(w.getUUID());return r!=null&&r.alive()&&r.profession()==Profession.PORTER&&b!=null&&(Set.of("town_hall","warehouse").contains(b.type())||SmithyDelivery.post(b));}
  /** Trusted physical step, called only after production eligibility/custody checks. */
@@ -60,7 +62,7 @@ public final class PorterWork {
     if(receiving!=null&&!LogisticsRoutes.fits(receiving,java.util.List.of(item))){release(l,w.getUUID());w.workStatus("logistics_supply_changed");return;}
    }
   }
-  if(t.getString("stage").equals("deliver")&&!WorldJournal.exists(l,operation(t,"put"))&&item.is(net.minecraft.world.item.Items.WHEAT)&&b.get().type().equals("farm")){
+  if(t.getString("stage").equals("deliver")&&!WorldJournal.exists(l,operation(t,"put"))&&(item.is(net.minecraft.world.item.Items.WHEAT)&&b.get().type().equals("farm")||LogisticsRoutes.bulkDestination(b.get(),item))){
    var sourceId=t.getUUID("source");var source=e.settlement().buildings().stream().filter(x->x.id().equals(sourceId)).findFirst().orElse(null);
    if(source!=null&&source.type().equals("town_hall")&&!LogisticsRoutes.fits(c,List.of(item))){
     // A farm can fill after surplus left the hall. Mark the paid parcel before
@@ -72,7 +74,7 @@ public final class PorterWork {
    }
   }
   if(!near(w,pos)){w.workStatus(t.getString("stage").equals("fetch")?"logistics_fetching":"logistics_delivering");w.displayWorkItem(t.getString("stage").equals("deliver")?item:ItemStack.EMPTY);approach(w,pos);return;}w.getNavigation().stop();
-  if(t.getString("stage").equals("fetch")){var held=WorldJournal.recoverAmount(l,operation(t,"take"));if(held.isEmpty()&&!WorldJournal.exists(l,operation(t,"take"))){for(int slot=0;slot<c.getContainerSize();slot++)if(ItemStack.isSameItemSameTags(item,c.getItem(slot))&&c.getItem(slot).getCount()>=item.getCount()&&LogisticsRoutes.count(c,s->ItemStack.isSameItemSameTags(s,item))-item.getCount()>=LogisticsRoutes.reserve(b.get(),item)){held=WorldJournal.takeAmount(l,operation(t,"take"),pos,slot,c.getItem(slot).copy(),item.getCount());break;}}
+  if(t.getString("stage").equals("fetch")){var held=WorldJournal.recoverAmount(l,operation(t,"take"));if(held.isEmpty()&&!WorldJournal.exists(l,operation(t,"take"))){for(int slot:java.util.stream.IntStream.range(0,c.getContainerSize()).boxed().sorted(Comparator.comparingInt(i->c.getItem(i).getCount())).toList())if(ItemStack.isSameItemSameTags(item,c.getItem(slot))&&c.getItem(slot).getCount()>=item.getCount()&&LogisticsRoutes.count(c,s->ItemStack.isSameItemSameTags(s,item))-item.getCount()>=LogisticsRoutes.reserve(b.get(),item)){held=WorldJournal.takeAmount(l,operation(t,"take"),pos,slot,c.getItem(slot).copy(),item.getCount());break;}}
    if(held.isEmpty()){release(l,w.getUUID());w.workStatus("logistics_supply_changed");return;}if(!ItemStack.matches(item,held))throw new IllegalStateException("Mismatched porter receipt");t.putString("stage","deliver");NbtRecord.write(path(l,w.getUUID()),t);w.displayWorkItem(held);return;}
   if(!WorldJournal.deposit(l,operation(t,"put"),pos,item)){w.workStatus("output_full");return;}release(l,w.getUUID());w.displayWorkItem(ItemStack.EMPTY);w.workStatus("logistics_delivered");
  }
