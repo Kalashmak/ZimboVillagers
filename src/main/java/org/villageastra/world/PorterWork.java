@@ -40,8 +40,9 @@ public final class PorterWork {
    if(!t.getString("stage").equals("fetch")||WorldJournal.exists(l,operation(t,"take")))return false;
   }
   var bread=HandBread.inspect(l,e.settlement().id());
-  return bread.getString("stage").equals("output")&&bread.getInt("output")==0&&bread.getInt("bread")>0
-      &&(LogisticsRoutes.grainOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null
+  boolean foodWaiting=bread.getString("stage").equals("output")&&bread.getInt("output")==0&&bread.getInt("bread")>0
+      ||HandBread.open(l,e)&&HandBread.wheatAvailable(l,e)>=HandBread.WHEAT_PER_UNIT;
+  return foodWaiting&&(LogisticsRoutes.grainOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null
         ||LogisticsRoutes.bulkOverflow(l,e,w.blockPosition(),LogisticsRoutes.load(l,e,post),null)!=null);
  }
  public static boolean eligible(ResidentEntity w,boolean withoutPlayers){if(!(w.level() instanceof ServerLevel l)||!w.isAlive()||w.settlementId()==null||w.escortPlayer()!=null||l.getServer().getPlayerCount()==0&&!withoutPlayers)return false;var e=SettlementData.get(l.getServer()).entry(w.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;var r=e.settlement().resident(w.getUUID());var b=e.settlement().workplace(w.getUUID());return r!=null&&r.alive()&&r.profession()==Profession.PORTER&&b!=null&&(Set.of("town_hall","warehouse").contains(b.type())||SmithyDelivery.post(b));}

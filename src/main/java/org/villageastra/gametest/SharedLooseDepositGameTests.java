@@ -50,7 +50,7 @@ public final class SharedLooseDepositGameTests {
   l.setBlock(ore.west(),Blocks.SAND.defaultBlockState(),2);
   if(mode!=1)WorldJournal.harvest(l,previous,ore.west(),Blocks.SAND.defaultBlockState(),ItemStack.EMPTY);
   NbtRecord.write(NaturalSupplyGoal.path(l,colleague),oldRecord);
-  var own=new CompoundTag();own.putInt("surveyRadius",320);own.putInt("surveyCursor",323000);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),own);
+  var own=new CompoundTag();own.putInt("surveyRadius",320);own.putInt("surveyCursor",323000);own.putInt("looseSurveyCursor",323000);own.putInt("plantSurveyCursor",323000);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),own);
   if(mode==3)l.setBlock(ore.east(),Blocks.WATER.defaultBlockState(),2);
   if(mode==4){cost.remove("minecraft:sand");cost.putInt("minecraft:clay_ball",1);project.put("cost",cost);HallUpgradeGoal.store(l,s.id(),project);}
   var supply=new NaturalSupplyGoal(npc,true);var job=new UUID[1];

@@ -113,4 +113,19 @@ public final class FarmingReliefGameTests {
   }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
  }
 
+ @GameTest(template="empty",batch="bulk_food_preparation",timeoutTicks=200)
+ public static void grainWithoutABreadJobStillRetainsHungryCourierToClearThePantry(GameTestHelper h){
+  var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  try{
+   for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Body registered");}
+   var hall=Workshops.hall(e);var mine=s.buildings().stream().filter(b->b.type().equals("mine")).findFirst().orElseThrow();for(var b:List.of(hall,mine))l.setBlock(LogisticsRoutes.position(e,b),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
+   var stock=LogisticsRoutes.chest(l,e,hall);stock.expandHall();for(int slot=0;slot<108;slot++)stock.setItem(slot,new ItemStack(Items.COBBLESTONE,64));stock.setItem(0,new ItemStack(Items.WHEAT,64));stock.setItem(107,new ItemStack(Items.COBBLESTONE,8));
+   var courier=s.residents().stream().filter(r->r.profession()==Profession.PORTER).findFirst().orElseThrow();var body=(ResidentEntity)l.getEntity(courier.id());for(var r:s.residents())if(!r.id().equals(courier.id()))r.fallIll();courier.missedMeal(1);courier.missedMeal(2);
+   h.assertTrue(HandBread.inspect(l,s.id()).isEmpty()&&HandBread.wheatAvailable(l,e)>=HandBread.WHEAT_PER_UNIT,"Real grain exists but no bread job has yet started");
+   h.assertTrue(CargoCustody.mayStartFoodTransport(body),"Hungry courier can clear pantry before emergency bread is baked");FarmingRelief.tick(l,e);h.assertTrue(courier.profession()==Profession.PORTER,"Grain-backed food recovery retains its only courier");
+   stock.setItem(0,new ItemStack(Items.COBBLESTONE,64));h.assertTrue(!CargoCustody.mayStartFoodTransport(body),"No paid bread and no grain gives no emergency work exemption");stock.setItem(0,new ItemStack(Items.WHEAT,64));
+   var dest=LogisticsRoutes.chest(l,e,mine);for(int slot=0;slot<dest.getContainerSize();slot++)dest.setItem(slot,new ItemStack(Items.DIRT,64));h.assertTrue(!CargoCustody.mayStartFoodTransport(body),"Full producer store gives no fictitious recovery route");
+  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+ }
+
 }

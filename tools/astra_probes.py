@@ -412,7 +412,16 @@ def main(argv: list[str]) -> int:
               'see DEVELOPMENT.md "Хранение")', file=sys.stderr)
         return 75
     started = time.time()
-    if not args.no_build and not build(args):
+    if args.no_build:
+        # Reusing compilation must still isolate this client's classes. Otherwise
+        # a subsequent compile can remove a lazily loaded class during startup.
+        if not A.acquire_run_lock(f'{args.batch}-snapshot', args.lock_wait_min):
+            return 1
+        try:
+            snapshot(args)
+        finally:
+            A.release_run_lock()
+    elif not build(args):
         return 1
     build_time = time.time() - started
     launch = load_launch(args)

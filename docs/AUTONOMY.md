@@ -292,6 +292,12 @@ python tools/analyze_autonomy.py docs/runs/natural-growth-seed28.log --output do
 
 The town hall keeps twelve empty slots as headroom. When fewer remain, couriers may return surplus logs, saplings and sticks to a loaded forester store, or surplus excavation materials to a loaded mine store. They keep four stacks of logs/cobblestone and one stack of other eligible bulk, plus construction, tool and existing transport reservations. Full destination stores refuse the route.
 
-Couriers take the smallest suitable stack first so a short parcel can actually free a slot. A hungry courier may finish this recovery for already baked emergency bread and is retained by farming relief. Every withdrawal and delivery uses the ordinary durable inventory journal. A destination that fills during travel sends the paid parcel through custody instead of discarding it.
+Couriers take the smallest suitable stack first so a short parcel can actually free a slot. A hungry courier may finish this recovery for already baked emergency bread or while emergency baking has actual available grain and is retained by farming relief. Every withdrawal and delivery uses the ordinary durable inventory journal. A destination that fills during travel sends the paid parcel through custody instead of discarding it.
 
 `bulk_stock_recovery` and `bulk_food_recovery` verify an actual withdrawal, delivery and bread deposit, with full-destination and construction-reservation guards. These checks cover the storage recovery; they do not establish that a new village reaches every terminal building.
+
+### Balanced mineral discovery
+
+When a miner has an unmet quarry demand after exhausting the ordinary drive, every other fresh twenty-tick search window starts with the saved general survey cursor. Other windows keep the existing nearby and remembered-deposit searches first. Both orders share the same five-millisecond allowance, four native plans and finite column allowance; a costly individual native query still completes before yielding. The choice and exact cursor/depth survive goal reloads.
+
+`mineral_survey_fairness` prepares an exhausted mine, a real previously delivered sand block, a remaining sand order and covered accessible iron. The resident must discover, mine and physically deliver the iron and the remaining sand with the same genuinely worn loaned pick. Fluid boundaries, roofs, ordinary labor and reversible travel remain checked. This is a focused scheduling check, not a measurement of total village development speed.

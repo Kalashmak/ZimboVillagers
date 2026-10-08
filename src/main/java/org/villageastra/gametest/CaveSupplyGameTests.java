@@ -9,12 +9,15 @@ import net.minecraftforge.gametest.*;
 import org.villageastra.VillageAstra;
 import org.villageastra.domain.*;
 import org.villageastra.persistence.NbtRecord;
+import org.villageastra.persistence.WorldJournal;
 import org.villageastra.server.*;
 import org.villageastra.world.*;
 
 /** A real loaned pick, descent into a dry cave, exposed wall ore and physical return. */
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class CaveSupplyGameTests {
+ @GameTest(template="empty",batch="mineral_survey_fairness",timeoutTicks=12000)
+ public static void exhaustedMinerFindsDeepOreWithoutLosingTheOutstandingSandDelivery(GameTestHelper h){trip(h,false,1,false,false,false,true);}
  @GameTest(template="empty",batch="cave_reach",timeoutTicks=200)
  public static void lowPlatformStillRejectsOreBeyondNormalEyeReach(GameTestHelper h){
   var l=h.getLevel();var target=h.absolutePos(new BlockPos(6,9,6));var feet=target.west().below(4);
@@ -66,8 +69,11 @@ public final class CaveSupplyGameTests {
   trip(h,high,ores,breaking,face,false);
  }
  private static void trip(GameTestHelper h,boolean high,int ores,boolean breaking,boolean face,boolean buildingStone){
+  trip(h,high,ores,breaking,face,buildingStone,false);
+ }
+ private static void trip(GameTestHelper h,boolean high,int ores,boolean breaking,boolean face,boolean buildingStone,boolean mixed){
   var product=buildingStone?Items.ANDESITE:Items.RAW_IRON;
-  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+(face?327680:ores>1?(breaking?262144:245760):(high?180224:114688)),120,at.getZ());
+  var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+(mixed?458752:face?327680:ores>1?(breaking?262144:245760):(high?180224:114688)),120,at.getZ());
   var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
   for(int x=(base.getX()-2)>>4;x<=(base.getX()+85)>>4;x++)for(int z=(base.getZ()-2)>>4;z<=(base.getZ()+4)>>4;z++){
    var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);
@@ -92,6 +98,18 @@ public final class CaveSupplyGameTests {
   // Resume the real bounded survey at this column, not a pre-created harvest job.
   int cursor=0;for(int x=-192;x<=192;x++)for(int z=-192;z<=192;z++){int d=x*x+z*z;if(d<6404||d==6404&&(x<80||x==80&&z<2))cursor++;}
   var scan=new CompoundTag();scan.putInt("surveyCursor",cursor);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),scan);
+  UUID previous=mixed?UUID.randomUUID():null;var sand=base.offset(42,-18,0);
+  if(mixed){
+   cost.putInt("minecraft:sand",2);project.put("cost",cost);HallUpgradeGoal.store(l,s.id(),project);
+   var oldSand=base.offset(40,-17,0);l.setBlock(oldSand,Blocks.SAND.defaultBlockState(),2);l.setBlock(sand,Blocks.SAND.defaultBlockState(),2);
+   var receipt=WorldJournal.harvest(l,previous,oldSand,Blocks.SAND.defaultBlockState(),ItemStack.EMPTY);h.assertTrue(receipt!=null,"Prepared previous trip has a genuine sand harvest receipt");
+   var oldLoot=receipt.get(0);h.assertTrue(WorldJournal.deposit(l,Settlement.childId(previous,"deliver/0"),stock,oldLoot)&&chest.countItem(Items.SAND)==1,"Historical one sand was really delivered, leaving one still needed");
+   scan.putUUID("id",previous);scan.putBoolean("complete",true);scan.putString("stage","carry");scan.putLong("target",oldSand.asLong());scan.put("before",NbtUtils.writeBlockState(Blocks.SAND.defaultBlockState()));scan.putInt("delivered",1);NbtRecord.write(NaturalSupplyGoal.path(l,npc.getUUID()),scan);
+   var first=new boolean[]{false};h.onEachTick(()->{
+    var selected=NaturalSupplyGoal.inspect(l,npc.getUUID());if(first[0]||!selected.hasUUID("id")||selected.getUUID("id").equals(previous))return;
+    h.assertTrue(BlockPos.of(selected.getLong("target")).equals(target)&&selected.getBoolean("quarry"),"An exhausted miner's deep discovery window must resume the exact ore column before another remembered loose-material lead");first[0]=true;
+   });
+  }
   if(buildingStone){
    h.assertTrue(l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,target.getX(),target.getZ())-target.getY()>8,"Building stone is deeper than the former surface window");
    h.assertTrue(SurfaceQuarry.safe(l,target),"Deep stone remains outside protection and fluid bounds");
@@ -121,6 +139,7 @@ public final class CaveSupplyGameTests {
   });
   h.succeedWhen(()->{
    h.assertTrue(chest.countItem(product)==expected&&l.getBlockState(target).isAir(),"The covered wall ore must be mined and physically delivered: "+npc.position()+" ticks="+npc.tickCount);
+   if(mixed)h.assertTrue(chest.countItem(Items.SAND)==2&&l.getBlockState(sand).isAir()&&NaturalSupplyGoal.inspect(l,npc.getUUID()).getBoolean("complete"),"Surface discovery retains its windows and the second physical sand delivery; old paid sand is never replayed");
    int returnedDamage=-1;for(int slot=0;slot<chest.getContainerSize();slot++)if(chest.getItem(slot).is(Items.STONE_PICKAXE))returnedDamage=chest.getItem(slot).getDamageValue();
    h.assertTrue(chest.countItem(Items.STONE_PICKAXE)==(breaking?0:1)&&(breaking||returnedDamage==(face?expected+1:expected)),"The same borrowed pick pays each actual block: count="+chest.countItem(Items.STONE_PICKAXE)+" damage="+returnedDamage);
    if(face)h.assertTrue(chest.countItem(Items.COBBLESTONE)==1&&npc.tickCount>=400,"One real obstruction was excavated, worked and physically delivered with the ore");
