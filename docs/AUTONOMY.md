@@ -313,3 +313,8 @@ Travel to a proposed site requires a complete reversible native route. A rejecte
 Workshop commuters use the existing dry, climbable return planner. The route retains its recovery policy during navigation, allowing a resident in a deep dry hollow to walk to a verified climbing wall. Workshop repathing occurs every twenty body ticks instead of every tick. Close enough to work, the resident still needs a clear view of the station and the same paid ingredients and labor.
 
 Night returns use that policy for nearby and distant beds. The 320-block home limit, night schedule, assigned bed and occupied-bed checks remain in place. Physical tests verify returning from a nine-block hollow to finish the same paid crafting job, reaching one's own nearby and distant bed, preserving health and terrain, and walking around a wall on a distant return. These checks do not prove recovery from every cave or full autonomous village progression.
+
+
+## Подход к уступу при выходе из пещеры
+
+При выходе из ямы житель завершает подход к выбранной точке напрямую только на её высоте и при свободном проходе для всего тела. Если перед точкой нужна ступенька или мешает стена, сохраняется обычная навигация с прыжком. Это предотвращает застревание у последнего блока перед подъёмом. Высота лазания, проверка опоры, потолка, воды и сохранность груза остаются прежними. Проверка воспроизводит участок естественной пещеры с исходными состояниями блоков и запомненными уступами; до исправления реальный житель не достигал точки по существующему полному маршруту.

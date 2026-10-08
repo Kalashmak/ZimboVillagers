@@ -113,6 +113,15 @@ public final class PitEscapeGoal extends Goal {
   anchor=next.anchor();exit=next.exit();atAnchor=false;escapeLimit=Math.min(2400,escapeLimit+160);return true;
  }
  @Override public void start(){recoveryOrigin=resident.blockPosition();escapeTicks=0;atAnchor=false;escapeLimit=resident.distanceToSqr(Vec3.atBottomCenterOf(anchor))>16?1200:160;resident.getNavigation().stop();resident.workStatus("escaping_pit");}
+ /** Finishing the last stride must not cut out a native jump or cross a wall. */
+ private boolean clearAlignment(){
+  if(!resident.onGround()||Math.abs(resident.getY()-anchor.getY())>.125)return false;
+  var delta=Vec3.atBottomCenterOf(anchor).subtract(resident.position());
+  for(int i=1;i<=8;i++){
+   var step=new Vec3(delta.x*i/8,0,delta.z*i/8);var p=BlockPos.containing(resident.position().add(step));
+   if(!resident.level().hasChunkAt(p)||!resident.level().noCollision(resident,resident.getBoundingBox().move(step)))return false;
+  }return true;
+ }
  @Override public boolean requiresUpdateEveryTick(){return true;}
  @Override public void tick(){escapeTicks++;
   double horizontal=resident.position().multiply(1,0,1).distanceToSqr(Vec3.atBottomCenterOf(anchor).multiply(1,0,1));
@@ -126,8 +135,8 @@ public final class PitEscapeGoal extends Goal {
   if(!atAnchor&&(horizontal>.01&&!wadingAligned||Math.abs(resident.getY()-anchor.getY())>1.5)){
    // Navigation considers a waypoint reached before the body is at its centre. Finish the
    // last stride explicitly so the upward motion starts under the verified clear column.
-   if(horizontal<2.25){resident.getNavigation().stop();resident.getMoveControl().setWantedPosition(anchor.getX()+.5,anchor.getY(),anchor.getZ()+.5,.8);}
-   else{var path=resident.routeToRecoveryAnchor(anchor);if(path!=null&&path.canReach())resident.getNavigation().moveTo(path,.8);}return;
+   if(horizontal<2.25&&clearAlignment()){resident.getNavigation().stop();resident.getMoveControl().setWantedPosition(anchor.getX()+.5,anchor.getY(),anchor.getZ()+.5,.8);}
+   else {var path=resident.routeToRecoveryAnchor(anchor);if(path!=null&&path.canReach())resident.getNavigation().moveTo(path,.8);}return;
   }
   atAnchor=true;
   // Cross fully onto the ledge before ordinary navigation resumes. At its edge the node

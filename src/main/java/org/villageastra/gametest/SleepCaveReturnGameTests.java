@@ -32,6 +32,6 @@ public final class SleepCaveReturnGameTests {
    // wake the body. Observe the real bed activation, as the home-safety tests do.
    if(!npc.isSleeping()&&!"sleeping".equals(npc.workStatus()))return;
    h.assertTrue(npc.distanceToSqr(bed.getCenter())<=4&&bed.equals(SleepGoal.bed(l,e,r))&&l.getBlockState(base.offset(edge-1,-5,0)).is(Blocks.STONE),"Own bed reached physically; cave wall remains intact");clean.run();h.succeed();});
-  h.runAtTickTime(2800,()->{if(done[0])return;var why=npc.position()+" goals="+npc.runningGoals();clean.run();throw new GameTestAssertException("Night cave return stalled: "+why);});
+  h.runAtTickTime(2800,()->{if(done[0])return;var why=npc.position()+" goals="+npc.runningGoals()+" tick="+npc.tickCount+" entityTicking="+l.isPositionEntityTicking(npc.blockPosition())+" added="+npc.isAddedToWorld()+" status="+npc.workStatus()+" path="+npc.getNavigation().getPath();clean.run();throw new GameTestAssertException("Night cave return stalled: "+why);});
  }
 }
