@@ -16,6 +16,22 @@ public final class HallPackingGameTests {
    h.assertTrue(LogisticsRoutes.fits(c,List.of(new ItemStack(Items.COBBLESTONE,16),new ItemStack(Items.BREAD))),"Planning preserves the empty slot for a new food type");var op=UUID.randomUUID();h.assertTrue(WorldJournal.deposit(t.l,op,LogisticsRoutes.position(t.e,t.hall()),new ItemStack(Items.COBBLESTONE,16)),"Actual journal deposit succeeds");h.assertTrue(c.getItem(0).isEmpty()&&c.getItem(5).getCount()==48,"Matching material is merged before an earlier empty slot");h.assertTrue(WorldJournal.deposit(t.l,op,LogisticsRoutes.position(t.e,t.hall()),new ItemStack(Items.COBBLESTONE,16))&&c.getItem(5).getCount()==48,"Replaying the same deposit never repeats it");
   }finally{ResearchV2Town.done(t);}h.succeed();
  }
+ @GameTest(template="empty",batch="hall_packing_headroom",timeoutTicks=100)
+ public static void fragmentedTimberPacksBeforeReservedPantrySlotsBlockItsProducer(GameTestHelper h){
+  var t=ResearchV2Town.town(h,null);try{
+   var c=LogisticsRoutes.chest(t.l,t.e,t.hall());c.expandHall();for(int slot=0;slot<108;slot++)c.setItem(slot,slot>=100?ItemStack.EMPTY:new ItemStack(Items.DIRT,64));
+   c.setItem(0,new ItemStack(Items.BIRCH_LOG,60));c.setItem(1,new ItemStack(Items.BIRCH_LOG,60));c.setItem(99,new ItemStack(Items.BIRCH_LOG,5));
+   var pos=LogisticsRoutes.position(t.e,t.hall());var cargo=WorldJournal.takeAmount(t.l,UUID.randomUUID(),pos,99,c.getItem(99).copy(),5);
+   h.assertTrue(cargo.getCount()==5&&!LogisticsRoutes.surplusFits(c,cargo),"Nine reserved empty slots and two four-item gaps cannot accept this actual whole load");
+   h.assertTrue(HallPacking.advance(t.l,t.e,0),"Sort before the bulk-export headroom reserve blocks a producer");
+   h.assertTrue(c.countItem(Items.BIRCH_LOG)==120,"Sort intent never changes inventory");HallPacking.advance(t.l,t.e,20);HallPacking.advance(t.l,t.e,40);
+   h.assertTrue(c.countItem(Items.BIRCH_LOG)==120&&LogisticsRoutes.surplusFits(c,cargo),"Consolidating real timber opens a large enough existing stack");
+   var delivery=UUID.randomUUID();h.assertTrue(WorldJournal.deposit(t.l,delivery,pos,cargo)&&WorldJournal.deposit(t.l,delivery,pos,cargo),"The paid arriving load has an idempotent deposit");
+   h.assertTrue(c.countItem(Items.BIRCH_LOG)==125&&java.util.stream.IntStream.range(0,108).filter(i->c.getItem(i).isEmpty()).count()==9,"All timber retained; no reserved slot consumed and no replay duplication");
+   for(int slot=95;slot<100;slot++)c.setItem(slot,ItemStack.EMPTY);
+   h.assertTrue(!HallPacking.advance(t.l,t.e,160),"With thirteen empty slots, ordinary work is not preempted by optional sorting");
+  }finally{ResearchV2Town.done(t);}h.succeed();
+ }
  private static OwnedChestEntity fill(ResearchV2Town.Town t){var c=LogisticsRoutes.chest(t.l,t.e,t.hall());c.expandHall();for(int i=0;i<108;i++)c.setItem(i,new ItemStack(Items.DIRT,64));c.setItem(0,new ItemStack(Items.COBBLESTONE,32));c.setItem(107,new ItemStack(Items.COBBLESTONE,32));return c;}
  @GameTest(template="empty",batch="hall_packing",timeoutTicks=100)
  public static void fullHallPacksRealStacksAndKeepsTheVacatedSlotForBread(GameTestHelper h){

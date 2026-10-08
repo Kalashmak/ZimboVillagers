@@ -81,6 +81,8 @@ public final class LogisticsRoutes {
  /** A producer's own product that goes to the stock. */
  public static boolean product(Settlement.Building b,ItemStack item){return !item.isEmpty()&&(b.type().equals("livestock")?LivestockPens.product(item):output(item)||b.type().equals(ForesterHut.TYPE)&&(item.is(net.minecraft.tags.ItemTags.PLANKS)||item.is(Items.APPLE))||b.type().equals("mine")&&mineral(item));}
  /** Excavated intermediates are usable stock too; sandstone need not be crafted again from sand. */
+ /** Empty slots reserved for food, tools and paid outputs by generic bulk exports. */
+ public static final int SURPLUS_EMPTY_RESERVE=12;
  /** Generic bulk exports leave real slots for food, tools and paid outputs. Explicit wants still take precedence. */
  public static boolean surplusFits(net.minecraft.world.Container stock,ItemStack item){
   // Filling an existing stack consumes no reserved empty slot.
@@ -89,7 +91,7 @@ public final class LogisticsRoutes {
   // reserve as other bulk exports. Explicit food/construction wants are above this filter.
   if((item.is(Items.WHEAT)||Population.nutrition(item)>0)&&stock.countItem(item.getItem())<item.getMaxStackSize())return true;
   int empty=0;for(int i=0;i<stock.getContainerSize();i++)if(stock.getItem(i).isEmpty())empty++;
-  return empty>12;
+  return empty>SURPLUS_EMPTY_RESERVE;
  }
  /** A crowded hall returns only surplus grain to loaded farms, keeping construction reservations and four stacks for food. */
  static Route grainOverflow(ServerLevel l,SettlementData.Entry e,BlockPos from,int load,Predicate<Route> accept){

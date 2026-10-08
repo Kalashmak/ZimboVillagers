@@ -26,7 +26,7 @@ public final class HallPacking {
    if((exists?WorldJournal.recoverExisting(l,deposit)!=null:WorldJournal.deposit(l,deposit,pos,held))){t.remove("held");t.putString("stage","idle");t.putLong("next",now+100);}else if(exists)t.putInt("tries",t.getInt("tries")+1);
    NbtRecord.write(p,t);return true;
   }
-  if(now<t.getLong("next"))return false;int empty=0;for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).isEmpty())empty++;if(empty>=4)return false;
+  if(now<t.getLong("next"))return false;int empty=0;for(int i=0;i<c.getContainerSize();i++)if(c.getItem(i).isEmpty())empty++;if(empty>LogisticsRoutes.SURPLUS_EMPTY_RESERVE)return false;
   for(int dest=0;dest<c.getContainerSize();dest++){var target=c.getItem(dest);if(target.isEmpty()||target.getCount()>=target.getMaxStackSize())continue;
    for(int source=c.getContainerSize()-1;source>dest;source--){var item=c.getItem(source);if(item.isEmpty()||!ItemStack.isSameItemSameTags(target,item))continue;
     int amount=Math.min(item.getCount(),Math.min(c.getMaxStackSize(),target.getMaxStackSize())-target.getCount());if(amount<=0)continue;
