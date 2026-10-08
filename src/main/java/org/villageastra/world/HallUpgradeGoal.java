@@ -383,7 +383,15 @@ public final class HallUpgradeGoal extends Goal {
   if(!worker.onGround()){lastStand="airborne at "+worker.blockPosition().toShortString()+" climb="+worker.onClimbable();return null;}
   // All legal work positions share one search frontier. Enclosed nearby cells
   // must not hide a reachable stand beyond an arbitrary twelve-candidate cutoff.
-  var path=ConstructionRoutes.planAny(worker,new java.util.LinkedHashSet<>(candidates));
+  // Entering a scaffold requires its near side, while ordinary placement can
+  // use any stand within tool reach. Search the preferred group together first.
+  net.minecraft.world.level.pathfinder.Path path=null;
+  if(!nearbyWork&&!candidates.isEmpty()){
+   double nearest=candidates.stream().mapToDouble(p->p.distSqr(target)).min().orElse(0);
+   var near=new java.util.LinkedHashSet<BlockPos>();for(var p:candidates)if(p.distSqr(target)<=nearest+1)near.add(p);
+   path=ConstructionRoutes.planAny(worker,near);
+  }
+  if(path==null||!path.canReach())path=ConstructionRoutes.planAny(worker,new java.util.LinkedHashSet<>(candidates));
   if(path!=null&&path.canReach()){var chosen=path.getTarget();lastStand="stand="+chosen.toShortString()+" from="+worker.blockPosition().toShortString()+" candidates="+candidates.size();return chosen;}
   lastStand="candidates="+candidates.size()+" sharedSearch=true ground="+worker.onGround()+" first="+(candidates.isEmpty()?"none":candidates.get(0).toShortString())+" at="+worker.blockPosition().toShortString()+"="+net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(l.getBlockState(worker.blockPosition()).getBlock()).getPath()+" climb="+worker.onClimbable();
   return null;

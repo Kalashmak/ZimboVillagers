@@ -37,4 +37,14 @@ public final class ConstructionRouteGameTests {
   h.assertTrue(Math.abs(stand.getX()-base.getX())>3||Math.abs(stand.getZ()-base.getZ())>3,"Selected position must be outside sealed room");
   var path=ConstructionRoutes.plan(npc,stand);h.assertTrue(path!=null&&path.canReach(),"Selected stand has a real path");h.succeed();
  }
+ @GameTest(template="empty",batch="construction_column_approach",timeoutTicks=200)
+ public static void columnApproachAdvancesToTheColumnInsteadOfChoosingCurrentCell(GameTestHelper h){
+  var l=h.getLevel();var base=h.absolutePos(new BlockPos(6,12,6));
+  for(int x=-7;x<=7;x++)for(int z=-7;z<=7;z++)for(int y=0;y<=4;y++)l.setBlock(base.offset(x,y,z),(y==0?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
+  var target=base.offset(4,1,0);for(int y=1;y<=3;y++)l.setBlock(target.above(y-1),VillageAstra.TIMBER_SCAFFOLD.get().defaultBlockState(),2);
+  var npc=VillageAstra.RESIDENT.get().create(l);npc.moveTo(base.getX()+.5,base.getY()+1,base.getZ()+.5);npc.setOnGround(true);
+  var stand=HallUpgradeGoal.stand(l,npc,target,new int[]{target.getY()});
+  h.assertTrue(stand!=null&&stand.distSqr(target)<=2,"A column approach must advance to its reachable near side instead of accepting the worker's current cell: "+stand);
+  h.assertTrue(ConstructionRoutes.plan(npc,stand).canReach(),"Column approach remains physically reachable");h.succeed();
+ }
 }
