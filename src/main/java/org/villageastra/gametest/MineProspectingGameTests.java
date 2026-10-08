@@ -16,18 +16,22 @@ public final class MineProspectingGameTests {
  public static void minerPaysStoneAndExchangesFloorOreWithoutOpeningSupport(GameTestHelper h){floorExchange(h,false);}
  @GameTest(template="empty",batch="mine_flat_floor_exchange",timeoutTicks=1800)
  public static void minerExchangesIronBelowTheSameGalleryFromAnAdjacentStand(GameTestHelper h){floorExchange(h,true);}
- private static void floorExchange(GameTestHelper h,boolean sameGallery){
+ @GameTest(template="empty",batch="mine_distant_floor_exchange",timeoutTicks=5000)
+ public static void minerReachesPaidFloorOreAtTheEndOfALongGallery(GameTestHelper h){floorExchange(h,true,true);}
+ private static void floorExchange(GameTestHelper h,boolean sameGallery){floorExchange(h,sameGallery,false);}
+ private static void floorExchange(GameTestHelper h,boolean sameGallery,boolean distant){
+  int end=distant?198:16,oreX=distant?186:6,length=distant?192:6;
   var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());
   var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*8,96,old.e.center().getZ()*8));data.add(e);
   var t=new ResearchV2Town.Town(old.l,e,old.s,old.shop);ResearchV2Town.lay(t.l,e,t.shop,"mine");t.l.setBlock(e.center().offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
   var base=BuildingPlacement.origin(e,t.shop);var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();
-  for(int x=base.getX()>>4;x<=(base.getX()+16)>>4;x++)for(int z=(base.getZ()+3)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,t.s.id());chunks.add(cp);}
-  for(int x=(base.getX()>>4)-2;x<=((base.getX()+16)>>4)+2;x++)for(int z=((base.getZ()+3)>>4)-2;z<=((base.getZ()+10)>>4)+2;z++)t.l.getChunk(x,z);
-  for(int x=0;x<=16;x++)for(int z=3;z<=10;z++)for(int y=-2;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
-  for(int x=2;x<=10;x++)for(int z=4;z<=8;z++){int foot=z<=5?1:z<=7?0:-1;for(int y=foot;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.AIR.defaultBlockState(),2);}
+  for(int x=base.getX()>>4;x<=(base.getX()+end)>>4;x++)for(int z=(base.getZ()+3)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,t.s.id());chunks.add(cp);}
+  for(int x=(base.getX()>>4)-2;x<=((base.getX()+end)>>4)+2;x++)for(int z=((base.getZ()+3)>>4)-2;z<=((base.getZ()+10)>>4)+2;z++)t.l.getChunk(x,z);
+  for(int x=0;x<=end;x++)for(int z=3;z<=10;z++)for(int y=-2;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
+  for(int x=2;x<=(distant?196:10);x++)for(int z=4;z<=8;z++){int foot=z<=5?1:z<=7?0:-1;for(int y=foot;y<=4;y++)t.l.setBlock(BuildingPlacement.at(e,t.shop,x,y,z),Blocks.AIR.defaultBlockState(),2);}
   var stock=LogisticsRoutes.position(e,t.shop);t.l.setBlock(stock,VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var chest=(net.minecraft.world.Container)t.l.getBlockEntity(stock);chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
-  var ore=BuildingPlacement.at(e,t.shop,6,sameGallery?-2:-1,sameGallery?8:7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
-  t.s.noteMine(t.shop.id(),32,3,5,0);t.s.noteMine(t.shop.id(),new MineArea.Gallery(0,MineDrive.EAST,6));t.s.noteMine(t.shop.id(),new MineArea.Gallery(1,MineDrive.EAST,6));
+  var ore=BuildingPlacement.at(e,t.shop,oreX,sameGallery?-2:-1,sameGallery?8:7);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
+  t.s.noteMine(t.shop.id(),32,3,5,0);t.s.noteMine(t.shop.id(),new MineArea.Gallery(0,MineDrive.EAST,length));t.s.noteMine(t.shop.id(),new MineArea.Gallery(1,MineDrive.EAST,length));
   var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:lantern",2);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);
   var hall=LogisticsRoutes.chest(t.l,e,Workshops.hall(e));hall.setItem(0,new ItemStack(Items.COAL,8));hall.setItem(1,new ItemStack(Items.STICK,8));
   var npc=VillageAstra.RESIDENT.get().create(t.l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));
@@ -36,7 +40,7 @@ public final class MineProspectingGameTests {
   chest.clearContent();h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"No floor job without actual replacement stone");chest.setItem(0,new ItemStack(Items.COBBLESTONE,2));
   state.put("tool",new ItemStack(Items.WOODEN_PICKAXE).save(new CompoundTag()));h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"Insufficient pick never selects floor iron");state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));
   t.l.setBlock(ore.north(),Blocks.WATER.defaultBlockState(),2);h.assertTrue(!MineOreWork.begin(npc,e,t.shop,state),"Paid stone does not permit exposing water");t.l.setBlock(ore.north(),Blocks.STONE.defaultBlockState(),2);
-  h.assertTrue(MineOreWork.begin(npc,e,t.shop,state),"Reachable floor iron must become a paid, support-preserving mining job; needed="+MineProspecting.needed(t.l,e,t.shop)+" path="+HarvestAccess.reversible(npc.routeTo(BuildingPlacement.at(e,t.shop,6,-1,8),0,128))+" chest="+LogisticsRoutes.chest(t.l,e,t.shop));
+  h.assertTrue(MineOreWork.begin(npc,e,t.shop,state),"Reachable floor iron must become a paid, support-preserving mining job; needed="+MineProspecting.needed(t.l,e,t.shop)+" path="+HarvestAccess.reversible(npc.routeTo(BuildingPlacement.at(e,t.shop,oreX,-1,8),0,128))+" chest="+LogisticsRoutes.chest(t.l,e,t.shop));
   var operation=state.getCompound("mineOre").getUUID("id");var unpaid=state.copy();MineWork.write(t.l,t.shop,state);
   npc.setNoAi(false);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);npc.goalSelector.addGoal(6,new ResourceWorkGoal(npc,true,()->6000L));t.l.addFreshEntity(npc);
   var checkpoints=new CompoundTag[1];h.onEachTick(()->{
@@ -57,7 +61,7 @@ public final class MineProspectingGameTests {
     var custody=JobCargo.snapshot(npc,true);h.assertTrue(ForestFixture.count(custody.items(),Items.COBBLESTONE)==0&&ForestFixture.count(custody.items(),Items.RAW_IRON)==1,"Death custody after replacement contains ore and no spent stone");
     com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_FLOOR_EXCHANGE VERIFIED bodyTicks={} ore={} stonePaid=1 iron=1 pickWear=1",npc.tickCount,ore);npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);
    }).thenSucceed();
-  h.runAtTickTime(1700,()->{var saved=MineWork.read(t.l,t.shop);var detail="Floor trip stalled: pos="+npc.position()+" bodyTicks="+npc.tickCount+" status="+npc.workStatus()+" ticking="+t.l.isPositionEntityTicking(npc.blockPosition())+" state="+saved; npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);h.assertTrue(false,detail);});
+  h.runAtTickTime(distant?4900:1700,()->{var saved=MineWork.read(t.l,t.shop);var detail="Floor trip stalled: pos="+npc.position()+" bodyTicks="+npc.tickCount+" status="+npc.workStatus()+" ticking="+t.l.isPositionEntityTicking(npc.blockPosition())+" state="+saved; npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,t.s.id());ResearchV2Town.done(t);h.assertTrue(false,detail);});
  }
 
  @GameTest(template="empty",batch="mine_extension",timeoutTicks=2400)

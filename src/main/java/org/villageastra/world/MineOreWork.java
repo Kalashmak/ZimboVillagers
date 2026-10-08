@@ -84,7 +84,7 @@ public final class MineOreWork {
     if(dy<0&&(!support||local.getY()<-limit-area.descent()))continue;
     if(!MineOutcrops.wanted(b,wanted)||support&&!stoneAvailable||!area.contains(local.getX(),local.getY(),local.getZ(),0)||org.villageastra.server.OwnershipEvents.protectedBlock(l,p,bld->!bld.id().equals(mine.id()))||!safe(l,p,tool)||!visible(l,npc,eye,p)||support&&stand.below().equals(p))continue;
     double distance=npc.distanceToSqr(Vec3.atBottomCenterOf(stand));if(distance>=best)continue;
-    if(support&&(queries++>=4||!HarvestAccess.reversible(HarvestRouteCache.plan(npc,stand,128))))continue;
+    if(support&&(queries++>=4||!HarvestAccess.reversible(HarvestRouteCache.plan(npc,stand,NaturalSupplyGoal.ROUTE_RANGE))))continue;
     chosen=p;foot=stand;best=distance;exchange=support;
    }
   }

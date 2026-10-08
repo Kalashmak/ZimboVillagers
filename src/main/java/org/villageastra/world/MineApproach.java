@@ -7,9 +7,19 @@ import org.villageastra.server.SettlementData;
 public final class MineApproach {
  private MineApproach(){}
  public static BlockPos waypoint(ResidentEntity worker,SettlementData.Entry e,Settlement.Building mine,CompoundTag state,BlockPos target){
-  int descent=state.getInt("descent");if(descent<=0)return target;
-  var dest=BuildingPlacement.local(e,mine,target);if(dest.getY()>-descent)return target;
+  int descent=state.getInt("descent");
+  var dest=BuildingPlacement.local(e,mine,target);
   var here=BuildingPlacement.local(e,mine,worker.blockPosition());int x=here.getX(),z=here.getZ();
+  var claimed=e.settlement().mineAreas().get(mine.id());
+  // Long, already excavated branches exceed an ordinary navigation search.
+  // Walk short real sections; never teleport or choose a shortcut through a wall.
+  if(claimed!=null&&z==dest.getZ()&&Math.abs(here.getY()-dest.getY())<=1&&Math.abs(x-dest.getX())>24
+    &&claimed.contains(x,here.getY(),z,0)&&claimed.contains(dest.getX(),dest.getY(),dest.getZ(),0)){
+   var next=BuildingPlacement.at(e,mine,x+Integer.signum(dest.getX()-x)*16,dest.getY(),z);
+   if(worker.level().hasChunkAt(next)&&worker.level().getBlockState(next).isAir()&&worker.level().getBlockState(next.above()).isAir()
+     &&worker.level().getBlockState(next.below()).isFaceSturdy(worker.level(),next.below(),net.minecraft.core.Direction.UP))return next;
+  }
+  if(descent<=0||dest.getY()>-descent)return target;
   // A path search from a lower branch can settle under the destination instead of
   // finding the stairs. Use the same physical ascent as an ordinary cargo delivery.
   var area=e.settlement().mineAreas().get(mine.id());
