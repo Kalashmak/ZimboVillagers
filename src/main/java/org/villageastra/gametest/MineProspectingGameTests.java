@@ -87,6 +87,8 @@ public final class MineProspectingGameTests {
  public static void exhaustedMineExtendsItsPaidWorkingFaceToRealOre(GameTestHelper h){extension(h,1);}
  @GameTest(template="empty",batch="mine_extended_survey",timeoutTicks=2400)
  public static void unmetOreDemandContinuesBeyondFourSurveySections(GameTestHelper h){extension(h,4);}
+ @GameTest(template="empty",batch="mine_twelve_section_survey",timeoutTicks=2400)
+ public static void unmetOreDemandCanContinueBeyondEightCompletedSections(GameTestHelper h){extension(h,8);}
  private static void extension(GameTestHelper h,int sections){
   var f=town(h,true);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
   int initial=CoreEffects.mine().galleryLength()*sections;
@@ -131,6 +133,11 @@ public final class MineProspectingGameTests {
    var chest=LogisticsRoutes.chest(t.l,t.e,t.shop);chest.setItem(0,new ItemStack(Items.RAW_IRON,64));
    h.assertTrue(!MineProspecting.begin(t.l,t.e,t.shop,state),"Ore already awaiting delivery prevents unnecessary excavation");chest.clearContent();
    h.assertTrue(MineProspecting.begin(t.l,t.e,t.shop,state),"The same dry supported face with unmet demand is eligible");
+   var remoteMine=new Settlement.Building(t.shop.id(),"mine",t.shop.x()+300,t.shop.y(),t.shop.z());
+   var remoteFace=face.offset(300,0,0);t.l.getChunk(remoteFace.getX()>>4,remoteFace.getZ()>>4);
+   for(int dx=-1;dx<=1;dx++)for(int dz=-1;dz<=1;dz++)for(int dy=-5;dy<=1;dy++)t.l.setBlock(remoteFace.offset(dx,dy,dz),Blocks.STONE.defaultBlockState(),2);
+   h.assertTrue(!MineProspecting.needed(t.l,t.e,remoteMine).isEmpty(),"Remote-face refusal still has a real ore order");
+   h.assertTrue(!MineProspecting.begin(t.l,t.e,remoteMine,state.copy()),"A whole added section must remain inside supported worker territory");
    var ending=state.copy();ending.putInt("run",ending.getInt("prospectLength")-1);ending.putInt("cell",4);ending.putString("mineStage","EAST");MineWork.step(ending);
    h.assertTrue(ending.getInt("side")==MineDrive.DONE,"Finishing a section never replays the opposite paid gallery");
    t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,MineArea.maxGalleryLength()));

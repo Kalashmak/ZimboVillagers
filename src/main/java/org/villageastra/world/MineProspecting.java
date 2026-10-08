@@ -45,6 +45,11 @@ public final class MineProspecting {
   var ordered=area.galleries().stream().filter(g->g.step()<=limit&&g.length()%section==0&&g.length()<MineArea.maxGalleryLength())
    .sorted(Comparator.comparingInt(MineArea.Gallery::length).thenComparing(Comparator.comparingInt(MineArea.Gallery::step).reversed()).thenComparingInt(MineArea.Gallery::side)).toList();
   for(var g:ordered){
+   int length=g.length()+section,left=area.width()==1?3:2,right=area.width()==1?3:4;
+   var endpoint=BuildingPlacement.at(e,mine,g.side()==MineDrive.EAST?right+length:left-length,-g.step()-area.descent(),7+g.step());
+   // Keep the entire new section inside the village's supported worker territory,
+   // including a little room to stand beside a face or turn back.
+   int reach=NaturalSupplyGoal.ROUTE_RANGE-4;if(endpoint.distSqr(e.center())>(double)reach*reach)continue;
    var candidate=t.copy();candidate.putInt("floorStep",g.step());candidate.putInt("step",g.step()+1);candidate.putInt("cell",0);candidate.putInt("side",g.side());candidate.putInt("run",g.length());candidate.putInt("prospectLength",g.length()+section);
    var next=MineDrive.next(MineWork.drive(candidate),g.step(),MineWork.shape(candidate));var pos=MineWork.at(e,mine,next.cell());
    if(!l.hasChunkAt(pos)||org.villageastra.server.OwnershipEvents.protectedBlock(l,pos,b->!b.id().equals(mine.id()))||!MineWork.galleryFloor(l,e,mine,candidate,next.cell())||MineWork.unsafeGallery(l,pos)||!MineWork.diggable(l,e,mine,pos,candidate))continue;
