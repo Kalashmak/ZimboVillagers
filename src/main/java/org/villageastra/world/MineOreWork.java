@@ -44,7 +44,22 @@ public final class MineOreWork {
   if(b.isAir()||b.getDestroySpeed(l,p)<0||b.requiresCorrectToolForDrops()&&!tool.isCorrectToolForDrops(b)||l.getBlockState(p.above()).getBlock() instanceof FallingBlock)return false;
   if(!b.getFluidState().isEmpty())return false;for(var d:Direction.values())if(!l.getFluidState(p.relative(d)).isEmpty())return false;return true;
  }
- private static boolean visible(ServerLevel l,ResidentEntity npc,Vec3 eye,BlockPos p){var center=Vec3.atCenterOf(p);if(eye.distanceToSqr(center)>16)return false;var hit=l.clip(new ClipContext(eye,center,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,npc));return hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(p);}
+ private static boolean visible(ServerLevel l,ResidentEntity npc,Vec3 eye,BlockPos p){
+  var center=Vec3.atCenterOf(p);if(eye.distanceToSqr(center)>16)return false;
+  if(sees(l,npc,eye,center,p))return true;
+  // The center of a high wall block may be hidden by the stone below it,
+  // although its near face is exposed to the gallery. Each face still needs
+  // a real unobstructed collision ray; enclosed ore remains invisible.
+  for(var side:Direction.values()){
+   var point=center.add(side.getStepX()*.499,side.getStepY()*.499,side.getStepZ()*.499);
+   if(eye.distanceToSqr(point)<=16&&sees(l,npc,eye,point,p))return true;
+  }
+  return false;
+ }
+ private static boolean sees(ServerLevel l,ResidentEntity npc,Vec3 eye,Vec3 point,BlockPos p){
+  var hit=l.clip(new ClipContext(eye,point,ClipContext.Block.COLLIDER,ClipContext.Fluid.NONE,npc));
+  return hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(p);
+ }
  private static boolean floor(MineArea a,BlockPos p){
   int x=p.getX(),y=p.getY(),z=p.getZ(),left=a.width()==1?3:2,right=a.width()==1?3:4;
   int row=z-7;if(row>=0&&row<=a.lastStep()&&x>=left&&x<=right&&y<=-row-a.descent())return true;

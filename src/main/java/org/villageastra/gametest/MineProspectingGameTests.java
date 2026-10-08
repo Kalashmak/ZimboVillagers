@@ -155,14 +155,22 @@ public final class MineProspectingGameTests {
  private static void physicalWallResource(GameTestHelper h,boolean andesite){
   physicalWallResource(h,andesite,false);
  }
- private static void physicalWallResource(GameTestHelper h,boolean andesite,boolean finalStride){
+ @GameTest(template="empty",batch="mine_high_wall_ore",timeoutTicks=1200)
+ public static void minerUsesTheVisibleFaceOfHighWallOreWhenItsCenterIsOccluded(GameTestHelper h){physicalWallResource(h,false,false,true);}
+ private static void physicalWallResource(GameTestHelper h,boolean andesite,boolean finalStride){physicalWallResource(h,andesite,finalStride,false);}
+ private static void physicalWallResource(GameTestHelper h,boolean andesite,boolean finalStride,boolean highWall){
   var f=town(h,true);var t=f.town;oreGallery(f);var owned=UUID.randomUUID();var chunks=new ArrayList<net.minecraft.world.level.ChunkPos>();var base=BuildingPlacement.origin(t.e,t.shop);
   if(andesite){var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());var cost=new CompoundTag();cost.putInt("minecraft:polished_andesite",3);project.put("cost",cost);HallUpgradeGoal.store(t.l,t.s.id(),project);}
   for(int x=(base.getX()-3)>>4;x<=(base.getX()+16)>>4;x++)for(int z=(base.getZ()+4)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);t.l.getChunkSource().addRegionTicket(ORE_TICKET,cp,3,owned);chunks.add(cp);}
   for(int x=((base.getX()-3)>>4)-2;x<=((base.getX()+16)>>4)+2;x++)for(int z=((base.getZ()+4)>>4)-2;z<=((base.getZ()+10)>>4)+2;z++)t.l.getChunk(x,z);
   for(int x=9;x<=14;x++)for(int y=-8;y<=-3;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,7),(y==-8?Blocks.STONE:Blocks.AIR).defaultBlockState(),2);
   var rock=andesite?Blocks.ANDESITE:Blocks.IRON_ORE;var loot=andesite?Items.ANDESITE:Items.RAW_IRON;
-  var ore=BuildingPlacement.at(t.e,t.shop,6,-5,8);t.l.setBlock(ore,rock.defaultBlockState(),2);var start=BuildingPlacement.at(t.e,t.shop,14,-7,7);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);
+  var ore=BuildingPlacement.at(t.e,t.shop,6,highWall?-3:-5,8);t.l.setBlock(ore,rock.defaultBlockState(),2);var start=BuildingPlacement.at(t.e,t.shop,14,-7,7);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);
+  if(highWall){
+   var eye=net.minecraft.world.phys.Vec3.atBottomCenterOf(BuildingPlacement.at(t.e,t.shop,6,-7,7)).add(0,f.npc.getEyeHeight(),0);
+   var hit=t.l.clip(new net.minecraft.world.level.ClipContext(eye,net.minecraft.world.phys.Vec3.atCenterOf(ore),net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,f.npc));
+   h.assertTrue(!hit.getBlockPos().equals(ore)&&t.l.getBlockState(ore.north()).isAir(),"The high ore has an exposed near face even though stone below blocks its center");
+  }
   h.assertTrue(MineOreWork.begin(f.npc,t.e,t.shop,f.state),"A known visible wall face is recorded before its physical trip"+oreDiagnostic(f));
   if(finalStride){var stand=BuildingPlacement.at(t.e,t.shop,6,-7,7);f.state.getCompound("mineOre").putLong("stand",stand.asLong());f.npc.moveTo(stand.getX()+.5+1.567347876206,stand.getY(),stand.getZ()+.5);
    // Reproduce the observed completed approximate path retained by the native
@@ -174,7 +182,7 @@ public final class MineProspectingGameTests {
   f.state.putUUID("worker",f.npc.getUUID());MineWork.write(t.l,t.shop,f.state);
   f.npc.setNoAi(false);f.npc.goalSelector.removeAllGoals(g->true);f.npc.targetSelector.removeAllGoals(g->true);f.npc.goalSelector.addGoal(6,new ResourceWorkGoal(f.npc,true,()->6000));h.assertTrue(t.l.addFreshEntity(f.npc),"Physical ore worker registers: removed="+f.npc.isRemoved()+" existing="+t.l.getEntity(f.npc.getUUID())+" villageExists="+(SettlementData.get(t.l.getServer()).entry(t.s.id())!=null));
   h.onEachTick(()->{t.l.resetEmptyTime();if(t.l.getBlockState(ore).isAir()){
-   var after=MineWork.read(t.l,t.shop);h.assertTrue(f.npc.tickCount>0&&f.npc.distanceToSqr(initialPosition)>(finalStride?1:16),"The worker physically walks to the ore before mining");h.assertTrue(ForestFixture.count(after.getList("cargo",Tag.TAG_COMPOUND),loot)==1,"Physical excavation retains its real cargo");h.assertTrue(ItemStack.of(after.getCompound("tool")).getDamageValue()==1,"The actual wall harvest wears the paid pick once");h.assertTrue(t.l.getBlockState(MineOreWork.stand(f.state).below()).is(Blocks.STONE),"Mining the wall retains the supporting gallery floor");f.npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,owned);doneOre(f);h.succeed();
+   var after=MineWork.read(t.l,t.shop);h.assertTrue(f.npc.tickCount>0&&f.npc.distanceToSqr(initialPosition)>(finalStride?1:16),"The worker physically walks to the ore before mining");h.assertTrue(ForestFixture.count(after.getList("cargo",Tag.TAG_COMPOUND),loot)==1,"Physical excavation retains its real cargo");h.assertTrue(ItemStack.of(after.getCompound("tool")).getDamageValue()==1,"The actual wall harvest wears the paid pick once");h.assertTrue(t.l.getBlockState(MineOreWork.stand(f.state).below()).is(Blocks.STONE),"Mining the wall retains the supporting gallery floor");if(highWall)com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_HIGH_WALL_ORE VERIFIED bodyTicks={} iron=1 pickWear=1",f.npc.tickCount);f.npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,owned);doneOre(f);h.succeed();
   }});
   h.runAtTickTime(1100,()->{var diagnostic=MineWork.read(t.l,t.shop);var details="Ore trip stalled: pos="+f.npc.position()+" ownTicks="+f.npc.tickCount+" status="+f.npc.workStatus()+" ticking="+t.l.isPositionEntityTicking(f.npc.blockPosition())+" goals="+f.npc.runningGoals()+" failure="+diagnostic.getString("oreFailure")+" job="+diagnostic.getCompound("mineOre")+" path="+(f.npc.getNavigation().getPath()==null?null:f.npc.getNavigation().getPath().getTarget());f.npc.discard();for(var cp:chunks)t.l.getChunkSource().removeRegionTicket(ORE_TICKET,cp,3,owned);doneOre(f);h.assertTrue(false,details);});
  }
