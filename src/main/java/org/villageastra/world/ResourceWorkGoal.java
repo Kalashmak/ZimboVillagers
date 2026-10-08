@@ -793,6 +793,17 @@ public final class ResourceWorkGoal extends Goal {
         if(overflow)status("output_full");
         state.putString("stage",ItemStack.of(state.getCompound("tool")).isEmpty()?"tool":"choose");state.putUUID("operation",UUID.randomUUID());save();
     }
+    /** A waiting load stays in durable custody while its owner gathers an urgent raw material.
+     * Existing journal intents must finish at their original destination before yielding. */
+    public static boolean forestDeliveryBlocked(ServerLevel level,SettlementData.Entry entry,Settlement.Building hut,CompoundTag work){
+        if(!work.getString("stage").equals("deliver")||!work.getString("status").equals("output_full")||!work.hasUUID("operation"))return false;
+        var cargo=work.getList("cargo",Tag.TAG_COMPOUND);int index=work.getInt("delivered");
+        if(index<0||index>=cargo.size()||WorldJournal.exists(level,Settlement.childId(work.getUUID("operation"),"delivery/"+index)))return false;
+        var item=ItemStack.of(cargo.getCompound(index));if(item.isEmpty())return false;
+        var output=LogisticsRoutes.position(entry,hut);var hall=Workshops.hall(entry);
+        if(forestRoom(level,output,item))return false;
+        return hall!=null&&!forestOverflowRoom(level,LogisticsRoutes.position(entry,hall),item);
+    }
     /** Emergency forestry cargo shares the pantry headroom used by ordinary bulk couriers. */
     private static boolean forestOverflowRoom(ServerLevel level,BlockPos pos,ItemStack item){
         return level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof Container c&&LogisticsRoutes.surplusFits(c,item)&&forestRoom(level,pos,item);

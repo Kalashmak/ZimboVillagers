@@ -107,6 +107,7 @@ public final class NaturalSupplyGoal extends Goal {
   if(person==null||person.profession()!=Profession.FORESTER||b==null)return false;
   var file=l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-work/"+b.id()+".bin");
   if(!Files.exists(file))return false;var work=NbtRecord.read(file);
+  if(work.hasUUID("worker")&&work.getUUID("worker").equals(worker.getUUID())&&ResourceWorkGoal.forestDeliveryBlocked(l,e,b,work))return false;
   if(!work.getList("cargo",Tag.TAG_COMPOUND).isEmpty())return true;
   String stage=work.getString("stage"),status=work.getString("status");
   return Set.of("dig","deliver","sapling","replant","nursery_soil").contains(stage)

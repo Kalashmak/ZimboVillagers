@@ -52,7 +52,11 @@ public final class ForestOverflowGameTests {
     var current=NbtRecord.read(MineWork.path(l,hut.id()));
     h.assertTrue(current.getInt("delivered")==2&&!current.contains("forestDeliveryAt")&&!WorldJournal.exists(l,Settlement.childId(op,"delivery/2")),"Forest overflow must leave the last food slots free and retain its paid seed");
     h.assertTrue(LogisticsRoutes.fits(chest,List.of(new ItemStack(Items.WHEAT,16),new ItemStack(Items.BREAD,4))),"Food can still enter the protected pantry space");
-    for(int slot=0;slot<13;slot++)chest.setItem(slot,ItemStack.EMPTY);
+    // Supply may already have delivered clay during the blocked timber wait.
+    // Free only fixture filler; allow one clay slot plus the timber slot above the 12-slot reserve.
+    int empty=0;for(int slot=0;slot<chest.getContainerSize();slot++)if(chest.getItem(slot).isEmpty())empty++;
+    com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_FOREST_FULL_RELEASE clayBefore={} emptyBefore={}",chest.countItem(Items.CLAY_BALL),empty);
+    for(int slot=0;slot<chest.getContainerSize()&&empty<14;slot++)if(chest.getItem(slot).is(Items.DIRT)){chest.setItem(slot,ItemStack.EMPTY);empty++;}
    }
   });
   h.onEachTick(()->{
