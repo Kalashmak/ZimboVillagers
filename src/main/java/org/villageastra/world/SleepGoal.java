@@ -11,7 +11,7 @@ import org.villageastra.server.SettlementData;
 /** AD-060: at night every resident goes home and sleeps in their own bed; the guard keeps watch. At dawn they get up and go back to work. */
 public final class SleepGoal extends Goal {
  /** The night the residents sleep through, in ticks of the day, and how far from home a resident still walks back to bed. */
- public static final long DUSK=12600,DAWN=23200;public static final int HOME_REACH=96;
+ public static final long DUSK=12600,DAWN=23200;public static final int HOME_REACH=320;
  private final ResidentEntity resident;private final boolean withoutPlayers;private final java.util.function.LongSupplier clock;private BlockPos bed;private int repath;
  public SleepGoal(ResidentEntity resident){this(resident,false,()->resident.level().getDayTime());}
  /** A goal with its own clock and no need for players around: the tests drive the night without touching the shared world time. */
@@ -67,7 +67,18 @@ public final class SleepGoal extends Goal {
   if(resident.level().getBlockState(bed).getValue(BedBlock.OCCUPIED)){resident.getNavigation().stop();return;}
   if(resident.position().distanceToSqr(bed.getX()+.5,bed.getY()+.5,bed.getZ()+.5)<=4){
    resident.getNavigation().stop();resident.startSleeping(bed);resident.workStatus("sleeping");return;}
-  if(--repath<=0){repath=20;resident.getNavigation().moveTo(bed.getX()+.5,bed.getY(),bed.getZ()+.5,.7);}
+  if(--repath<=0){
+   var nav=resident.getNavigation();
+   if(resident.blockPosition().distSqr(bed)>64*64){
+    // A dispersed village can put a school beyond the ordinary navigation range.
+    // Keep a usable route instead of repeating a long search every twenty ticks.
+    repath=100;
+    if(nav.isDone()||nav.getTargetPos()==null||!nav.getTargetPos().equals(bed)){
+     var route=resident.routeTo(bed,1,HOME_REACH);
+     if(route!=null&&route.canReach())nav.moveTo(route,.7);
+    }
+   }else{repath=20;nav.moveTo(bed.getX()+.5,bed.getY(),bed.getZ()+.5,.7);}
+  }
  }
  @Override public void stop(){
   if(resident.isSleeping())resident.stopSleeping();
