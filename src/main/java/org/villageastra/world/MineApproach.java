@@ -13,6 +13,14 @@ public final class MineApproach {
   // A path search from a lower branch can settle under the destination instead of
   // finding the stairs. Use the same physical ascent as an ordinary cargo delivery.
   var area=e.settlement().mineAreas().get(mine.id());
+  // A half tread can briefly bring the feet to the destination's elevation
+  // one row too early. Reach that gallery's stair landing before turning
+  // sideways, instead of alternating between ascent and the lower branch.
+  int targetRow=dest.getZ()-7;
+  if(area!=null&&area.contains(x,here.getY(),z,0)&&targetRow>=0&&targetRow<=area.lastStep()
+    &&Math.abs(dest.getY()+descent+targetRow)<=1
+    &&(here.getY()<dest.getY()||x>=1&&x<=5&&z>dest.getZ()&&here.getY()<=dest.getY()+1))
+   return BuildingPlacement.at(e,mine,3,1-targetRow-descent,dest.getZ());
   if(here.getY()<dest.getY()&&area!=null&&area.contains(x,here.getY(),z,0))return BuildingPlacement.at(e,mine,2,1,1);
   // Surface ground above a gallery is not an entrance, even when it is slightly below the lot.
   if(here.getY()>1-descent){

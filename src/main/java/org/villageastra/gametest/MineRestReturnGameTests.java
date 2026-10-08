@@ -24,7 +24,7 @@ public final class MineRestReturnGameTests {
   var work=MineWork.read(l,mine);work.putInt("descent",7);work.putInt("step",1);work.putInt("extentStep",1);MineWork.write(l,mine,work);s.noteMine(mine.id(),1,3,5,7);
   var npc=VillageAstra.RESIDENT.get().create(l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,false,null,null,-1);s.admit(r,home.id());s.assign(r.id(),Profession.MINER,mine.id());r.fallIll();npc.bind(s.id(),r);npc.moveTo(base.getX()+3.5,base.getY()-5,base.getZ()+6.5);npc.onlyGoals(g->g instanceof SafeDescentGoal||g instanceof PitEscapeGoal||g instanceof ResidentDoorGoal,5,new PatientGoal(npc));h.assertTrue(l.addFreshEntity(npc),"Actual sick miner registered");var anchor=HomeNeighborhood.anchor(npc);
   Runnable clean=()->{npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:forced)l.getChunkSource().removeRegionTicket(TICKET,cp,3,owner);};
-  h.onEachTick(()->{l.resetEmptyTime();if(npc.tickCount>0&&npc.blockPosition().distSqr(anchor)<=16&&npc.getY()>=base.getY()){h.assertTrue(r.sick(),"Return did not manufacture a cure");clean.run();h.succeed();}});
+  h.onEachTick(()->{l.resetEmptyTime();if(npc.tickCount>0&&npc.distanceToSqr(anchor.getX()+.5,anchor.getY(),anchor.getZ()+.5)<=16&&npc.getY()>=base.getY()){h.assertTrue(r.sick(),"Return did not manufacture a cure");clean.run();h.succeed();}});
   h.runAtTickTime(1600,()->{String why="Sick miner did not reach home: "+npc.position()+" home="+anchor+" ticks="+npc.tickCount+" status="+npc.workStatus()+" path="+(npc.getNavigation().getPath()==null?null:npc.getNavigation().getPath().getTarget());clean.run();h.assertTrue(false,why);});
  }
 }
