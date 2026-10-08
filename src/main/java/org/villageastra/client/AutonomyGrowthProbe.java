@@ -21,8 +21,9 @@ final class AutonomyGrowthProbe {
  static void tick(Minecraft mc){
   if(failure!=null){LogUtils.getLogger().error("ASTRA_AUTONOMY_GROWTH INCOMPLETE {}",failure);mc.stop();return;}
   if(done){LogUtils.getLogger().info("ASTRA_AUTONOMY_GROWTH VERIFIED fullProgression=true noPlayerSupplies=true");mc.stop();return;}
+  var server=mc.getSingleplayerServer();if(server==null||server.isStopped())return;
   if(++ticks%10!=0||busy)return;busy=true;
-  mc.getSingleplayerServer().execute(()->{try{sample(mc);}catch(Exception ex){failure=ex.toString();}finally{busy=false;}});
+  server.execute(()->{try{if(!server.isStopped()&&!server.getPlayerList().getPlayers().isEmpty())sample(server);}catch(Exception ex){failure=ex.toString();}finally{busy=false;}});
  }
  private static java.nio.file.Path observation(net.minecraft.server.MinecraftServer server) {
   return server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/zimbovillagers-probes/growth.bin");
@@ -34,8 +35,8 @@ final class AutonomyGrowthProbe {
   var roles=new net.minecraft.nbt.ListTag();for(var r:witnessed)roles.add(net.minecraft.nbt.StringTag.valueOf(r.name()));t.put("witnessed",roles);
   org.villageastra.persistence.NbtRecord.write(observation(server),t);
  }
- private static void sample(Minecraft mc){
-  var server=mc.getSingleplayerServer();var l=server.overworld();var data=SettlementData.get(server);
+ private static void sample(net.minecraft.server.MinecraftServer server){
+  var l=server.overworld();var data=SettlementData.get(server);
   if(!started){if(data.entries().isEmpty())return;var player=server.getPlayerList().getPlayers().get(0);
    var e=data.entries().stream().min(Comparator.comparingDouble(x->player.distanceToSqr(x.center().getCenter()))).orElseThrow();village=e.settlement().id();since=data.clock().ticks();started=true;player.setGameMode(GameType.CREATIVE);player.getAbilities().flying=true;
    boolean resume=java.nio.file.Files.exists(observation(server));
