@@ -118,6 +118,41 @@ public final class MineProspectingGameTests {
     f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);
    }).thenSucceed();
  }
+ @GameTest(template="empty",batch="mine_seal_reload",timeoutTicks=2400)
+ public static void unloadedFoundationPreservesItsFetchPaymentAndPlacementOperation(GameTestHelper h){
+  var f=town(h,true,4194304);var t=f.town;var base=BuildingPlacement.origin(t.e,t.shop);var state=f.state;
+  state.putInt("floorStep",12);state.putInt("step",13);state.putInt("side",MineDrive.WEST);state.putInt("run",193);state.putInt("cell",0);state.putInt("prospectLength",216);state.putInt("prospectFloor",12);state.putInt("prospectLimit",25);state.putString("mineStage","WEST");state.putUUID("worker",f.npc.getUUID());
+  var forced=PhysicalFixtureChunks.force(t.l,base,-196,4,0,22);forced.addAll(PhysicalFixtureChunks.force(t.l,t.e.center(),0,0,0,0));
+  for(int x=-196;x<=-190;x++)for(int z=17;z<=21;z++)for(int y=-21;y<=-13;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
+  for(int x=-191;x<=-190;x++)for(int y=-19;y<=-15;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,19),Blocks.AIR.defaultBlockState(),2);
+  var water=BuildingPlacement.at(t.e,t.shop,-192,-20,19);t.l.setBlock(water,Blocks.WATER.defaultBlockState(),2);var face=water.above();var access=BuildingPlacement.at(t.e,t.shop,-191,-19,19);
+  h.assertTrue(MineSealing.beginFloor(t.l,t.e,t.shop,state,new MineDrive.Cell(-192,-19,19)),"Known dry gallery face selects an ordinary paid foundation job");var id=state.getUUID("operation");MineWork.write(t.l,t.shop,state);
+  var stock=LogisticsRoutes.position(t.e,t.hall());var chest=LogisticsRoutes.chest(t.l,t.e,t.hall());chest.clearContent();chest.setItem(0,new ItemStack(Items.DIRT));
+  f.npc.moveTo(stock.getX()+1.5,stock.getY(),stock.getZ()+.5);f.npc.setNoAi(true);
+  var distant=forced.stream().filter(cp->cp.x<(base.getX()>>4)-2).toList();PhysicalFixtureChunks.release(t.l,distant);
+  h.startSequence().thenWaitUntil(()->h.assertTrue(!t.l.hasChunkAt(face),"Real foundation chunk has unloaded while fetching"))
+   .thenIdle(200).thenExecute(()->{
+    h.assertTrue(!t.l.hasChunkAt(face),"Foundation stays unloaded without incidental ore scans");var resumed=MineWork.read(t.l,t.shop);
+    TouchLoad.exhaust(t.l.getServer());sealTick(t,f.npc,resumed,stock,access,0);
+    h.assertTrue(resumed.getUUID("operation").equals(id)&&resumed.getString("stage").equals("seal_fetch")&&!t.l.hasChunkAt(face)&&chest.countItem(Items.DIRT)==1,"Unknown unloaded foundation must defer, preserving exact operation and untaken material");
+    TouchLoad.resetTick();sealTick(t,f.npc,resumed,stock,access,1);
+    h.assertTrue(t.l.hasChunkAt(face)&&resumed.getString("stage").equals("seal_place")&&resumed.getUUID("operation").equals(id)&&chest.countItem(Items.DIRT)==0&&ForestFixture.count(resumed.getList("cargo",Tag.TAG_COMPOUND),Items.DIRT)==1,"Same job loads its known face and actually withdraws one material");
+    h.assertTrue(org.villageastra.persistence.WorldJournal.recoverAmount(t.l,Settlement.childId(id,"seal_take")).getCount()==1&&t.l.getBlockState(water).is(Blocks.WATER),"Payment has a real receipt; no remote placement occurred");
+   }).thenWaitUntil(()->h.assertTrue(!t.l.hasChunkAt(face),"Paid foundation chunk unloads during return trip"))
+   .thenIdle(200).thenExecute(()->{
+    try{
+     var resumed=MineWork.read(t.l,t.shop);TouchLoad.exhaust(t.l.getServer());sealTick(t,f.npc,resumed,stock,access,2);
+     h.assertTrue(resumed.getUUID("operation").equals(id)&&resumed.getString("stage").equals("seal_place")&&!t.l.hasChunkAt(face)&&ForestFixture.count(resumed.getList("cargo",Tag.TAG_COMPOUND),Items.DIRT)==1,"Budget refusal preserves already paid cargo and placement identity");
+     TouchLoad.resetTick();sealTick(t,f.npc,resumed,stock,access,3);h.assertTrue(t.l.hasChunkAt(face)&&resumed.getUUID("operation").equals(id)&&!resumed.contains("sealReady"),"Known face reloads without working from the distant stock");
+     f.npc.moveTo(access.getX()+.5,access.getY(),access.getZ()+.5);f.npc.setOnGround(true);sealTick(t,f.npc,resumed,stock,access,4);h.assertTrue(t.l.getBlockState(water).is(Blocks.WATER),"Actual placement still requires its ordinary forty ticks");sealTick(t,f.npc,resumed,stock,access,44);
+     h.assertTrue(t.l.getBlockState(water).is(Blocks.DIRT)&&t.l.getBlockState(face).is(Blocks.STONE)&&ForestFixture.count(resumed.getList("cargo",Tag.TAG_COMPOUND),Items.DIRT)==0,"Exactly one paid foundation is placed at physical reach without excavation");
+     h.assertTrue(org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,Settlement.childId(id,"seal_place"))!=null&&chest.countItem(Items.DIRT)==0,"The original job owns its committed placement and no second withdrawal");
+    }finally{f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);}
+   }).thenSucceed();
+ }
+ private static void sealTick(ResearchV2Town.Town t,ResidentEntity npc,CompoundTag state,BlockPos stock,BlockPos access,long now){
+  MineSealing.tick(t.l,t.shop,state,npc,stock,stock.east(),access,p->npc.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(p))<1,()->MineWork.write(t.l,t.shop,state),x->{},now);
+ }
  private static void extension(GameTestHelper h,int sections){extension(h,sections,false,false);}
  private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial){
   extension(h,sections,waterFloor,partial,false);

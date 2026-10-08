@@ -57,6 +57,13 @@ public final class MineSealing {
  public static void tick(ServerLevel l,Settlement.Building mine,CompoundTag t,ResidentEntity worker,BlockPos stock,BlockPos stockStand,BlockPos access,Predicate<BlockPos> near,Runnable save,Consumer<String> status,long now){
   var previous=t.copy();reconcile(l,t);if(!previous.equals(t))save.run();if(t.getBoolean("sealPlaced")){finish(t,save);return;}
   var id=t.getUUID("operation");var face=BlockPos.of(t.getLong("sealFace"));var at=BlockPos.of(t.getLong("sealAt"));
+  // Going back for paid material can unload the face. Missing chunk data is
+  // not a changed foundation and must not cancel this durable operation.
+  var known=new ArrayList<BlockPos>();known.add(face);for(var direction:Direction.values())known.add(face.relative(direction));
+  if(known.stream().anyMatch(p->!l.hasChunkAt(p))){
+   var e=SettlementData.get(l.getServer()).entry(worker.settlementId());double reach=(double)NaturalSupplyGoal.ROUTE_RANGE*NaturalSupplyGoal.ROUTE_RANGE;
+   if(e==null||face.distSqr(e.center())>reach||worker.blockPosition().distSqr(e.center())>reach||TouchLoad.ensureAll(l,known)!=TouchLoad.Touch.OK){status.accept("unloaded");return;}
+  }
   if(!at.equals(candidate(l,mine,face))){finish(t,save);return;}
   if(t.getString("stage").equals("seal_fetch")){
    if(!near.test(stockStand))return;
