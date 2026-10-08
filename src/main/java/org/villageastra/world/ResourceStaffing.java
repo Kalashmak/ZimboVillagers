@@ -32,8 +32,11 @@ public final class ResourceStaffing {
   return java.nio.file.Files.exists(file)&&Set.of("dig","replant","sapling","nursery_soil").contains(org.villageastra.persistence.NbtRecord.read(file).getString("stage"));
  }
  public static boolean tick(ServerLevel l,SettlementData.Entry e){
-  var s=e.settlement();if(s.governance().playerMayor()!=null||!HallUpgradeGoal.pending(l,s.id()))return false;
-  var project=HallUpgradeGoal.fundingView(l,s.id());if(project.getBoolean("funded")||s.governance().paused(HallConstructionPlan.projectId(project)))return false;
+  var s=e.settlement();if(s.governance().playerMayor()!=null)return false;
+  boolean research=!org.villageastra.server.BookResearch.wants(l,e).isEmpty();
+  if(HallUpgradeGoal.pending(l,s.id())){
+   var project=HallUpgradeGoal.fundingView(l,s.id());if((project.getBoolean("funded")||s.governance().paused(HallConstructionPlan.projectId(project)))&&!research)return false;
+  }else if(!research)return false;
   var forest=s.buildings().stream().filter(b->b.type().equals("forester")&&Population.slots(s,b)>0).findFirst().orElse(null);
   var mine=s.buildings().stream().filter(b->b.type().equals("mine")&&Population.slots(s,b)>0).findFirst().orElse(null);if(forest==null||mine==null)return false;
   boolean forestStaffed=staffed(s,Profession.FORESTER,forest),mineStaffed=staffed(s,Profession.MINER,mine);if(forestStaffed&&mineStaffed||!forestStaffed&&!mineStaffed)return false;

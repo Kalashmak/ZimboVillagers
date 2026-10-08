@@ -22,7 +22,12 @@ public final class ResourceStaffingGameTests {
  public static void aPaidSaplingIsReallyPlantedBeforeTheForesterChangesJobs(GameTestHelper h){scene(h,false,false,true,false);}
  @GameTest(template="empty",batch="resource_staffing",timeoutTicks=200)
  public static void anyPlanksOrderUsesExistingBirchInsteadOfDemandingOakAndSwitchingTheMiner(GameTestHelper h){scene(h,false,false,false,true);}
+ @GameTest(template="empty",batch="resource_research_staffing",timeoutTicks=200)
+ public static void anUnfundedResearchOrderReassignsTheOnlyRawWorkerAfterConstructionEnds(GameTestHelper h){scene(h,false,false,false,false,true);}
  private static void scene(GameTestHelper h,boolean timberShortage,boolean minerFirst,boolean renewal,boolean alternative){
+  scene(h,timberShortage,minerFirst,renewal,alternative,false);
+ }
+ private static void scene(GameTestHelper h,boolean timberShortage,boolean minerFirst,boolean renewal,boolean alternative,boolean research){
   var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
   try{
    var donor=s.residents().stream().filter(r->r.profession()==Profession.FORESTER).findFirst().orElseThrow();var oldMiner=s.residents().stream().filter(r->r.profession()==Profession.MINER).findFirst().orElseThrow();
@@ -34,7 +39,8 @@ public final class ResourceStaffingGameTests {
    var stock=LogisticsRoutes.chest(l,e,hall);var source=LogisticsRoutes.chest(l,e,forest);if(!timberShortage){stock.setItem(0,new ItemStack(log,64));source.setItem(0,new ItemStack(log,64));}
    stock.setItem(1,new ItemStack(Items.STONE_PICKAXE));stock.setItem(2,new ItemStack(Items.BREAD,32));
    var cost=new CompoundTag();cost.putInt("minecraft:polished_andesite",3);if(timberShortage)cost.putInt("minecraft:oak_planks",64);var project=new CompoundTag();project.putUUID("id",UUID.randomUUID());project.putUUID("project",project.getUUID("id"));project.put("cost",cost);HallUpgradeGoal.enqueue(l,e,project);
-   h.assertTrue(MineProspecting.needed(l,e,mine).contains(Items.ANDESITE),"Actual approved project lacks mined andesite");
+   if(research){HallUpgradeGoal.drop(l,s.id());var record=org.villageastra.server.BookResearch.inspect(l,e);var orders=new ListTag();orders.add(StringTag.valueOf("metallurgy.1"));record.put("resourceOrders",orders);org.villageastra.server.BookResearch.store(l,e,record);h.assertTrue(!HallUpgradeGoal.pending(l,s.id())&&!org.villageastra.server.BookResearch.wants(l,e).isEmpty(),"Construction has ended but a real research material order remains");}
+   h.assertTrue(MineProspecting.needed(l,e,mine).contains(research?Items.RAW_IRON:Items.ANDESITE),"Actual approved order lacks mined resources");
    var body=(ResidentEntity)l.getEntity(donor.id());var paid=ItemStack.EMPTY;var axe=ItemStack.EMPTY;
    if(!timberShortage){var operation=UUID.randomUUID();paid=WorldJournal.takeAmount(l,operation,LogisticsRoutes.position(e,forest),0,source.getItem(0).copy(),2);source.setItem(3,new ItemStack(Items.STONE_AXE));axe=WorldJournal.takeAmount(l,Settlement.childId(operation,"tool"),LogisticsRoutes.position(e,forest),3,source.getItem(3).copy(),1);axe.setDamageValue(7);
     var work=new CompoundTag();work.putUUID("operation",operation);work.putUUID("worker",donor.id());work.putString("stage","deliver");work.put("tool",axe.save(new CompoundTag()));var cargo=new ListTag();cargo.add(paid.save(new CompoundTag()));work.put("cargo",cargo);NbtRecord.write(l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-work/"+forest.id()+".bin"),work);

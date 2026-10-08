@@ -450,6 +450,13 @@ public final class ResourceWorkGoal extends Goal {
                 if(next.floor()){if(carrying()){deliverUndug();return;}if((withoutPlayers||worker.tickCount%100==0)&&MineProspecting.begin(level,mineEntry,mine,state)){save();return;}if(near(beside(output)))status("mine_floor");return;}
                 target=MineWork.at(mineEntry,mine,next.cell());
                 if(target.getY()<=level.getMinBuildHeight()+2){if(carrying()){deliverUndug();return;}status("bottom_of_world");return;}
+                // The selected face must not depend on an unrelated ore-sensing pass
+                // to reload it after the worker returns home. Keep the shared load budget.
+                double reach=(double)NaturalSupplyGoal.ROUTE_RANGE*NaturalSupplyGoal.ROUTE_RANGE;
+                if(!level.hasChunkAt(target)&&target.distSqr(mineEntry.center())<=reach&&worker.blockPosition().distSqr(mineEntry.center())<=reach){
+                    var faceChunks=new ArrayList<BlockPos>();faceChunks.add(target);for(var direction:net.minecraft.core.Direction.Plane.HORIZONTAL)faceChunks.add(target.relative(direction));
+                    if(TouchLoad.ensureAll(level,faceChunks)!=TouchLoad.Touch.OK){status("unloaded");return;}
+                }
                 if(!level.hasChunkAt(target)){if(carrying()){deliverUndug();return;}status("unloaded");return;}
                 var block=level.getBlockState(target);
                 // An unsafe gallery cell (not ground, a block entity, a fluid in it or beside it) ends that gallery: the drive turns to the other side.

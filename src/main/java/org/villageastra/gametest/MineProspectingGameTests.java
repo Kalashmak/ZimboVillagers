@@ -93,11 +93,43 @@ public final class MineProspectingGameTests {
  public static void paidPlugSupportsTheNextGalleryColumnBeforeAnyExcavation(GameTestHelper h){extension(h,1,true,false);}
  @GameTest(template="empty",batch="mine_gallery_floor_seal",timeoutTicks=2400)
  public static void waterBlockedPartialGalleryCanResumeAfterPaidFoundationRepair(GameTestHelper h){extension(h,1,true,true);}
+ @GameTest(template="empty",batch="mine_drive_route_reload",timeoutTicks=5000)
+ public static void selectedDistantDriveResumesAfterItsFaceChunkUnloads(GameTestHelper h){extension(h,8,false,false,true);}
+ @GameTest(template="empty",batch="mine_drive_face_reload",timeoutTicks=5000)
+ public static void selectedDriveLoadsItsKnownFaceBeforeDeclaringItUnavailable(GameTestHelper h){extension(h,8,false,false,true,true);}
+ @GameTest(template="empty",batch="mine_drive_west_face_reload",timeoutTicks=2400)
+ public static void aSelectedWestFaceLoadsEvenWithoutIncidentalOreSensing(GameTestHelper h){
+  var f=town(h,true,3145728);var t=f.town;var base=BuildingPlacement.origin(t.e,t.shop);var state=f.state;
+  state.putInt("prospectFloor",12);state.putInt("prospectLimit",25);state.putInt("floorStep",12);state.putInt("step",13);state.putInt("cell",0);state.putInt("side",MineDrive.WEST);state.putInt("run",193);state.putInt("prospectLength",216);state.putBoolean("prospectExtension",true);state.putString("mineStage","WEST");state.putString("stage","choose");
+  var forced=PhysicalFixtureChunks.force(t.l,base,-196,4,0,22);forced.addAll(PhysicalFixtureChunks.force(t.l,t.e.center(),0,0,0,0));
+  for(int x=-196;x<=4;x++)for(int z=17;z<=21;z++)for(int y=-20;y<=-13;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,z),Blocks.STONE.defaultBlockState(),2);
+  for(int x=-191;x<=1;x++)for(int y=-19;y<=-15;y++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y,19),Blocks.AIR.defaultBlockState(),2);
+  t.s.noteMine(t.shop.id(),new MineArea.Gallery(12,MineDrive.WEST,193));
+  var water=BuildingPlacement.at(t.e,t.shop,-192,-20,19);t.l.setBlock(water,Blocks.WATER.defaultBlockState(),2);var target=water.above(5);
+  MineWork.write(t.l,t.shop,state);var start=BuildingPlacement.at(t.e,t.shop,18,4,-47);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);
+  HallUpgradeGoal.drop(t.l,t.s.id());h.assertTrue(MineProspecting.needed(t.l,t.e,t.shop).isEmpty(),"An already selected drive must not depend on incidental ore-demand sensing to load its face");
+  PhysicalFixtureChunks.release(t.l,forced.stream().filter(cp->cp.x<(base.getX()>>4)-2).toList());
+  h.startSequence().thenWaitUntil(()->h.assertTrue(!t.l.hasChunkAt(target),"The previously selected west face unloads"))
+   .thenIdle(200).thenExecute(()->{
+    h.assertTrue(!t.l.hasChunkAt(target),"Face remains unloaded while the miner is at home");var goal=new ResourceWorkGoal(f.npc,true,()->6000L);h.assertTrue(goal.canUse(),"Durable mine work reloads for the actual assigned worker");
+    TouchLoad.exhaust(t.l.getServer());goal.tick();h.assertTrue(!t.l.hasChunkAt(target)&&MineWork.read(t.l,t.shop).getString("stage").equals("choose"),"The shared chunk budget defers preparation without mining");TouchLoad.resetTick();goal.tick();var chosen=MineWork.read(t.l,t.shop);
+    h.assertTrue(t.l.hasChunkAt(target)&&chosen.getString("stage").equals("seal_fetch"),"The known west face loads and requests paid support before excavation; state="+chosen);
+    h.assertTrue(ItemStack.of(chosen.getCompound("tool")).getDamageValue()==0&&chosen.getList("cargo",Tag.TAG_COMPOUND).isEmpty()&&t.l.getBlockState(water).is(Blocks.WATER)&&t.l.getBlockState(target).is(Blocks.STONE),"Planning invents no material and opens no unsupported column");
+    f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);
+   }).thenSucceed();
+ }
  private static void extension(GameTestHelper h,int sections){extension(h,sections,false,false);}
  private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial){
-  var f=town(h,true);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
+  extension(h,sections,waterFloor,partial,false);
+ }
+ private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial,boolean gap){
+  extension(h,sections,waterFloor,partial,gap,false);
+ }
+ private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial,boolean gap,boolean faceCheck){
+  var f=town(h,true,gap?2097152:0);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
   int initial=CoreEffects.mine().galleryLength()*sections+(partial?1:0);
   var base=BuildingPlacement.origin(t.e,t.shop);var forced=PhysicalFixtureChunks.force(t.l,base,0,initial+31,0,z+3);
+  if(gap)forced.addAll(PhysicalFixtureChunks.force(t.l,t.e.center(),0,0,0,0));
   for(int x=2;x<=initial+30;x++)for(int dz=-2;dz<=2;dz++)for(int dy=-1;dy<=6;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z+dz),Blocks.STONE.defaultBlockState(),2);
   for(int x=4;x<5+initial;x++)for(int dy=0;dy<5;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z),Blocks.AIR.defaultBlockState(),2);
   t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,initial));
@@ -114,9 +146,18 @@ public final class MineProspectingGameTests {
   h.assertTrue(state.getInt("floorStep")==floor&&state.getInt("run")==initial,"Existing depth and paid gallery endpoint are retained");
   MineWork.write(t.l,t.shop,state);var saved=MineWork.read(t.l,t.shop);var next=MineWork.next(t.l,t.e,t.shop,saved);
   h.assertTrue(next.stage()==MineDrive.Stage.EAST&&next.cell().x()==5+initial,"Reload resumes the next unmined column");
-  var start=BuildingPlacement.at(t.e,t.shop,3+initial,y,z);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);f.npc.setNoAi(false);f.npc.onlyGoals(g->false,6,new ResourceWorkGoal(f.npc,true,()->6000));boolean[] started={false};
+  var start=faceCheck?BuildingPlacement.at(t.e,t.shop,2,1,3):BuildingPlacement.at(t.e,t.shop,gap?4:3+initial,y,z);f.npc.moveTo(start.getX()+.5,start.getY(),start.getZ()+.5);f.npc.setNoAi(false);f.npc.onlyGoals(g->false,6,new ResourceWorkGoal(f.npc,true,()->6000));boolean[] started={false},unloadedSeen={false};long[] faceUnloadedAt={-1};
+  if(gap)PhysicalFixtureChunks.release(t.l,forced.stream().filter(cp->cp.x>(base.getX()>>4)+2).toList());
   h.onEachTick(()->{
-   if(!started[0]){if(TouchLoad.ticking(t.l,f.npc.blockPosition()))started[0]=t.l.addFreshEntity(f.npc);return;}
+   if(faceCheck&&!started[0]&&!t.l.hasChunkAt(ore)){
+    if(faceUnloadedAt[0]<0){faceUnloadedAt[0]=t.l.getGameTime();return;}if(t.l.getGameTime()-faceUnloadedAt[0]<200)return;
+    var goal=new ResourceWorkGoal(f.npc,true,()->6000L);h.assertTrue(goal.canUse(),"The actual durable selected drive loads into its worker goal");
+    var selected=MineWork.at(t.e,t.shop,MineWork.next(t.l,t.e,t.shop,MineWork.read(t.l,t.shop)).cell());h.assertTrue(!t.l.hasChunkAt(selected),"The next selected mining cell is genuinely unloaded before choosing");
+    goal.tick();var chosen=MineWork.read(t.l,t.shop);h.assertTrue(t.l.hasChunkAt(selected)&&chosen.getString("stage").equals("dig"),"A known bounded face is loaded before validating ordinary excavation; state="+chosen);
+    h.assertTrue(ItemStack.of(chosen.getCompound("tool")).getDamageValue()==0&&chosen.getList("cargo",Tag.TAG_COMPOUND).isEmpty(),"Loading a face does not dig or create cargo");
+    f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);h.succeed();return;
+   }
+   if(!started[0]){if(gap&&!unloadedSeen[0]){if(t.l.hasChunkAt(ore))return;unloadedSeen[0]=true;}if(TouchLoad.ticking(t.l,f.npc.blockPosition())&&(!gap||TouchLoad.ticking(t.l,t.e.center()))){started[0]=t.l.addFreshEntity(f.npc);if(started[0]&&gap)ResourceExpedition.follow(f.npc,true);}return;}
    var work=MineWork.read(t.l,t.shop);
    if(waterFloor){
     if(MineSealing.active(work))sealSeen[0]=work.getUUID("operation");
@@ -124,6 +165,7 @@ public final class MineProspectingGameTests {
    }
    int iron=ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON);
    if(iron==0)return;
+   if(gap)h.assertTrue(unloadedSeen[0]&&f.npc.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(start))>10000,"A genuinely unloaded selected face is reached by physical travel");
    if(waterFloor){
     h.assertTrue(sealSeen[0]!=null&&t.l.getBlockState(plug).is(Blocks.COBBLESTONE),"A real paid plug supports the new column");
     var receipt=org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,Settlement.childId(sealSeen[0],"seal_place"));h.assertTrue(receipt!=null&&receipt.getCompound("before").getString("Name").equals("minecraft:water"),"Water replacement has a committed placement receipt");
@@ -136,7 +178,11 @@ public final class MineProspectingGameTests {
    com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_MINE_EXTENSION VERIFIED bodyTicks={} iron={} work={}",f.npc.tickCount,iron,work);
    f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);h.succeed();
   });
-  h.runAtTickTime(2300,()->h.assertTrue(false,"Extension stalled: "+f.npc.position()+" "+f.npc.workStatus()+" "+MineWork.read(t.l,t.shop)));
+  h.runAtTickTime(gap?4900:2300,()->{
+   var current=MineWork.read(t.l,t.shop);var at=BuildingPlacement.at(t.e,t.shop,current.getIntArray("access")[0],current.getIntArray("access")[1],current.getIntArray("access")[2]);var waypoint=MineApproach.waypoint(f.npc,t.e,t.shop,current,at);
+   var detail="Extension stalled: unloaded="+unloadedSeen[0]+" base="+base+" local="+BuildingPlacement.local(t.e,t.shop,f.npc.blockPosition())+" waypoint="+waypoint+" waypointLoaded="+t.l.hasChunkAt(waypoint)+" foot="+t.l.getBlockState(waypoint)+" support="+t.l.getBlockState(waypoint.below())+" path="+f.npc.getNavigation().getPath()+" lease="+ResourceExpedition.status(f.npc)+" centerTicking="+TouchLoad.ticking(t.l,t.e.center())+" "+f.npc.position()+" "+f.npc.workStatus()+" "+current;
+   f.npc.discard();PhysicalFixtureChunks.release(t.l,forced);ResearchV2Town.done(t);h.assertTrue(false,detail);
+  });
  }
 
  @GameTest(template="empty",batch="mine_extension_guards",timeoutTicks=200)
@@ -180,7 +226,10 @@ public final class MineProspectingGameTests {
  private record Town(ResearchV2Town.Town town,ResidentEntity npc,CompoundTag state){}
  private static Town town(GameTestHelper h){return town(h,false);}
  private static Town town(GameTestHelper h,boolean isolated){
-  var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*(isolated?4:1),64,old.e.center().getZ()*(isolated?4:1)));data.add(e);
+  return town(h,isolated,0);
+ }
+ private static Town town(GameTestHelper h,boolean isolated,int remote){
+  var old=ResearchV2Town.town(h,"mine");var data=SettlementData.get(old.l.getServer());data.remove(old.s.id());var e=new SettlementData.Entry(old.s,old.e.dimension(),new BlockPos(old.e.center().getX()*(isolated?4:1)+remote,64,old.e.center().getZ()*(isolated?4:1)));data.add(e);
   var t=new ResearchV2Town.Town(old.l,e,old.s,old.shop);ResearchV2Town.lay(t.l,e,t.shop,"mine");t.l.setBlock(e.center().offset(1,1,4),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
   var npc=VillageAstra.RESIDENT.get().create(t.l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);t.s.admit(r,Settlement.childId(t.s.id(),"home"));t.s.assign(r.id(),Profession.MINER,t.shop.id());npc.bind(t.s.id(),t.s.resident(r.id()));npc.setNoAi(true);
   var state=MineWork.read(t.l,t.shop);int floor=MineWork.floorStep(t.l,e,t.shop,state);state.putInt("floorStep",floor);state.putInt("extentStep",floor);state.putInt("stairAudit",floor+1);state.putInt("step",floor+1);state.putInt("side",MineDrive.DONE);state.put("tool",new ItemStack(Items.STONE_PICKAXE).save(new CompoundTag()));t.s.noteMine(t.shop.id(),floor,3,5,7);MineWork.write(t.l,t.shop,state);
