@@ -61,11 +61,14 @@ public final class MineProspectingGameTests {
  }
 
  @GameTest(template="empty",batch="mine_extension",timeoutTicks=2400)
- public static void exhaustedMineExtendsItsPaidWorkingFaceToRealOre(GameTestHelper h){
+ public static void exhaustedMineExtendsItsPaidWorkingFaceToRealOre(GameTestHelper h){extension(h,1);}
+ @GameTest(template="empty",batch="mine_extended_survey",timeoutTicks=2400)
+ public static void unmetOreDemandContinuesBeyondFourSurveySections(GameTestHelper h){extension(h,4);}
+ private static void extension(GameTestHelper h,int sections){
   var f=town(h,true);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
-  var base=BuildingPlacement.origin(t.e,t.shop);var forced=PhysicalFixtureChunks.force(t.l,base,0,55,0,z+3);
-  for(int x=2;x<=54;x++)for(int dz=-2;dz<=2;dz++)for(int dy=-1;dy<=6;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z+dz),Blocks.STONE.defaultBlockState(),2);
-  int initial=CoreEffects.mine().galleryLength();
+  int initial=CoreEffects.mine().galleryLength()*sections;
+  var base=BuildingPlacement.origin(t.e,t.shop);var forced=PhysicalFixtureChunks.force(t.l,base,0,initial+31,0,z+3);
+  for(int x=2;x<=initial+30;x++)for(int dz=-2;dz<=2;dz++)for(int dy=-1;dy<=6;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z+dz),Blocks.STONE.defaultBlockState(),2);
   for(int x=4;x<5+initial;x++)for(int dy=0;dy<5;dy++)t.l.setBlock(BuildingPlacement.at(t.e,t.shop,x,y+dy,z),Blocks.AIR.defaultBlockState(),2);
   t.s.noteMine(t.shop.id(),new MineArea.Gallery(floor,MineDrive.EAST,initial));
   state.putIntArray("surveyedFloors",java.util.stream.IntStream.rangeClosed(0,floor).toArray());state.putString("stage","choose");
