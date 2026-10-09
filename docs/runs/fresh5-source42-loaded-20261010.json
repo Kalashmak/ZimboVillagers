@@ -1,0 +1,52 @@
+{
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "world": "run-client-1/saves/astra-smoke-1791497240499",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "resume_observed_ticks": 13791020,
+  "runtime_manifest": "docs/runs/full-growth-fresh5-runtime-segment42-20261009.json",
+  "runtime_files": 1976,
+  "pid": 27396,
+  "session": 15904,
+  "closed_previous": {
+    "log": "docs/runs/full-growth-fresh5-segment41-20261009-saved.log",
+    "sha256": "4734a6c8cb587f6e30d08798ed44d1b5c458c8fbd6d5fc09bbbc0f3c22c76e87",
+    "last_sample": [
+      "13789606",
+      "1",
+      "18"
+    ],
+    "normal_exit": true,
+    "all_dimensions_saved": true,
+    "full_acceptance": false,
+    "source_commit": "806cbf63ac7d38caf18d1c4c9fe6044e176cbafe",
+    "checkpoint": "build/checkpoints/full-growth-fresh5-segment41-20261009"
+  },
+  "last_observation": [
+    "13795929",
+    "1",
+    "18",
+    "restaurant",
+    "false",
+    "false",
+    "0/532"
+  ],
+  "loaded_changes": [
+    "AD477 paid foundations under dry solid mine faces"
+  ],
+  "tested_public_commit": "264f2a09183117c238c9659f3e307fdb25ee5551",
+  "closed_world": {
+    "saved_active_ticks": 13799849,
+    "alive": 12,
+    "historical_dead": 2,
+    "child": {
+      "born": 13614280,
+      "schoolTicks": 61400,
+      "life": "CHILD",
+      "educated": 0
+    }
+  },
+  "maximum_verified": false,
+  "live_log_hashed": false,
+  "release_binary_updated": false,
+  "clock_note": "Probe active/observedTicks are elapsed from the retained baseline; saved activeTicks is the absolute settlement simulation clock."
+}

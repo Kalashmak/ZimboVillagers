@@ -538,3 +538,8 @@ The same natural world resumed after a normal complete save; all1975 runtime fil
 ### Paid support under dry mine faces
 
 Miners can now repair a missing dry foundation beneath a solid gallery face before continuing excavation. They use actual stock and retain the normal work time; an existing safe work platform is required. Recovery preserves paid cargo, and unsafe or changed ground stops placement. Both copies passed28 native checks and166 fresh unit tests. The continuing natural village still has two lanterns left to supply for its restaurant; this patch has not yet been loaded there, and maximum autonomous development remains unverified.
+
+
+### Continuing village: source42
+
+The same natural village resumed after a complete normal save with paid dry-foundation repairs loaded. All1976 runtime files match the tested build. Its restaurant has487/489 materials and still needs two lanterns; the next observation must confirm actual iron supply and construction. The child has61400/72000 recorded attendance ticks. Maximum development remains unverified.
