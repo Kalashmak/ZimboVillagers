@@ -437,4 +437,4 @@ The continuing natural world completed this house after the repair: the builder 
 
 The mayor no longer searches all block-operation receipts of a modern farm for a legacy hay-storage migration when its bill contains no positive hay-block requirement. Actual old hay projects still check committed placements before any migration; paid cargo, withdrawal counters and waiting projects remain unchanged. The native control recorded 1,000 receipt searches across 100 modern-farm passes; the corrected path records zero and leaves the project record unwritten. Both source copies pass 13 related native checks, with 166 unit tests fresh in the trial and independent final. This removes an observed repeated filesystem query; it is not a measured percentage increase in overall village speed.
 
-The continuing natural village has not yet loaded this change or reached maximum progression.
+The continuing natural village resumed its current saved world with this change and all 1,942 runtime files matching the verified build. Farm funding continues through ordinary production; maximum progression remains unverified.
