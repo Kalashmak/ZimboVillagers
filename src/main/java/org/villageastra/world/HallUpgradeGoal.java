@@ -758,7 +758,10 @@ public final class HallUpgradeGoal extends Goal {
    op.putInt("deferred",op.getInt("deferred")+1);op.putInt("deferredAt",state.getInt("progress"));op.putLong("retry",gameTime+200);
    state.putInt("deferrals",state.getInt("deferrals")+1);save();stuckIndex=-1;stuckTicks=0;modeIndex=-1;worker.workStatus("column_in_the_way");return;
   }
-  if(!op.getBoolean("dismantle")&&!BuildingOrders.reconcile(l,op,site,state)){worker.workStatus("changed_target");return;}
+  if(!op.getBoolean("dismantle")&&!BuildingOrders.reconcile(l,op,site,state)){
+   if(ScaffoldLoss.finish(l,state,current,worker.getUUID())){save();worker.workStatus("construction_loss_recorded");return;}
+   worker.workStatus("changed_target");return;
+  }
   var planned=HallConstructionPlan.step(op);var target=planned.pos();
   if(planned.before().equals(planned.after())){op.putBoolean("done",true);state.putInt("progress",state.getInt("progress")+1);save();return;}
   // AD-112 (owner, 2026-09-19): a core or ring goes in only once its level's research of this building's branch is done; until then that

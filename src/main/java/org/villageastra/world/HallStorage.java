@@ -15,12 +15,13 @@ public final class HallStorage {
  private HallStorage(){}
  public static void ensure(ServerLevel l,SettlementData.Entry e){
   var hall=e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null);if(hall==null||HallUpgradeGoal.pending(l,e.settlement().id()))return;
-  var positions=java.util.List.of(BuildingPlacement.at(e,hall,1,1,4),BuildingPlacement.at(e,hall,1,1,3),BuildingPlacement.at(e,hall,5,1,2),BuildingPlacement.at(e,hall,5,1,3));
+  boolean castle=HallSite.castle(e.settlement());var stock=HallSite.stock(e);
+  var positions=castle?java.util.List.of(stock,stock.south(),stock.south(3),stock.south(4)):java.util.List.of(BuildingPlacement.at(e,hall,1,1,4),BuildingPlacement.at(e,hall,1,1,3),BuildingPlacement.at(e,hall,5,1,2),BuildingPlacement.at(e,hall,5,1,3));
   var anchor=positions.get(0);if(!l.hasChunkAt(anchor)||!(l.getBlockEntity(anchor) instanceof OwnedChestEntity master))return;
-  for(var pos:positions){if(!l.hasChunkAt(pos))return;var state=l.getBlockState(pos);if(!state.isAir()&&!state.is(VillageAstra.OWNED_CHEST.get()))return;if(!pos.equals(anchor)&&l.getBlockEntity(pos) instanceof OwnedChestEntity other&&!other.isEmpty())return;}
+  for(var pos:positions){if(!l.hasChunkAt(pos))return;var state=l.getBlockState(pos);if(castle&&!(l.getBlockEntity(pos) instanceof OwnedChestEntity))return;if(!state.isAir()&&!state.is(VillageAstra.OWNED_CHEST.get()))return;if(!pos.equals(anchor)&&l.getBlockEntity(pos) instanceof OwnedChestEntity other&&!other.isEmpty())return;}
   master.expand(108);
   for(int i=0;i<positions.size();i++){var pos=positions.get(i);var state=VillageAstra.OWNED_CHEST.get().defaultBlockState().setValue(ChestBlock.FACING,i<2?Direction.EAST:Direction.WEST).setValue(ChestBlock.TYPE,i%2==0?ChestType.RIGHT:ChestType.LEFT);state=BuildingPlacement.state(state,hall.rotation());
-   if(!l.getBlockState(pos).equals(state))l.setBlock(pos,state,2);
+   if(!castle&&!l.getBlockState(pos).equals(state))l.setBlock(pos,state,2);
    if(l.getBlockEntity(pos) instanceof OwnedChestEntity chest){var data=chest.getPersistentData();if(!data.contains("AstraHallMaster")){data.putLong("AstraHallMaster",anchor.asLong());data.putInt("AstraHallPage",i/2);data.putInt("AstraHallOffset",i*27);data.putUUID("AstraSettlement",e.settlement().id());chest.setChanged();}}
   }
  }

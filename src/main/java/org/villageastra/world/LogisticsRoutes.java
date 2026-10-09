@@ -24,7 +24,7 @@ public final class LogisticsRoutes {
  }
  public record Demand(String key,Predicate<ItemStack> matches,int target){}
  public record Route(Settlement.Building source,Settlement.Building destination,ItemStack item){}
- public static BlockPos position(SettlementData.Entry e,Settlement.Building b){return BuildingPlacement.at(e,b,1,1,4);}
+ public static BlockPos position(SettlementData.Entry e,Settlement.Building b){return b.type().equals("town_hall")&&HallSite.castle(e.settlement())?HallSite.stock(e):BuildingPlacement.at(e,b,1,1,4);}
  public static OwnedChestEntity chest(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
   var pos=position(e,b);if(!e.dimension().equals(l.dimension().location().toString())||!l.hasChunkAt(pos)||e.settlement().buildings().stream().noneMatch(x->x.equals(b))||!(l.getBlockEntity(pos) instanceof OwnedChestEntity c))return null;
   if(!c.getPersistentData().contains("AstraSettlement")){c.getPersistentData().putUUID("AstraSettlement",e.settlement().id());c.setChanged();}

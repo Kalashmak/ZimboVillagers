@@ -450,3 +450,14 @@ The continuing natural village loaded the workshop sensing cache from its curren
 ### Daily return during a jump
 
 Residents returning home while sick or going to a nearby bed keep their existing complete, supported return route during a dry jump. They still reject a route with a changed target, missing floor, water, blocked headroom or an incomplete journey; grounded route planning remains unchanged. Native checks cover those refusals, physical stairs, the resident’s own bed, distant beds and cave returns. The final integrated copies each passed 16 related game tests and 166 unit tests. An initial physical-test timing failure is retained in the development evidence. This correction has not yet been loaded into the continuing natural village; maximum progression remains unverified.
+
+
+### Autonomous early hall upgrades and temporary-block losses
+
+An NPC mayor now orders hall levels II and III after completing their research, using the same exact survey, full material bill and builder queue as a player. Existing construction, entrusted materials, damaged buildings and unloaded volumes retain their refusals. The survey also checks that its plaque chunk is loaded before reading it. An order grants neither civilization levels nor materials: the builders must still finish the physical renovation.
+
+A castle village now addresses the stock chest actually placed by its castle design. Its four existing chest halves share the established 108 stock slots without replacing their block states, merging occupied secondary inventories or creating missing furniture. The ordinary hall keeps its existing address and storage behavior. Old transactions at an incorrect castle address are not migrated.
+
+If a paid temporary scaffold is already missing when its removal is selected, builders can record the loss and finish bookkeeping without returning a nonexistent item. This requires the exact earlier paid placement and its committed file and chunk receipt. A genuinely recorded removal instead recovers its single normal return. Separate signed loss accounting can replay after a interrupted project save; the original approved operation chain remains intact. The cause of the observed scaffold loss has not been established.
+
+Both integrated source copies passed 33 native construction, hall, storage and progression checks plus 166 unit tests. The continuing natural village has not yet loaded these changes; maximum progression remains unverified.

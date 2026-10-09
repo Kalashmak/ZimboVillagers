@@ -96,6 +96,7 @@ public final class MayorPlanner {
   var s=e.settlement();if(!npcMayor(s))return "";
   var studied=BookResearch.autoSelect(l,e);
   if(HallUpgradeGoal.pending(l,s.id()))return studied.isEmpty()?"":"research:"+studied;
+  var hallUpgrade=earlyHall(l,e);if(!hallUpgrade.isEmpty())return hallUpgrade;
   for(var parent:List.copyOf(s.buildings()))for(var k:Annexes.of(parent.type())){
    if(!Annexes.refusal(l,e,parent,k).isEmpty())continue;var survey=Annexes.survey(l,e,parent,k);if(!survey.ok())continue;
    var cost=new LinkedHashMap<String,Integer>();var price=survey.state().getCompound("cost");price.getAllKeys().forEach(key->cost.put(key,price.getInt(key)));
@@ -108,6 +109,21 @@ public final class MayorPlanner {
   }
   var wall=wall(l,e);if(!wall.isEmpty())return "wall:"+wall;
   return studied.isEmpty()?"":"research:"+studied;
+ }
+ /** AD-464: the first two hall upgrades use the office's exact survey, not the generic hall_office refusal. */
+ private static String earlyHall(ServerLevel l,SettlementData.Entry e){
+  int kept=e.settlement().civilization().level();if(kept>=3)return "";var hall=Workshops.hall(e);if(hall==null)return "";
+  if(ArchitectureMigration.waiting(l,e,hall)||Sieges.besieged(l.getServer(),e.settlement().id())
+    ||BuildingTiers.built(e,hall)!=kept||BuildingTiers.level(l,e,hall)<kept
+    ||!BuildingTiers.missingResearch(l,e,"town_hall",kept+1).isEmpty())return "";
+  var plaque=BuildingSigns.position(e,hall);
+  if(plaque!=null&&!l.hasChunkAt(plaque))return "";
+  net.minecraft.nbt.CompoundTag quote;
+  try{quote=HallUpgradeGoal.preview(l,e);}catch(IllegalStateException ex){
+   if("Unloaded upgrade volume".equals(ex.getMessage())||"Hall is damaged or upgrade volume changed".equals(ex.getMessage()))return "";throw ex;
+  }
+  var cost=new LinkedHashMap<String,Integer>();var price=quote.getCompound("cost");price.getAllKeys().forEach(key->cost.put(key,price.getInt(key)));
+  return affordable(l,e,cost)&&HallUpgradeGoal.approve(l,e,quote)?"level:town_hall":"";
  }
  /** AD-112, AD-137 (addendum, owner 2026-09-23): a building's next level may be ordered when every item of its estimate either lies in the
   *  hall or is one the village can make more of from what it brings in (Workshops.producible, recursive: the workshops and annexes it has
