@@ -392,3 +392,14 @@ The continuing natural village exposed unused shovel recycling during school sup
 A living assigned miner with an existing authoritative mine-work claim can have its native body saved away from that work corridor. While its village is visited, recovery searches existing entity-region records asynchronously in bounded batches, checking the exact UUID, settlement, health, escort state and a maximum distance of 320 blocks. It never constructs a resident from these records or generates search terrain. Only after a matching saved body is found does the shared loading budget open its actual chunk with the ordinary temporary ticket. Native Minecraft persistence restores the original position, health and worn equipment. Foreign claims, unvisited villages, escorts, other settlements and work outside the recovery boundary are refused. The lookup does not replace the regular movement, cargo or mine-work records.
 
 Physical tests cover a saved miner away from its current mine route, preserved health and pick wear, eventual ticket expiry, and refusal for escorts and foreign settlements. The existing claim, visit and distance guards remain covered. Full natural progression still requires observation in the continuing world.
+
+
+### Repeated natural-resource sensing
+
+Resource sensing shares a verified record within one actual server tick and gives each caller an independent copy. Existing atomic-write revisions and file metadata invalidate the cache immediately; a subsequent server tick rereads the record. Deletion, replacement, distinct residents, caller mutations and checksum failures remain covered. A deterministic native test reduces 100 unchanged sensing requests from 100 reads to one. Work duration, resource costs and the village clock are unchanged; overall speed improvement still requires observation.
+
+The quarry regression now keeps the production recovery pair, because pit recovery yields to safe descent. It retains the original hollow, deadline and health assertion. The single-root delivery fixture now seals the searched depth and clears native hills: the previous stone plane left valid planting soil, and a signed receipt confirmed the harvested cane had actually been planted there. Production recovery and nursery behavior are unchanged.
+
+### Unsuitable generation candidates
+
+A sector survey can reject a candidate whose existing bounded layout draws cannot fit all lots, then continue its original81 candidate attempts. Previously that rejection threw an exception and could crash native chunk generation. The regression reproduces the exact failing seed, sector and layout identity. Existing allocated layouts, identities, generation envelopes and upgrade reserves remain unchanged. The complete24-test resource, transport and generation selection passes in both copies, alongside166 unit tests; earlier failures remain retained. Maximum natural progression still requires observation in the continuing world.

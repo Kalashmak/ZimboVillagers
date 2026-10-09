@@ -50,7 +50,26 @@ public final class NaturalSupplyGoal extends Goal {
  private BlockPos nextColumn(){advanceSearchArea();return searchArea().get(cursor++);}
  public NaturalSupplyGoal(ResidentEntity w){this(w,false);}public NaturalSupplyGoal(ResidentEntity w,boolean test){worker=w;this.test=test;setFlags(EnumSet.of(Flag.MOVE,Flag.LOOK));}
  public static Path path(ServerLevel l,UUID id){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-natural/"+id+".bin");}
- public static CompoundTag inspect(ServerLevel l,UUID id){var p=path(l,id);return Files.exists(p)?NbtRecord.read(p):new CompoundTag();}
+ private static long INSPECT_READS;
+ /** Number of actual verified NBT reads, for development diagnostics. */
+ public static synchronized long inspectReads(){return INSPECT_READS;}
+ private record SupplyStamp(int tick,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record SupplyRead(SupplyStamp stamp,CompoundTag tag){}
+ private static final Map<net.minecraft.server.MinecraftServer,Map<Path,SupplyRead>> SUPPLY_READS=new WeakHashMap<>();
+ /** Share verified sensing only inside one actual server tick; each caller receives its own copy. */
+ public static synchronized CompoundTag inspect(ServerLevel l,UUID id){
+  var p=path(l,id).toAbsolutePath().normalize();
+  if(!Files.exists(p)){var cache=SUPPLY_READS.get(l.getServer());if(cache!=null)cache.remove(p);return new CompoundTag();}
+  try{
+   var a=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);
+   var stamp=new SupplyStamp(l.getServer().getTickCount(),AtomicRecord.revision(p),a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());
+   var cache=SUPPLY_READS.computeIfAbsent(l.getServer(),server->new LinkedHashMap<Path,SupplyRead>(16,.75F,true){
+    @Override protected boolean removeEldestEntry(Map.Entry<Path,SupplyRead> entry){return size()>256;}
+   });
+   var cached=cache.get(p);if(cached!=null&&cached.stamp().equals(stamp))return cached.tag().copy();
+   INSPECT_READS++;var tag=NbtRecord.read(p);cache.put(p,new SupplyRead(stamp,tag));return tag.copy();
+  }catch(java.io.IOException ex){throw new IllegalStateException("Cannot read "+p,ex);}
+ }
  public static boolean active(CompoundTag t){return t.hasUUID("id")&&!t.getBoolean("complete");}
  public static boolean quarryActive(ServerLevel l,UUID worker){var t=inspect(l,worker);return active(t)&&t.getBoolean("quarry");}
  public static boolean eligible(Resident r){return r!=null&&r.alive()&&r.life()==Resident.Life.ADULT&&(r.profession()==Profession.MINER||r.profession()==Profession.FORESTER||r.profession()==null);}

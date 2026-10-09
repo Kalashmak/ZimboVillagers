@@ -3,6 +3,16 @@ import org.junit.jupiter.api.Test;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 class OrganicLotsTest {
+ @Test void boundedCandidateRejectionPreservesExistingAllocations(){
+  var failed=UUID.fromString("7df7eabf-14fb-3273-81e5-bf000396d621");
+  assertEquals(-1,OrganicLots.redraws(failed,OrganicLots.CURRENT));
+  assertTrue(OrganicLots.tryBuildings(failed,OrganicLots.CURRENT).isEmpty());
+  assertThrows(IllegalStateException.class,()->OrganicLots.buildings(failed));
+  for(int version=1;version<=OrganicLots.CURRENT;version++){
+   var id=new UUID(5,12);
+   assertEquals(OrganicLots.buildings(id,version),OrganicLots.tryBuildings(id,version).orElseThrow());
+  }
+ }
  @Test void variedConnectedSettlementEnvelopeAndStableIdentities(){
   var signatures=new HashSet<String>();
   for(int seed=0;seed<2000;seed++){

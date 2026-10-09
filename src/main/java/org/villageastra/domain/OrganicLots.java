@@ -29,9 +29,13 @@ public final class OrganicLots {
  public static int[] farmReserve(boolean west){return west?new int[]{6-FARM_RESERVE[2],FARM_RESERVE[1],6-FARM_RESERVE[0],FARM_RESERVE[3]}:FARM_RESERVE.clone();}
  public static List<Settlement.Building> buildings(UUID id){return buildings(id,CURRENT);}
  public static List<Settlement.Building> buildings(UUID id,int version){
+  return tryBuildings(id,version).orElseThrow(()->new IllegalStateException("Cannot allocate organic lot: "+id+" layout="+version));
+ }
+ /** A bounded survey may reject a candidate whose existing layout draws do not fit. */
+ public static Optional<List<Settlement.Building>> tryBuildings(UUID id,int version){
   // Version FIELD_MODULES and older never redraw: their pieces keep the positions they were generated with.
-  for(int salt=0;salt<=(version>=BARN_LOTS?REDRAWS:0);salt++){var lots=allocate(id,version,salt);if(lots!=null)return lots;}
-  throw new IllegalStateException("Cannot allocate organic lot");
+  for(int salt=0;salt<=(version>=BARN_LOTS?REDRAWS:0);salt++){var lots=allocate(id,version,salt);if(lots!=null)return Optional.of(lots);}
+  return Optional.empty();
  }
  /** How many salted redraws the allocation of this village takes (0 = the first draw fits), or -1 when none does. */
  public static int redraws(UUID id,int version){for(int salt=0;salt<=(version>=BARN_LOTS?REDRAWS:0);salt++)if(allocate(id,version,salt)!=null)return salt;return -1;}

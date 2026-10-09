@@ -23,7 +23,15 @@ public final class ReedRenewalGameTests {
   var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+(single?122880:106496),90,at.getZ());var forced=new ArrayList<net.minecraft.world.level.ChunkPos>();
   if(single){
    for(int x=(base.getX()-124)>>4;x<=(base.getX()+124)>>4;x++)for(int z=(base.getZ()-124)>>4;z<=(base.getZ()+124)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);}
-   for(int x=-124;x<=124;x++)for(int z=-124;z<=124;z++)l.setBlock(base.offset(x,0,z),Blocks.STONE.defaultBlockState(),2);
+   // The nursery also searches beneath banks. A single plane leaves native soil
+   // above it on hills and below it in caves, so the supposedly unavailable
+   // planting plot varied with the server seed. Seal its searched depth and
+   // clear the original surface before adding the one controlled living root.
+   for(int x=-124;x<=124;x++)for(int z=-124;z<=124;z++){
+    int top=l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,base.getX()+x,base.getZ()+z);
+    for(int y=-16;y<=0;y++)l.setBlock(base.offset(x,y,z),Blocks.STONE.defaultBlockState(),2);
+    for(int y=1;y<=Math.max(4,top-base.getY()+3);y++)l.setBlock(base.offset(x,y,z),Blocks.AIR.defaultBlockState(),2);
+   }
   }
   for(int x=(base.getX()-2)>>4;x<=(base.getX()+38)>>4;x++)for(int z=(base.getZ()-2)>>4;z<=(base.getZ()+10)>>4;z++){var cp=new net.minecraft.world.level.ChunkPos(x,z);if(!l.getForcedChunks().contains(cp.toLong())){l.setChunkForced(x,z,true);forced.add(cp);}l.getChunk(x,z);}
   for(int x=-2;x<=38;x++)for(int z=-2;z<=10;z++)for(int y=0;y<=4;y++)l.setBlock(base.offset(x,y,z),y==0?(single?Blocks.STONE:Blocks.DIRT).defaultBlockState():Blocks.AIR.defaultBlockState(),2);

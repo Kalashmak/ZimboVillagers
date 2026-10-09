@@ -26,8 +26,9 @@ public final class SettlementSectors {
    int x=Math.floorDiv(sx*SIZE+100+(tile%9)*100+random.nextInt(33)-16,16)*16;
    int z=Math.floorDiv(sz*SIZE+100+(tile/9)*100+random.nextInt(33)-16,16)*16;
    var id=UUID.nameUUIDFromBytes((seed+":"+x+":"+z).getBytes(java.nio.charset.StandardCharsets.UTF_8));
+   var lots=OrganicLots.tryBuildings(id,OrganicLots.CURRENT);if(lots.isEmpty())continue;
    int[] heights=new int[7];int index=0;boolean valid=true;
-   for(var b:OrganicLots.buildings(id)){
+   for(var b:lots.get()){
     int low=Integer.MAX_VALUE,high=Integer.MIN_VALUE,door=Integer.MIN_VALUE;int west=OrganicLots.west(b.type()),width=OrganicLots.width(b.type()),depth=OrganicLots.depth(b.type());
     int slope=b.type().equals("farm")||b.type().equals("forester")?2:3;
     for(int dx:new int[]{0,width/2,width-1}){for(int dz:new int[]{0,depth/2,depth-1}){
