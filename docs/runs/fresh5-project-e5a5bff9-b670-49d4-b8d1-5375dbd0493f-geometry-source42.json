@@ -1,0 +1,35 @@
+{
+  "world": "run-client-1\\saves\\astra-smoke-1791497240499",
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "checked_utc": "2026-10-09T23:12:03.923514+00:00",
+  "record_sha256": "8f666990babbfeaffc0d4fd8aec6f92ed5abef76d36df778dafc77bbb99b5fb3",
+  "origin": [
+    -2516,
+    68,
+    -2476
+  ],
+  "permanent_nonair_cells_checked": 468,
+  "stable_properties_checked": 499,
+  "differences": [],
+  "temporary_scaffolds_excluded_from_architecture": true,
+  "remaining_scaffolds": [],
+  "expected_air_with_live_nonair": [],
+  "registered_buildings": [
+    {
+      "offset": -27212913098750,
+      "wood": "birch",
+      "id": [
+        2010612603,
+        1826700499,
+        -1339236888,
+        1990588682
+      ],
+      "type": "restaurant",
+      "architectureRevision": 119
+    }
+  ],
+  "alive": 12,
+  "full_acceptance": false,
+  "limits": "Live saved region/NBT read and signed complete/funded record. No soil substitutions; expected-air cells must also match. Stable properties checked, dynamic open/occupied/connectivity omitted. Temporary scaffolding is excluded from permanent design and checked absent in all operation positions. Full natural maximum not verified.",
+  "live_saved_read": true
+}

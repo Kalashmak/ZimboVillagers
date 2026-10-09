@@ -553,3 +553,8 @@ The continuing village paid one dirt from its actual stock and used it to suppor
 ### Restaurant supplied entirely by the village
 
 The same natural village has now paid all489 restaurant materials, including the final two lanterns. Original receipts confirm actual cave iron mining, tool payment and return to the town hall; a subsequent paid nugget job and the fully funded project were retained. Construction has532 operations, and physical completion is still pending. The new adult recovered from illness and has67820/72000 recorded schooling ticks; graduation remains pending. No items, health, education or construction progress were granted. Maximum development remains unverified.
+
+
+### Restaurant finished; natural schooling completed
+
+The village finished all538 construction operations. Its saved restaurant matches468 permanent blocks and499 stable properties, has no remaining construction scaffolds, and is registered exactly once. A baker is assigned. The new adult naturally completed72000 schooling ticks and became educated. The mayor has independently started the next home project. Meal production and further development are still being observed;115 researches and civilizationVI remain unverified.

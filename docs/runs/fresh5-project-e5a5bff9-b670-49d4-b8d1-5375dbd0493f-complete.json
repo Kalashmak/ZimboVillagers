@@ -1,0 +1,29 @@
+{
+  "project": "e5a5bff9-b670-49d4-b8d1-5375dbd0493f",
+  "flag": "complete",
+  "design": "restaurant",
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "private_record": "build\\checkpoints\\fresh5-project-e5a5bff9-b670-49d4-b8d1-5375dbd0493f-complete.bin",
+  "sha256": "8f666990babbfeaffc0d4fd8aec6f92ed5abef76d36df778dafc77bbb99b5fb3",
+  "captured_utc": "2026-10-09T23:10:10.928590+00:00",
+  "index": 538,
+  "progress": 538,
+  "operation_count": 538,
+  "origin": [
+    -2516,
+    68,
+    -2476
+  ],
+  "cost": {
+    "minecraft:bricks": 5,
+    "villageastra:timber_scaffold": 3,
+    "minecraft:birch_door": 1,
+    "minecraft:birch_slab": 8,
+    "minecraft:birch_stairs": 44,
+    "minecraft:smooth_sandstone": 5,
+    "minecraft:birch_planks": 8,
+    "minecraft:birch_log": 1,
+    "minecraft:brick_slab": 1
+  },
+  "full_acceptance": false
+}

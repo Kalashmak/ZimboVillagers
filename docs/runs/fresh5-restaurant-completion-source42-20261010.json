@@ -1,0 +1,21 @@
+{
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "captured_utc": "2026-10-09T23:15:22.699460+00:00",
+  "saved_absolute_clock": 14015618,
+  "restaurant": "77d7837b-6ce1-3cd3-b02c-dde876a5f90a",
+  "baker": "b7f64649-5dfc-3d31-a5ba-c7d87ab6e976",
+  "next_project": "3e7a6791-5e30-4b40-94b5-d1951595a8a2",
+  "next_design": "home",
+  "next_initial_material_count": 419,
+  "alive": 12,
+  "historical_dead": 2,
+  "private_directory": "build/checkpoints/fresh5-restaurant-working-registration-source42",
+  "sha256": {
+    "next-project.bin": "4101616599c1ad5a8fe3d23cfda3e142906bb21693dd89c28d22e9de67b9619e",
+    "registry.dat": "8245e5ac647841b958833f854c9e0e4cca2cfe37582131f00a29d1748e66dac0"
+  },
+  "world_modified": false,
+  "maximum_verified": false,
+  "limitations": "Read-only saved registry and next signed project, captured separately. Confirms exactly one restaurant registration and its real assigned baker, not yet a finished meal. Physical architecture and natural graduation have separate evidence."
+}
