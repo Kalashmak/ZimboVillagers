@@ -27,7 +27,7 @@ public final class HomeRestGoal extends Goal {
  private boolean hour(){return !SleepGoal.night(Math.floorMod(day.getAsLong(),24000L));}
  @Override public boolean canUse(){
   if(++wait<CHECK)return false;wait=0;
-  if(npc.isPassenger()||npc.isSleeping()||npc.isInWater()||!hour())return false;
+  if(!npc.onGround()||npc.isPassenger()||npc.isSleeping()||npc.isInWater()||!hour())return false;
   long t=Math.floorMod(day.getAsLong(),24000L);
   if(eager==0&&npc.getRandom().nextInt(t>=EVENING?3:15)!=0)return false;
   var e=entry();if(e==null||Sieges.besieged(npc.getServer(),e.settlement().id()))return false;
@@ -55,7 +55,11 @@ public final class HomeRestGoal extends Goal {
   if(SeatEntity.seated(npc)){SeatEntity.keep(npc);left--;npc.workStatus("resting");return;}
   walked++;double dx=npc.getX()-(chair.getX()+.5),dz=npc.getZ()-(chair.getZ()+.5),dy=Math.abs(npc.getY()-chair.getY());
   if(dx*dx+dz*dz<2.6&&dy<=1.2){npc.getNavigation().stop();if(SeatEntity.sit((ServerLevel)npc.level(),chair,npc)==null)chair=null;return;}
-  if(--repath<=0||npc.getNavigation().isDone()){repath=20;npc.getNavigation().moveTo(chair.getX()+.5,chair.getY(),chair.getZ()+.5,.6);}
+  if(--repath<=0||npc.getNavigation().isDone()){
+   repath=20;var nav=npc.getNavigation();var route=nav.getPath();
+   // Keep the advancing safe path during stair jumps and ordinary twenty-tick updates.
+   if(nav.isDone()||!(route instanceof ResourceReturnRoute.ReturnPath)||!route.canReach()||!route.getTarget().equals(chair))nav.moveTo(ResourceReturnRoute.plan(npc,chair),.6);
+  }
  }
  @Override public void stop(){SeatEntity.stand(npc);npc.getNavigation().stop();chair=null;left=0;if("resting".equals(npc.workStatus()))npc.workStatus("");}
 }
