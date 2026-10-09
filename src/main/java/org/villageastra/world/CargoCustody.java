@@ -40,7 +40,7 @@ public final class CargoCustody {
  private static final Map<MinecraftServer,Map<UUID,Optional<CompoundTag>>> CACHE=new WeakHashMap<>();
  private static final Map<MinecraftServer,Map<UUID,String>> ADMITTED=new WeakHashMap<>();
  private static Path directory(MinecraftServer server){return server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-custody");}
- private static CompoundTag load(MinecraftServer server,UUID owner){return CACHE.computeIfAbsent(server,k->new HashMap<>()).computeIfAbsent(owner,k->{var file=directory(server).resolve(owner+".bin");if(!Files.exists(file))return Optional.empty();var t=NbtRecord.read(file);if(t.getInt("schema")!=1||!t.hasUUID("id")||!t.hasUUID("settlement")||!t.getUUID("owner").equals(owner))throw new IllegalStateException("Invalid custody record");return Optional.of(t);}).orElse(null);}
+ private static CompoundTag load(MinecraftServer server,UUID owner){return CACHE.computeIfAbsent(server,k->new HashMap<>()).computeIfAbsent(owner,k->{var file=directory(server).resolve(owner+".bin");if(!Files.exists(file))return Optional.empty();var t=NbtRecord.read(file);if(t.getInt("schema")!=1||!t.hasUUID("id")||!t.hasUUID("settlement")||!t.getUUID("owner").equals(owner))throw new IllegalStateException("Invalid custody record");if(t.contains("startedAt")&&(!t.contains("startedAt",Tag.TAG_LONG)||t.getLong("startedAt")<0)||t.contains("completedAt")&&(!t.contains("completedAt",Tag.TAG_LONG)||t.getLong("completedAt")<0||t.contains("startedAt",Tag.TAG_LONG)&&t.getLong("completedAt")<t.getLong("startedAt")))throw new IllegalStateException("Invalid custody clock boundary");return Optional.of(t);}).orElse(null);}
  private static void save(MinecraftServer server,CompoundTag t){NbtRecord.write(directory(server).resolve(t.getUUID("owner")+".bin"),t);CACHE.computeIfAbsent(server,k->new HashMap<>()).put(t.getUUID("owner"),Optional.of(t));}
  public static boolean dead(MinecraftServer server,UUID owner){var t=load(server,owner);return t!=null&&t.getBoolean("dead");}
  public static boolean pending(MinecraftServer server,UUID owner){var t=load(server,owner);return t!=null&&!t.getBoolean("complete");}
@@ -52,11 +52,13 @@ public final class CargoCustody {
   var previous=load(server,worker.getUUID());
   if(previous!=null&&previous.getBoolean("dead"))return previous;
   if(previous!=null&&!previous.getBoolean("complete")){
-   if(death){previous.putString("dimension",worker.level().dimension().location().toString());previous.putBoolean("dead",true);previous.putLong("deathPos",worker.blockPosition().asLong());save(server,previous);}return previous;
+   if(death){previous.putString("dimension",worker.level().dimension().location().toString());previous.putBoolean("dead",true);previous.putLong("deathPos",worker.blockPosition().asLong());save(server,previous);}ScienceWorks.pauseForCustody(server,previous);return previous;
   }
   var snapshot=JobCargo.snapshot(worker,death);if(!death&&snapshot.jobs().isEmpty())return null;
+  // Persist recovery of the preceding closed interval before this owner's record is replaced by another BEGIN.
+  if(previous!=null)ScienceWorks.pauseForCustody(server,previous);
   var t=new CompoundTag();t.putInt("schema",1);t.putUUID("id",UUID.randomUUID());t.putUUID("owner",worker.getUUID());t.putUUID("settlement",worker.settlementId());
-  t.putString("dimension",worker.level().dimension().location().toString());t.putString("sourceDimension",SettlementData.get(server).entry(worker.settlementId()).dimension());t.putBoolean("dead",death);t.putLong("deathPos",worker.blockPosition().asLong());t.put("jobs",snapshot.jobs());t.put("items",snapshot.items());save(server,t);return t;
+  t.putString("dimension",worker.level().dimension().location().toString());t.putString("sourceDimension",SettlementData.get(server).entry(worker.settlementId()).dimension());t.putBoolean("dead",death);t.putLong("deathPos",worker.blockPosition().asLong());t.put("jobs",snapshot.jobs());t.put("items",snapshot.items());t.putLong("startedAt",SettlementData.get(server).clock().ticks());save(server,t);ScienceWorks.pauseForCustody(server,t);return t;
  }
  public static boolean mayStartWork(ResidentEntity worker){
   return mayStartWork(worker,false);
@@ -138,13 +140,15 @@ public final class CargoCustody {
    }
    worker.getNavigation().stop();
    if(HallFundingCustody.rejoin(sourceLevel,t)){
-    t.putInt("index",items.size());t.putBoolean("complete",true);save(server,t);worker.displayWorkItem(ItemStack.EMPTY);return;
+    t.putInt("index",items.size());complete(server,t);worker.displayWorkItem(ItemStack.EMPTY);return;
    }
    if(!WorldJournal.deposit(level,Settlement.childId(id,"return/"+index),stock,item)){worker.workStatus("return_stock_full");return;}
    t.putInt("index",index+1);save(server,t);return;
   }
-  JobCargo.release(level,t.getUUID("owner"),t.getList("jobs",Tag.TAG_COMPOUND));t.putBoolean("complete",true);save(server,t);if(worker!=null)worker.displayWorkItem(ItemStack.EMPTY);
+  JobCargo.release(level,t.getUUID("owner"),t.getList("jobs",Tag.TAG_COMPOUND));complete(server,t);if(worker!=null)worker.displayWorkItem(ItemStack.EMPTY);
  }
+ /** The real village clock closes the signed interval once; replay never moves either boundary. */
+ private static void complete(MinecraftServer server,CompoundTag t){t.putBoolean("complete",true);t.putLong("completedAt",SettlementData.get(server).clock().ticks());save(server,t);}
  private static ServerLevel level(MinecraftServer server,CompoundTag t){return server.getLevel(ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,new ResourceLocation(t.getString("dimension"))));}
  public static void recover(MinecraftServer server){
   var dir=directory(server);if(!Files.exists(dir))return;

@@ -38,16 +38,45 @@ public final class ScienceWorks {
  static long progress(CompoundTag seat,long now){long ticks=seat.getLong("ticks");long since=seat.getLong("since");return since>=0&&now>since?ticks+(now-since):ticks;}
  /** The places held now: the laboratory's working level allows them and a scientist sits in each (read only, for the office). */
  public static int seated(ServerLevel l,SettlementData.Entry e){var lab=lab(e);if(lab==null)return 0;
-  try{var t=read(l,lab);if(t==null||t.getInt("schema")!=SCHEMA)return Math.min(scientists(e,lab).size(),ScienceBalance.seats(Math.max(1,lab.level())));
-   int n=0;for(var raw:t.getList("seats",Tag.TAG_COMPOUND))if(((CompoundTag)raw).hasUUID("worker"))n++;return n;}catch(RuntimeException ex){return 0;}}
+  try{var t=read(l,lab);if(t==null||t.getInt("schema")!=SCHEMA)return Math.min((int)scientists(e,lab).stream().filter(w->!CargoCustody.pending(l.getServer(),w)).count(),ScienceBalance.seats(Math.max(1,lab.level())));
+   int n=0;for(var raw:t.getList("seats",Tag.TAG_COMPOUND)){var seat=(CompoundTag)raw;if(seat.hasUUID("worker")&&!seat.getBoolean("custodyPaused")&&!CargoCustody.pending(l.getServer(),seat.getUUID("worker")))n++;}return n;}catch(RuntimeException ex){return 0;}}
  /** Status of a scientist's place, for the resident card: "science_writing", "science_chest_full" or "" (no place: the laboratory is full). */
- public static String status(ServerLevel l,SettlementData.Entry e,UUID worker){var lab=lab(e);if(lab==null)return "";var t=read(l,lab);if(t==null||t.getInt("schema")!=SCHEMA)return "";
-  for(var raw:t.getList("seats",Tag.TAG_COMPOUND)){var s=(CompoundTag)raw;if(s.hasUUID("worker")&&s.getUUID("worker").equals(worker))return s.getBoolean("full")?"science_chest_full":"science_writing";}return "";}
+ public static String status(ServerLevel l,SettlementData.Entry e,UUID worker){if(CargoCustody.pending(l.getServer(),worker))return "returning_cargo";var lab=lab(e);if(lab==null)return "";var t=read(l,lab);if(t==null||t.getInt("schema")!=SCHEMA)return "";
+  for(var raw:t.getList("seats",Tag.TAG_COMPOUND)){var s=(CompoundTag)raw;if(s.hasUUID("worker")&&s.getUUID("worker").equals(worker))return s.getBoolean("custodyPaused")?"returning_cargo":s.getBoolean("full")?"science_chest_full":"science_writing";}return "";}
  /** AD-154: the index of the place a scientist holds (his desk, LabDesks), or -1 without one. */
- public static int seat(ServerLevel l,SettlementData.Entry e,UUID worker){var lab=lab(e);if(lab==null)return -1;
+ public static int seat(ServerLevel l,SettlementData.Entry e,UUID worker){if(CargoCustody.pending(l.getServer(),worker))return -1;var lab=lab(e);if(lab==null)return -1;
   try{var t=read(l,lab);if(t==null||t.getInt("schema")!=SCHEMA)return -1;var seats=t.getList("seats",Tag.TAG_COMPOUND);
-   for(int i=0;i<seats.size();i++){var s=seats.getCompound(i);if(s.hasUUID("worker")&&s.getUUID("worker").equals(worker))return i;}}catch(RuntimeException ex){return -1;}
+   for(int i=0;i<seats.size();i++){var s=seats.getCompound(i);if(s.hasUUID("worker")&&s.getUUID("worker").equals(worker)&&!s.getBoolean("custodyPaused"))return i;}}catch(RuntimeException ex){return -1;}
   return -1;}
+ /** AD472: a durable cargo transfer pauses only its owner's scientific place at the signed village-clock boundary.
+  * The hook follows custody's durable BEGIN; advance repairs a missed hook, including a return completed between passes. */
+ public static void pauseForCustody(net.minecraft.server.MinecraftServer server,CompoundTag custody){
+  var e=SettlementData.get(server).entry(custody.getUUID("settlement"));if(e==null)return;
+  var l=server.getLevel(net.minecraft.resources.ResourceKey.create(net.minecraft.core.registries.Registries.DIMENSION,new net.minecraft.resources.ResourceLocation(e.dimension())));if(l==null)return;
+  var lab=lab(e);if(lab==null)return;var t=read(l,lab);if(t==null||t.getInt("schema")!=SCHEMA)return;
+  boolean dirty=false;for(var raw:t.getList("seats",Tag.TAG_COMPOUND)){var s=(CompoundTag)raw;
+   if(s.hasUUID("worker")&&s.getUUID("worker").equals(custody.getUUID("owner")))dirty|=custody(s,custody,SettlementData.get(server).clock().ticks());}
+  if(dirty)write(l,lab,t);
+ }
+ /** A legacy transfer has no historical clock boundary: keep the old counter at first observation and mark that limitation durably. */
+ private static boolean custody(CompoundTag seat,CompoundTag cargo,long now){
+  if(!cargo.hasUUID("id"))return false;boolean dirty=false;
+  if(!seat.hasUUID("custody")||!seat.getUUID("custody").equals(cargo.getUUID("id"))){
+   boolean legacy=!cargo.contains("startedAt",Tag.TAG_LONG);long boundary=legacy?now:cargo.getLong("startedAt"),since=seat.getLong("since");fold(seat,boundary);
+   seat.putUUID("custody",cargo.getUUID("id"));seat.putUUID("custodyOwner",cargo.getUUID("owner"));seat.putLong("custodyResumeFloor",since>=0?Math.max(boundary,since):boundary);seat.putBoolean("custodyPaused",true);
+   if(legacy){seat.putBoolean("custodyLegacy",true);seat.putLong("custodyObservedAt",now);}else{seat.remove("custodyLegacy");seat.remove("custodyObservedAt");}dirty=true;
+  }
+  if(cargo.getBoolean("complete")&&seat.getBoolean("custodyPaused")){
+   long completed=!seat.getBoolean("custodyLegacy")&&cargo.contains("completedAt",Tag.TAG_LONG)?cargo.getLong("completedAt"):now;
+   seat.putLong("since",seat.hasUUID("worker")&&!cargo.getBoolean("dead")&&!seat.getBoolean("full")?Math.max(completed,seat.getLong("custodyResumeFloor")):-1);seat.putBoolean("custodyPaused",false);dirty=true;
+  }
+  return dirty;
+ }
+ private static boolean custody(net.minecraft.server.MinecraftServer server,CompoundTag seat,long now){
+  var owner=seat.hasUUID("worker")?seat.getUUID("worker"):seat.hasUUID("custodyOwner")?seat.getUUID("custodyOwner"):null;
+  return owner!=null&&custody(seat,CargoCustody.inspect(server,owner),now);
+ }
+ private static void clearCustody(CompoundTag seat){for(var key:List.of("custody","custodyOwner","custodyResumeFloor","custodyPaused","custodyLegacy","custodyObservedAt"))seat.remove(key);}
  /** Every 40 ticks for every village (ServerEvents): the places, the works due and the ordered level-I payments. */
  public static void tick(net.minecraft.server.MinecraftServer server,long now){
   for(var e:List.copyOf(SettlementData.get(server).entries())){
@@ -68,10 +97,12 @@ public final class ScienceWorks {
   int places=ScienceBalance.seats(t.getInt("level"));var seats=seats(t,places);
   var free=new ArrayList<>(scientists(e,lab));
   // A place keeps its scientist while he stays; the others take the free places in order.
-  for(int i=0;i<seats.size();i++){var s=seats.getCompound(i);if(s.hasUUID("worker")){var w=s.getUUID("worker");if(i<places&&free.remove(w))continue;fold(s,now);s.remove("worker");dirty=true;}}
-  for(int i=0;i<places&&!free.isEmpty();i++){var s=seats.getCompound(i);if(s.hasUUID("worker"))continue;s.putUUID("worker",free.remove(0));s.putLong("since",now);dirty=true;}
+  for(int i=0;i<seats.size();i++){var s=seats.getCompound(i);dirty|=custody(l.getServer(),s,now);if(s.hasUUID("worker")){var w=s.getUUID("worker");if(i<places&&free.remove(w))continue;fold(s,now);s.remove("worker");dirty=true;}}
+  // Existing owners retain their stopped durable place; pending new owners cannot occupy a free desk.
+  free.removeIf(w->CargoCustody.pending(l.getServer(),w));
+  for(int i=0;i<places&&!free.isEmpty();i++){var s=seats.getCompound(i);if(s.hasUUID("worker"))continue;clearCustody(s);s.putUUID("worker",free.remove(0));s.putLong("since",now);dirty=true;dirty|=custody(l.getServer(),s,now);}
   int written=0;
-  for(int i=0;i<seats.size();i++){var s=seats.getCompound(i);long p=progress(s,now);if(p<ScienceBalance.WORK_TICKS)continue;
+  for(int i=0;i<seats.size();i++){var s=seats.getCompound(i);if(s.getBoolean("custodyPaused"))continue;long p=progress(s,now);if(p<ScienceBalance.WORK_TICKS)continue;
    if(chest==null)continue; // unloaded: the clock keeps counting and the works are written when the chest loads
    var pos=LogisticsRoutes.position(e,lab);boolean full=false;
    while(p>=ScienceBalance.WORK_TICKS){var id=Settlement.childId(lab.id(),"science/"+i+"/"+s.getInt("n"));

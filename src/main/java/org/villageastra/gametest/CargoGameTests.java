@@ -17,6 +17,17 @@ import java.util.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class CargoGameTests {
  private record Fixture(ServerLevel level,BlockPos origin,Settlement village,ResidentEntity worker,Container stock,UUID building,Path file){}
+ private static final net.minecraft.server.level.TicketType<UUID> BUILDER_TICKET=net.minecraft.server.level.TicketType.create("zimbovillagers_cargo_builder",Comparator.<UUID>naturalOrder());
+ private static void loadedBuilderFixture(GameTestHelper h,java.util.function.Consumer<Fixture> exercise){
+  var l=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var owner=UUID.randomUUID();var chunks=new HashSet<net.minecraft.world.level.ChunkPos>();
+  for(var pos:StarterVillage.layout(origin).keySet())chunks.add(new net.minecraft.world.level.ChunkPos(pos));
+  for(var cp:chunks){l.getChunkSource().addRegionTicket(BUILDER_TICKET,cp,3,owner);l.getChunk(cp.x,cp.z);}
+  h.startSequence().thenWaitUntil(()->h.assertTrue(chunks.stream().allMatch(cp->l.isPositionEntityTicking(new BlockPos(cp.getMinBlockX(),origin.getY(),cp.getMinBlockZ()))),"Starter fixture chunks must tick before builder admission")).thenExecute(()->{
+   try{var f=fixture(h);var r=f.village.residents().stream().filter(x->x.profession()==Profession.BUILDER).findFirst().orElseThrow();
+    h.assertTrue(l.getEntity(r.id()) instanceof ResidentEntity,"The actual canonical builder must be admitted before its paid work");exercise.accept(f);
+   }finally{for(var cp:chunks)l.getChunkSource().removeRegionTicket(BUILDER_TICKET,cp,3,owner);}
+  });
+ }
  private static Fixture fixture(GameTestHelper h){
   var level=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var village=StarterVillage.create(level,origin);
   var resident=village.residents().stream().filter(r->r.profession()==Profession.MINER).findFirst().orElseThrow();var worker=(ResidentEntity)level.getEntity(resident.id());
@@ -62,24 +73,24 @@ public final class CargoGameTests {
   f.worker.hurt(f.level.damageSources().genericKill(),1000);CargoCustody.tick(f.level.getServer());var pile=deathContainer(f);
   h.assertTrue(pile.countItem(Items.STONE_PICKAXE)==0&&pile.countItem(Items.COBBLESTONE)==1&&f.stock.countItem(Items.STONE_PICKAXE)==1,"Deposited tool and undelivered ore have one owner each");h.succeed();
  }
- @GameTest(template="empty",timeoutTicks=200) public static void hallDeathKeepsWorkButLosesItsFunding(GameTestHelper h){
-  var f=fixture(h);var resident=f.village.residents().stream().filter(r->r.profession()==Profession.BUILDER).findFirst().orElseThrow();var worker=(ResidentEntity)f.level.getEntity(resident.id());
+ @GameTest(template="empty",timeoutTicks=400) public static void hallDeathKeepsWorkButLosesItsFunding(GameTestHelper h){
+  loadedBuilderFixture(h,f->{var resident=f.village.residents().stream().filter(r->r.profession()==Profession.BUILDER).findFirst().orElseThrow();var worker=(ResidentEntity)f.level.getEntity(resident.id());
   var entry=new org.villageastra.server.SettlementData.Entry(f.village,f.level.dimension().location().toString(),f.origin);HallUpgradeGoal.request(f.level,entry);
   var file=f.level.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-upgrades/"+f.village.id()+".bin");var state=NbtRecord.read(file);state.putUUID("worker",worker.getUUID());NbtRecord.write(file,state);
   f.stock.setItem(10,new ItemStack(Items.SPRUCE_PLANKS,3));WorldJournal.takeAmount(f.level,Settlement.childId(state.getUUID("id"),"fund/0"),f.origin.offset(1,1,4),10,new ItemStack(Items.SPRUCE_PLANKS,3),3);
   worker.hurt(f.level.damageSources().genericKill(),1000);CargoCustody.tick(f.level.getServer());var t=CargoCustody.inspect(f.level.getServer(),worker.getUUID());var pos=BlockPos.of(t.getList("drops",Tag.TAG_COMPOUND).getCompound(0).getLong("pos"));var pile=(Container)f.level.getBlockEntity(pos);
   var reset=NbtRecord.read(file);h.assertTrue(pile.countItem(Items.SPRUCE_PLANKS)==3&&f.stock.countItem(Items.SPRUCE_PLANKS)==0,"Funding becomes finite death cargo, not a refund");
   h.assertTrue(!reset.getBoolean("funded")&&reset.getList("cargo",Tag.TAG_COMPOUND).isEmpty()&&!reset.getUUID("id").equals(state.getUUID("id")),"Remaining project requires fresh physical funding and receipts");
-  h.assertTrue(reset.getList("ops",Tag.TAG_COMPOUND).equals(state.getList("ops",Tag.TAG_COMPOUND)),"Construction geometry remains queued");h.succeed();
+  h.assertTrue(reset.getList("ops",Tag.TAG_COMPOUND).equals(state.getList("ops",Tag.TAG_COMPOUND)),"Construction geometry remains queued");h.succeed();});
  }
- @GameTest(template="empty",timeoutTicks=200) public static void completedBlockReceiptCannotBecomeDeathLoot(GameTestHelper h){
-  var f=fixture(h);var resident=f.village.residents().stream().filter(r->r.profession()==Profession.BUILDER).findFirst().orElseThrow();var worker=(ResidentEntity)f.level.getEntity(resident.id());
+ @GameTest(template="empty",timeoutTicks=400) public static void completedBlockReceiptCannotBecomeDeathLoot(GameTestHelper h){
+  loadedBuilderFixture(h,f->{var resident=f.village.residents().stream().filter(r->r.profession()==Profession.BUILDER).findFirst().orElseThrow();var worker=(ResidentEntity)f.level.getEntity(resident.id());
   var source=f.origin.offset(1,1,4);var target=f.origin.offset(8,1,8);var job=new BlockWork(f.level.dimension().location().toString(),source,target,Blocks.AIR.defaultBlockState(),Blocks.COBBLESTONE.defaultBlockState());worker.blockWork(job);
   worker.moveTo(source.getX()+1.5,source.getY(),source.getZ()+.5);job.step(worker,true);h.assertTrue(job.carried().getCount()==1,"Existing paid builder cargo");
   WorldJournal.place(f.level,Settlement.childId(job.id(),"place"),target,Blocks.AIR.defaultBlockState(),Blocks.COBBLESTONE.defaultBlockState());
   worker.hurt(f.level.damageSources().genericKill(),1000);CargoCustody.tick(f.level.getServer());var custody=CargoCustody.inspect(f.level.getServer(),worker.getUUID());
   h.assertTrue(custody.getList("items",Tag.TAG_COMPOUND).isEmpty()&&custody.getBoolean("complete"),"Placed material never drops from stale entity checkpoint");
-  h.assertTrue(f.stock.countItem(Items.COBBLESTONE)==63&&f.level.getBlockState(target).is(Blocks.COBBLESTONE),"One debit and one actual block remain");h.succeed();
+  h.assertTrue(f.stock.countItem(Items.COBBLESTONE)==63&&f.level.getBlockState(target).is(Blocks.COBBLESTONE),"One debit and one actual block remain");h.succeed();});
  }
  @GameTest(template="empty",timeoutTicks=200) public static void aNewJobCannotStartBeforeOldCargoReturn(GameTestHelper h){
   var f=fixture(h);held(f,false);f.village.assign(f.worker.getUUID(),Profession.PORTER,Settlement.childId(f.village.id(),"building/town_hall"));

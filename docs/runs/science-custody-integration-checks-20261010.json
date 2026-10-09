@@ -1,0 +1,52 @@
+{
+  "parallel_commit": "3aee5047f78bb846114209e8d59cb4ccb4a6032e",
+  "owned_files": {
+    "src/main/java/org/villageastra/world/ScienceWorks.java": "7b60aac3f34fab35f96a65ac4093e1e869596ddfddb297e3399607a49e7473f6",
+    "src/main/java/org/villageastra/world/CargoCustody.java": "9e1acfb6d8157cd5fa6c259cecb0a34d4852fd99c4a58ad95a9a1a656990ba1e",
+    "src/main/java/org/villageastra/gametest/ScienceCustodyGameTests.java": "1c08d9b297bced9e19eb3bdca6a41e3af57e44d252fe3de14bf9015a7f47f4cf",
+    "src/main/java/org/villageastra/gametest/AutonomousScienceStaffingGameTests.java": "72ab4d92a4c7fbb0bb4a8e5c96574be4243bc439e6a6e6eb1fee6ab897012abb",
+    "src/main/java/org/villageastra/gametest/CargoGameTests.java": "44d131eb65d5810e0b8f470954eb9b560e8c49cd0f94476409f1296e9c4df66a"
+  },
+  "checks": [
+    {
+      "log": "docs/runs/science-custody-integrated-private-20261010.log",
+      "sha256": "317a160f84a09143879ddcc47eb1e740d349916c7ccae2f279ebb5bf5bf41085",
+      "initial_native_passed": 49,
+      "initial_native_required": 50,
+      "corrected_clock_log": "docs/runs/science-custody-clock-private-20261010.log",
+      "corrected_clock_sha256": "b4b76b21ce97196862cdc25a06d849f8ffa6eb57ec1b37a999c920593eec3088",
+      "corrected_native_passed": 12,
+      "covered_native": 50,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "production_unchanged_after_initial_integration": true
+    },
+    {
+      "log": "docs/runs/science-custody-integrated-independent-20261010.log",
+      "sha256": "775ff4e0a871fa6b8f6514d052511dcb01527d56e9be5036cedb3e195daf8ef4",
+      "initial_native_passed": 49,
+      "initial_native_required": 50,
+      "corrected_clock_log": "docs/runs/science-custody-clock-independent-20261010.log",
+      "corrected_clock_sha256": "9e897f67ca6900ec44fc2c48ea058307a6caa6a3779fb17794d716af0c1aa78f",
+      "corrected_native_passed": 12,
+      "covered_native": 50,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "production_unchanged_after_initial_integration": true
+    }
+  ],
+  "clock_fixture_correction": "Only custody diagnostic anchors fully paid lab-II helper to current actual clock; six original callers still start at zero. Full fourteen work periods, payments, real route selection and exact paid-two-cargo oracle retained. Initial integrated both49/50+166, original and corrected source/logs retained.",
+  "old_production_corrected_builder_control": 2,
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "release_binary_updated": false,
+  "limits": "Signed real-clock custody boundaries pause exact scientific seat and recover missed writes. Earned ticks, worker and output sequence retained; new pending scientists cannot take seats. Death and full chest cannot restart time. Existing illness/offline policy unchanged. Legacy records retain old accounting at explicit first-observation marker; no exact historical legacy boundary is claimed. Own baseline and intermediate death failure retained; old mixed/singleton builder failures and old singleton PASS retained. Root fixture-only readiness correction precedes actual paid/death assertions. Main Source39 remains prior frozen runtime."
+}
