@@ -205,6 +205,26 @@ public final class ResourceWorkGoal extends Goal {
     /** AD-131: the kind of sapling the forester's planting under way sets (the oak when none is named). */
     private Item planted(){var kind=item(state.getString("species"));return kind==Items.AIR?Items.OAK_SAPLING:kind;}
     private Block saplingBlock(){return planted() instanceof BlockItem item?item.getBlock():Blocks.OAK_SAPLING;}
+    private BlockPos approachTarget;
+    private net.minecraft.world.phys.Vec3 approachAnchor;
+    private int approachSince;
+    /** Only a physically occupied next landing after five seconds without progress asks for a safe detour. */
+    private net.minecraft.world.level.pathfinder.Path occupiedApproach(BlockPos target){
+        if(!target.equals(approachTarget)||approachAnchor==null||worker.position().distanceToSqr(approachAnchor)>.25||worker.tickCount<approachSince){
+            approachTarget=target;approachAnchor=worker.position();approachSince=worker.tickCount;
+        }
+        var nav=worker.getNavigation();var path=nav.getPath();
+        if(path==null||nav.isDone()||!path.canReach()||!path.getTarget().equals(target))return null;
+        if(worker.tickCount-approachSince>=100){
+            var next=path.getNextNodePos();double half=worker.getBbWidth()/2D+.05;
+            var box=new net.minecraft.world.phys.AABB(next.getX()+.5-half,next.getY(),next.getZ()+.5-half,next.getX()+.5+half,next.getY()+worker.getBbHeight(),next.getZ()+.5+half);
+            if(next.distSqr(worker.blockPosition())<=4&&!worker.level().getEntities(worker,box,e->e.isAlive()&&e.isPushable()).isEmpty()){
+                var around=ResourceReturnRoute.plan(worker,target,Set.of(next));
+                if(around!=null&&around.canReach())return around;
+            }
+        }
+        return path instanceof ResourceReturnRoute.ReturnPath?path:null;
+    }
     private boolean near(BlockPos pos){
         if(miner){var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());var mine=e.settlement().workplace(worker.getUUID());
             var waypoint=MineApproach.waypoint(worker,e,mine,state,pos);
@@ -231,7 +251,12 @@ public final class ResourceWorkGoal extends Goal {
             // radius. Reissuing it keeps the same completed native path forever.
             // Ore and seal work require the exact foot cell before working.
             if(precise)worker.getNavigation().moveTo(worker.getNavigation().createPath(BlockPos.containing(pos.getX()+.5,feetY,pos.getZ()+.5),0),.8);
-            else worker.getNavigation().moveTo(pos.getX()+.5,feetY,pos.getZ()+.5,!miner&&!farmer?ForestBalance.walkSpeed(hutLevel()):.8);
+            else {
+                var detour=!miner?occupiedApproach(pos):null;
+                double speed=!miner&&!farmer?ForestBalance.walkSpeed(hutLevel()):.8;
+                if(detour!=null)worker.getNavigation().moveTo(detour,speed);
+                else worker.getNavigation().moveTo(pos.getX()+.5,feetY,pos.getZ()+.5,speed);
+            }
         }
         status(!miner&&!farmer&&state.getString("stage").equals("dig")?"walking_to_tree":"walking");return false;
     }
