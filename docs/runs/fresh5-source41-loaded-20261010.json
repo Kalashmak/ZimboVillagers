@@ -1,0 +1,52 @@
+{
+  "source_commit": "806cbf63ac7d38caf18d1c4c9fe6044e176cbafe",
+  "world": "run-client-1/saves/astra-smoke-1791497240499",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "resume_observed_ticks": 13627946,
+  "runtime_manifest": "docs/runs/full-growth-fresh5-runtime-segment41-20261009.json",
+  "runtime_files": 1975,
+  "pid": 28508,
+  "session": 43581,
+  "closed_previous": {
+    "log": "docs/runs/full-growth-fresh5-segment40-20261009-saved.log",
+    "sha256": "b3e1210dfd56049d2afc478ec5a5964c83ee819cc48efb681c39e20a04e607c6",
+    "last_sample": [
+      "13626479",
+      "1",
+      "18"
+    ],
+    "normal_exit": true,
+    "all_dimensions_saved": true,
+    "full_acceptance": false,
+    "source_commit": "4ddf20c844884ed2664cd92c86ff36b10130470a",
+    "checkpoint": "build/checkpoints/full-growth-fresh5-segment40-20261009"
+  },
+  "last_observation": [
+    "13627946",
+    "1",
+    "18",
+    "restaurant",
+    "false",
+    "false",
+    "0/532"
+  ],
+  "loaded_changes": [
+    "AD474 return paid scientific parcels from full laboratories",
+    "AD475 share resource work-state checks"
+  ],
+  "closed_world": {
+    "saved_active_ticks": 13636800,
+    "alive": 12,
+    "historical_dead": 2,
+    "child": {
+      "id": "2e012c7c-2733-3afd-9f15-13bc2fdcf6d8",
+      "born": 13614280,
+      "school_ticks": 8420,
+      "educated": false
+    }
+  },
+  "maximum_verified": false,
+  "live_log_hashed": false,
+  "release_binary_updated": false,
+  "clock_note": "Probe observedTicks/active are elapsed from the retained observation baseline. Saved activeTicks is the absolute settlement simulation clock; do not compare them as the same counter."
+}

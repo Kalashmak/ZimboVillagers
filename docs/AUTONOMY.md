@@ -528,3 +528,8 @@ Mining and forestry scheduling reuse the existing validated work-state reader. D
 ### Scientific parcels and full laboratories
 
 If scientists fill a laboratory while its porter is carrying paid scientific works, the porter returns the parcel through normal cargo handling and can resume other deliveries. Existing deposit records still recover at their original laboratory. Both hall and warehouse sources were tested with actual walking, conserved finite cargo and repeated journal recovery; normal delivery also passed. Both integrated copies passed31 native scenarios and166 fresh unit tests. The natural village still runs source40 and has not yet loaded this fix; its maximum development remains unverified.
+
+
+### Continuing village: source41 and a new child
+
+The same natural world resumed after a normal complete save; all1975 runtime files matched the tested build. Scientific parcel recovery and shared resource-state checks are now loaded. Before saving, the restaurant had466/489 materials, and the population had grown naturally to12 living residents. The new child had8420/72000 recorded school-attendance ticks; education remains incomplete. The village still has civilization I and18/115 researches. Earlier deaths remain recorded, and maximum autonomous development is unverified.
