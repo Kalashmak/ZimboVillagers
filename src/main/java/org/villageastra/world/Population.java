@@ -129,8 +129,10 @@ public final class Population {
   boolean changed=false;var school=schoolStation(l,e);int lesson=school==null?0:lessonCredit(l,e);
   var taught=school==null?Set.<java.util.UUID>of():classroom(l,e,school);
   for(var r:e.settlement().residents()){
-   if(!r.alive()||r.life()!=Resident.Life.CHILD)continue;
+   if(!r.alive())continue;
    if(taught.contains(r.id())){r.attendSchool(lesson);changed=true;}
+   if(r.life()==Resident.Life.ADULT){if(r.completeSchool(SCHOOL_REQUIRED))changed=true;continue;}
+   if(r.life()!=Resident.Life.CHILD)continue;
    if(r.born()>=0&&now-r.born()>=GROW){boolean cadet=r.cadet();if(r.schoolTicks()>=SCHOOL_REQUIRED)r.educate();r.growUp();
     if(cadet&&r.educated())r.trainMilitary();
     if(l.getEntity(r.id()) instanceof ResidentEntity npc)npc.refreshLife(r);changed=true;}
@@ -157,12 +159,28 @@ public final class Population {
  public static Set<java.util.UUID> classroom(ServerLevel l,SettlementData.Entry e,BlockPos school,int level){
   int seats=pupils(level),cadets=cadets(level);
   var present=new ArrayList<Resident>();
-  for(var r:e.settlement().residents())if(r.alive()&&r.life()==Resident.Life.CHILD&&!r.educated()&&l.getEntity(r.id()) instanceof ResidentEntity child
+  for(var r:e.settlement().residents())if(r.alive()&&!r.educated()&&(r.life()==Resident.Life.CHILD||continuingPupil(l,e,r))&&l.getEntity(r.id()) instanceof ResidentEntity child
     &&child.distanceToSqr(school.getX()+.5,school.getY(),school.getZ()+.5)<=SCHOOL_RADIUS*SCHOOL_RADIUS)present.add(r);
   present.sort(Comparator.comparingLong((Resident x)->x.born()).thenComparing(x->x.id()));
   var out=new LinkedHashSet<java.util.UUID>();
-  for(int i=0;i<Math.min(seats,present.size());i++){var r=present.get(i);out.add(r.id());if(i<cadets)r.enlistCadet();}
+  for(int i=0;i<Math.min(seats,present.size());i++){var r=present.get(i);out.add(r.id());if(i<cadets&&r.life()==Resident.Life.CHILD)r.enlistCadet();}
   return out;
+ }
+ /** Adults may finish a course begun in childhood, after completing entrusted physical work. */
+ public static boolean continuingPupil(ServerLevel l,SettlementData.Entry e,Resident r){
+  if(!r.alive()||r.life()!=Resident.Life.ADULT||r.educated()||r.schoolTicks()<=0||r.schoolTicks()>=SCHOOL_REQUIRED
+    ||r.profession()==Profession.TEACHER||r.sick()||r.missedMeals()>=HUNGRY
+    ||!(l.getEntity(r.id()) instanceof ResidentEntity body)||body.escortPlayer()!=null||body.blockWork()!=null
+    ||CargoCustody.pending(l.getServer(),r.id())||NaturalSupplyGoal.active(NaturalSupplyGoal.inspect(l,r.id()))
+    ||PorterWork.active(PorterWork.inspect(l,r.id())))return false;
+  return e.settlement().buildings().stream().map(b->Workshops.inspect(l,b.id())).noneMatch(t->t.getBoolean("physicalSmelt")
+    &&!t.getString("stage").equals("idle")&&t.hasUUID("worker")&&t.getUUID("worker").equals(r.id()));
+ }
+ /** Reserve only the school's available seats for the oldest unfinished adult courses. */
+ public static boolean continuingSeat(ServerLevel l,SettlementData.Entry e,Resident r){
+  return e.settlement().residents().stream().filter(x->continuingPupil(l,e,x))
+    .sorted(Comparator.comparingLong((Resident x)->x.born()).thenComparing(Resident::id))
+    .limit(pupils(BuildingLevels.best(l,e,"school"))).anyMatch(x->x.id().equals(r.id()));
  }
  /** AD-151: the seats of a class and of its military class at a school's working level (core effects pupils, cadets). */
  public static int pupils(int level){return org.villageastra.domain.CoreEffects.value("school","pupils",level);}
@@ -178,7 +196,7 @@ public final class Population {
  /** Station of a school whose assigned teacher is physically present. */
  public static BlockPos schoolStation(ServerLevel l,SettlementData.Entry e){
   for(var b:e.settlement().buildings()){if(!b.type().equals("school"))continue;var station=LogisticsRoutes.position(e,b);
-   for(var r:e.settlement().residents())if(r.alive()&&r.profession()==Profession.TEACHER&&e.settlement().workplace(r.id())!=null&&e.settlement().workplace(r.id()).id().equals(b.id())&&l.getEntity(r.id()) instanceof ResidentEntity teacher&&teacher.distanceToSqr(station.getX()+.5,station.getY(),station.getZ()+.5)<=SCHOOL_RADIUS*SCHOOL_RADIUS)return station;}
+   for(var r:e.settlement().residents())if(r.alive()&&Population.mayWork(r)&&!CargoCustody.pending(l.getServer(),r.id())&&r.profession()==Profession.TEACHER&&e.settlement().workplace(r.id())!=null&&e.settlement().workplace(r.id()).id().equals(b.id())&&l.getEntity(r.id()) instanceof ResidentEntity teacher&&teacher.escortPlayer()==null&&teacher.distanceToSqr(station.getX()+.5,station.getY(),station.getZ()+.5)<=SCHOOL_RADIUS*SCHOOL_RADIUS)return station;}
   return null;
  }
  private static int free(Settlement s,Settlement.Home h){return h.usable()?(int)(h.capacity()-s.occupancy(h.id())):0;}
@@ -245,7 +263,7 @@ public final class Population {
   // AD-139: a courier of the restaurant is a porter too, but not the stock's.
   // AD-147 §1.2: a warehouse that posts no courier (VI while its wolves carry) opens no early post either.
   if(stock!=null&&slots(s,stock)>0&&s.residents().stream().noneMatch(x->x.alive()&&x.profession()==Profession.PORTER&&!Dining.restaurant(s.workplace(x.id()))&&!SmithyDelivery.post(s.workplace(x.id()))))return new Opening(Profession.PORTER,stock);
-  boolean children=s.residents().stream().anyMatch(x->x.alive()&&x.life()==Resident.Life.CHILD);
+  boolean children=s.residents().stream().anyMatch(x->x.alive()&&!x.educated()&&(x.life()==Resident.Life.CHILD||x.life()==Resident.Life.ADULT&&x.schoolTicks()>0&&x.schoolTicks()<SCHOOL_REQUIRED));
   var order=new ArrayList<String>(List.of("farm","restaurant","mill","courier"));if(children)order.add(0,"school");order.addAll(List.of("forester","mine","carpentry","masonry","smithy","smithy_courier","livestock","laboratory","clinic","guard_house","archery","wall_tower","cartographer","caravan","expedition","engineering","barracks"));
   // AD-095: a trained adult takes a military post before any other work: that is what it drilled for.
   if(r.military()){var posts=List.of("guard_house","archery","wall_tower","barracks");order.removeAll(posts);order.addAll(0,posts);}

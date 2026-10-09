@@ -8,7 +8,7 @@ import org.villageastra.server.SettlementData;
 public final class EducationStaffing {
  private EducationStaffing(){}
  public static boolean tick(ServerLevel l,SettlementData.Entry e){
-  var s=e.settlement();if(s.governance().playerMayor()!=null||s.residents().stream().noneMatch(r->r.alive()&&r.life()==Resident.Life.CHILD&&!r.educated()))return false;
+  var s=e.settlement();if(s.governance().playerMayor()!=null||s.residents().stream().noneMatch(r->r.alive()&&!r.educated()&&(r.life()==Resident.Life.CHILD||r.life()==Resident.Life.ADULT&&r.schoolTicks()>0&&r.schoolTicks()<Population.SCHOOL_REQUIRED)))return false;
   var school=s.buildings().stream().filter(b->b.type().equals("school")&&Population.slots(s,b)>0
    &&s.residents().stream().noneMatch(r->r.alive()&&r.profession()==Profession.TEACHER&&b.equals(s.workplace(r.id())))).findFirst().orElse(null);
   if(school==null)return false;

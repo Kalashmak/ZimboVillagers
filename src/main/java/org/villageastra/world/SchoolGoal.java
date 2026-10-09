@@ -19,10 +19,15 @@ public final class SchoolGoal extends Goal {
  }
  /** A daytime journey to a physically present teacher is a child's duty, including outside its home neighborhood. */
  public static net.minecraft.core.BlockPos childStation(ServerLevel l,SettlementData.Entry e,Resident r){
-  return r.life()==Resident.Life.CHILD&&!r.educated()&&l.getDayTime()%24000<12000?Population.schoolStation(l,e):null;
+  return !r.educated()&&l.getDayTime()%24000<12000&&(r.life()==Resident.Life.CHILD||Population.continuingSeat(l,e,r))?Population.schoolStation(l,e):null;
  }
- @Override public boolean canUse(){var s=station();return s!=null&&resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)>9;}
- @Override public boolean canContinueToUse(){var s=station();return s!=null&&resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)>4;}
- @Override public void tick(){var s=station();if(s!=null&&resident.tickCount%20<2){routeRequests++;resident.getNavigation().moveTo(s.getX()+.5,s.getY(),s.getZ()+.5,.7);}}
+ private boolean adultStudent(){
+  if(!(resident.level() instanceof ServerLevel l)||resident.settlementId()==null)return false;
+  var e=SettlementData.get(l.getServer()).entry(resident.settlementId());var r=e==null?null:e.settlement().resident(resident.getUUID());
+  return r!=null&&r.life()==Resident.Life.ADULT&&r.profession()!=Profession.TEACHER;
+ }
+ @Override public boolean canUse(){var s=station();return s!=null&&(adultStudent()||resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)>9);}
+ @Override public boolean canContinueToUse(){var s=station();return s!=null&&(adultStudent()||resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)>4);}
+ @Override public void tick(){var s=station();if(s!=null&&adultStudent()&&resident.distanceToSqr(s.getX()+.5,s.getY(),s.getZ()+.5)<=4){resident.getNavigation().stop();return;}if(s!=null&&resident.tickCount%20<2){routeRequests++;resident.getNavigation().moveTo(s.getX()+.5,s.getY(),s.getZ()+.5,.7);}}
  @Override public void stop(){resident.getNavigation().stop();}
 }

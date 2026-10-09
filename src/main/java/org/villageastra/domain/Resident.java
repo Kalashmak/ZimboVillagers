@@ -65,6 +65,12 @@ public final class Resident {
         educated = true;
         return true;
     }
+    /** Finish a childhood course after growing up; initial adults still cannot be educated by educate(). */
+    public boolean completeSchool(long requiredTicks) {
+        if (requiredTicks <= 0 || life != Life.ADULT || educated || schoolTicks < requiredTicks) return false;
+        educated = true;
+        return true;
+    }
     public void growUp() { if (life == Life.CHILD) life = Life.ADULT; }
     public void assign(Profession role) {
         if (life != Life.ADULT || (role != null && role.educationRequired() && !educated) || (role != null && role.military() && !military))
@@ -98,7 +104,7 @@ public final class Resident {
     public void missedMeal(long activeTicks) { lastMeal = activeTicks; missedMeals++; }
     /** AD-111 interim freeze: a far village nobody cares about neither eats nor starves; the due passes and missed meals stay as they are. */
     public void skipMeal(long activeTicks) { lastMeal = activeTicks; }
-    public void attendSchool(long ticks) { if (life == Life.CHILD && !educated) schoolTicks += ticks; }
+    public void attendSchool(long ticks) { if (ticks > 0 && !educated && (life == Life.CHILD || life == Life.ADULT && schoolTicks > 0)) schoolTicks += ticks; }
     /** AD-151 (owner: "III opens the military class — a child grows up a soldier"): a child taught in the school's military class; it grows up
      *  trained for arms (no drill at the barracks) when it grows up educated. */
     private boolean cadet;

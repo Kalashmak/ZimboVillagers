@@ -281,16 +281,16 @@ public final class ResidentEntity extends PathfinderMob {
         goalSelector.addGoal(5, new HallUpgradeGoal(this));
         goalSelector.addGoal(5, new MayorSiteGoal(this));
         goalSelector.addGoal(5, new ShelterGoal(this));
+        // AD-152: the sick go to the hospital.
+        goalSelector.addGoal(5, new PatientGoal(this));
+        goalSelector.addGoal(5, new MedicinePickupGoal(this));
+        goalSelector.addGoal(5, new SchoolGoal(this));
         goalSelector.addGoal(5, new NaturalSupplyGoal(this));
         goalSelector.addGoal(5, new WorkerSupplyGoal(this));
         goalSelector.addGoal(6, new ResourceWorkGoal(this));
         goalSelector.addGoal(6, new ResearchGoal(this));
         goalSelector.addGoal(6, new PorterGoal(this));
         goalSelector.addGoal(6, new WorkshopGoal(this));
-        goalSelector.addGoal(6, new SchoolGoal(this));
-        // AD-152: the sick go to the hospital.
-        goalSelector.addGoal(5, new PatientGoal(this));
-        goalSelector.addGoal(5, new MedicinePickupGoal(this));
         goalSelector.addGoal(6, new DrillGoal(this));
         goalSelector.addGoal(6, new LivestockGoal(this));
         goalSelector.addGoal(6, new CartographerGoal(this));
