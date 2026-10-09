@@ -124,8 +124,7 @@ public final class NaturalSupplyGoal extends Goal {
  public static boolean primaryForestryPending(ServerLevel l,SettlementData.Entry e,ResidentEntity worker){
   var person=e.settlement().resident(worker.getUUID());var b=e.settlement().workplace(worker.getUUID());
   if(person==null||person.profession()!=Profession.FORESTER||b==null)return false;
-  var file=l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-work/"+b.id()+".bin");
-  if(!Files.exists(file))return false;var work=NbtRecord.read(file);
+  var work=ToolSupplyReserve.inspectWork(l,b.id());
   if(work.hasUUID("worker")&&work.getUUID("worker").equals(worker.getUUID())&&ResourceWorkGoal.forestDeliveryBlocked(l,e,b,work))return false;
   if(!work.getList("cargo",Tag.TAG_COMPOUND).isEmpty())return true;
   String stage=work.getString("stage"),status=work.getString("status");
@@ -149,7 +148,7 @@ public final class NaturalSupplyGoal extends Goal {
   if(primaryForestryPending(l,e,worker))return true;
   var person=e.settlement().resident(worker.getUUID());var b=e.settlement().workplace(worker.getUUID());
   if(person==null||person.profession()!=Profession.MINER||b==null)return false;
-  var file=MineWork.path(l,b.id());if(!Files.exists(file))return false;var work=NbtRecord.read(file);
+  var work=ToolSupplyReserve.inspectWork(l,b.id());
   if(miningDeliveryBlocked(l,e,worker,work))return false;
   // Do not pin every mining stage: missing materials or a better pick may require
   // a surface trip. Only delivery and already funded beam placement finish first.

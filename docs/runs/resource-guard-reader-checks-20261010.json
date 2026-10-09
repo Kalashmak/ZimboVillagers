@@ -1,0 +1,47 @@
+{
+  "ad": "AD475",
+  "manifest": {
+    "src/main/java/org/villageastra/world/NaturalSupplyGoal.java": {
+      "before_file": "docs/runs/resource-guard-reader-NaturalSupplyGoal-before-20261010.java.txt",
+      "sha256": "cb3bf69b867be9c2cdadcc8debe13f1e06d7fc027465676d529bad47a016ece9",
+      "after_sha256": "0931e923051dfef05e258538305c9429b0e39d6a539a5ee63b8a7abcb9cafdfd"
+    },
+    "src/main/java/org/villageastra/world/ResourceWorkGoal.java": {
+      "before_file": "docs/runs/resource-guard-reader-ResourceWorkGoal-before-20261010.java.txt",
+      "sha256": "85f2327283fa52229403de85807e6b98edb74d996e4db47c5e19d36cebb6e6e5",
+      "after_sha256": "a199c1dc408f168d559c6525f4f9188d58fa5d9eb03320cf9c7e77118fd87ed9"
+    },
+    "private_source": "bf5abc9bd0bf0ec019b9be68eaae302ba62a8dd1",
+    "public_source": "52da9ab375baa8a328eec0dca7220f0163541f60"
+  },
+  "checks": [
+    {
+      "log": "docs/runs/resource-guard-reader-private-20261010.log",
+      "sha256": "a20daa31ad3b6f69eff6a984a4632da4bbabeefb86bdf16784f98bc2b6c94400",
+      "native_passed": 9,
+      "fresh_units": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "docs/runs/resource-guard-reader-independent-20261010.log",
+      "sha256": "2e36fc30776aee80ca501c90665ac00731c91120a389615982f45eb51a4047b3",
+      "native_passed": 9,
+      "fresh_units": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "new_cache": false,
+  "changed_predicates": false,
+  "changed_writes": false,
+  "main_loaded": false,
+  "maximum_verified": false,
+  "limits": "Reuse of the existing validated per-actual-tick copied reader. Existing physical resource, cargo, tool and freshness scenarios passed. No controlled overall speed measurement; main Source40 is unchanged."
+}

@@ -518,3 +518,8 @@ Both integrated copies cover 50 native scenarios and166 fresh unit tests. Initia
 ### Continuing village: verified source 40
 
 The same natural village resumed at clock13456270 after a normal complete save. All1972 frozen runtime files matched the tested build, loading automatic laboratory staffing, custody-aware scientific time and shared tool-state inspection. Before shutdown the restaurant had453/489 materials; the village still had11 living residents, civilization I and18/115 researches. Earlier deaths and intermittent missed meals remain recorded. No resources, health, age or education were granted. Maximum autonomous development remains unverified.
+
+
+### Shared resource-state checks
+
+Mining and forestry scheduling reuse the existing validated work-state reader. Decisions about cargo, tools and available storage still inspect current conditions. Both copies passed nine existing native cases and166 fresh unit tests, covering full storage, physical delivery, timber support, emergency hand felling and immediate tool-state changes. No overall speed percentage is claimed. The continuing natural world still runs source40; maximum development remains unverified.

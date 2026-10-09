@@ -690,7 +690,7 @@ public final class ResourceWorkGoal extends Goal {
                 int free=Math.max(0,item.getCount()-LogisticsRoutes.reserve(b,item));
                 if(item.is(net.minecraft.tags.ItemTags.LOGS))wood+=4*free;else if(item.is(net.minecraft.tags.ItemTags.PLANKS))wood+=free;else if(item.is(Items.STICK))sticks+=free;
             }
-            if(b.type().equals("forester")){var f=MineWork.path(l,b.id());if(Files.exists(f)){var axe=ItemStack.of(org.villageastra.persistence.NbtRecord.read(f).getCompound("tool"));if(axe.is(net.minecraft.tags.ItemTags.AXES)&&axe.getDamageValue()<axe.getMaxDamage())return false;}}
+            if(b.type().equals("forester")){var axe=ItemStack.of(ToolSupplyReserve.inspectWork(l,b.id()).getCompound("tool"));if(axe.is(net.minecraft.tags.ItemTags.AXES)&&axe.getDamageValue()<axe.getMaxDamage())return false;}
         }
         return wood<3+(sticks>=2?0:2);
     }
