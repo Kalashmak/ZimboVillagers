@@ -392,12 +392,25 @@ public final class ResourceWorkGoal extends Goal {
         if(stage.equals("plant")){
             UUID placement=state.hasUUID("plantPlacement")?state.getUUID("plantPlacement"):Settlement.childId(id,"plant");
             if(WorldJournal.recoverExisting(level,placement)!=null){finishPlant();return;}
+            UUID seedReturn=Settlement.childId(id,"plant_return");
+            if(farmer&&WorldJournal.exists(level,seedReturn)){
+                if(WorldJournal.recoverExisting(level,seedReturn)!=null)finishPlant();else status("output_full");
+                return;
+            }
             BlockPos target=BlockPos.of(state.getLong("target"));
             var planting=(farmer?FarmCrops.pending(state).block:saplingBlock()).defaultBlockState();
             if(farmer&&(!level.getBlockState(target).isAir()||!planting.canSurvive(level,target))){
                 var entry=SettlementData.get(worker.getServer()).entry(worker.settlementId());
                 var alternate=FarmWorkArea.cells(level,entry,worker.getUUID()).stream().filter(level::hasChunkAt).filter(p->level.getBlockState(p).isAir()&&planting.canSurvive(level,p)).min(Comparator.comparingDouble(p->p.distSqr(worker.blockPosition())));
-                if(alternate.isEmpty()){status("occupied_planting_site");return;}
+                if(alternate.isEmpty()){
+                    // A trampled last plot needs the ordinary tilling job. Release this
+                    // sowing only after its borrowed seed physically returns to storage.
+                    if(!near(beside(output)))return;
+                    ItemStack seed=WorldJournal.recoverTake(level,id);
+                    if(seed.isEmpty()){status("missing_seeds");return;}
+                    if(!WorldJournal.deposit(level,seedReturn,output,seed)){status("output_full");return;}
+                    finishPlant();return;
+                }
                 state.putLong("target",alternate.get().asLong());state.putUUID("plantPlacement",UUID.randomUUID());save();return;
             }
             if(!near(target))return;

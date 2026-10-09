@@ -122,7 +122,7 @@ public final class JobCargo {
    if(miner&&!s.getBoolean("advanced"))MineWork.step(s);
   }
   if(stage.equals("sapling")&&farmer){var r=WorldJournal.recoverExisting(level,id);if(r!=null)add(held,taken(r));}
-  if(farmer&&stage.equals("plant")&&WorldJournal.recoverExisting(level,s.hasUUID("plantPlacement")?s.getUUID("plantPlacement"):Settlement.childId(id,"plant"))==null)add(held,farmer?new ItemStack(FarmCrops.pending(s).seed):taken(WorldJournal.recoverExisting(level,id)));
+  if(farmer&&stage.equals("plant")&&WorldJournal.recoverExisting(level,s.hasUUID("plantPlacement")?s.getUUID("plantPlacement"):Settlement.childId(id,"plant"))==null&&WorldJournal.recoverExisting(level,Settlement.childId(id,"plant_return"))==null)add(held,new ItemStack(FarmCrops.pending(s).seed));
   // AD-112: the beam is the one MineDrive gave the chosen cell — the stair's width of logs, or a gallery's one — under its own ids.
   int placed=s.getInt("support_placed"),fetched=s.getInt("support_fetched"),width=miner?MineWork.beam(s).count():s.getInt("width");
   if(stage.equals("support_fetch")||stage.equals("support_place"))for(var raw:MineTimber.carried(level,s))add(held,ItemStack.of((CompoundTag)raw));

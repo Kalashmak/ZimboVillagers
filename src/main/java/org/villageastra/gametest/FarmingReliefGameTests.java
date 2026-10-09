@@ -90,6 +90,8 @@ public final class FarmingReliefGameTests {
  @GameTest(template="empty",batch="bulk_food_recovery",timeoutTicks=200)
  public static void hungryCourierClearsPaidBreadInsteadOfBeingReassignedToAnotherHungryFarm(GameTestHelper h){
   var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  var chunks=PhysicalFixtureChunks.force(l,e.center(),-3,10,-3,10);
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(e.center().offset(2,1,4)),"Courier fixture entity chunks are ready")).thenExecute(()->{
   try{
    for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Body registered");}
    var hall=Workshops.hall(e);var mine=s.buildings().stream().filter(b->b.type().equals("mine")).findFirst().orElseThrow();for(var b:List.of(hall,mine))l.setBlock(LogisticsRoutes.position(e,b),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
@@ -110,12 +112,14 @@ public final class FarmingReliefGameTests {
    h.assertTrue(stock.getItem(107).isEmpty()&&PorterWork.cargo(l,PorterWork.inspect(l,courier.id())).getCount()==8,"Courier really withdrew eight surplus blocks");
    h.assertTrue(CargoCustody.mayStartFoodTransport(body),"Hunger does not abandon the paid non-food recovery parcel");at=LogisticsRoutes.position(e,mine);body.moveTo(at.getX()+1.5,at.getY(),at.getZ()+.5);PorterWork.step(body);
    h.assertTrue(LogisticsRoutes.chest(l,e,mine).countItem(Items.COBBLESTONE)==8,"Actual parcel reaches the mine exactly once");HandBread.advance(l,e,courier.id(),now+5000);h.assertTrue(stock.countItem(Items.BREAD)==HandBread.BREAD_PER_UNIT,"Original paid bread finally fits");
-  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());PhysicalFixtureChunks.release(l,chunks);}h.succeed();});
  }
 
  @GameTest(template="empty",batch="bulk_food_preparation",timeoutTicks=200)
  public static void grainWithoutABreadJobStillRetainsHungryCourierToClearThePantry(GameTestHelper h){
   var l=h.getLevel();var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),h.absolutePos(new BlockPos(2,3,2)));SettlementData.get(l.getServer()).add(e);
+  var chunks=PhysicalFixtureChunks.force(l,e.center(),-3,10,-3,10);
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(e.center().offset(2,1,4)),"Courier fixture entity chunks are ready")).thenExecute(()->{
   try{
    for(var r:s.residents()){var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(e.center().getX()+2.5,e.center().getY()+1,e.center().getZ()+4.5);h.assertTrue(l.addFreshEntity(body),"Body registered");}
    var hall=Workshops.hall(e);var mine=s.buildings().stream().filter(b->b.type().equals("mine")).findFirst().orElseThrow();for(var b:List.of(hall,mine))l.setBlock(LogisticsRoutes.position(e,b),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);
@@ -125,7 +129,7 @@ public final class FarmingReliefGameTests {
    h.assertTrue(CargoCustody.mayStartFoodTransport(body),"Hungry courier can clear pantry before emergency bread is baked");FarmingRelief.tick(l,e);h.assertTrue(courier.profession()==Profession.PORTER,"Grain-backed food recovery retains its only courier");
    stock.setItem(0,new ItemStack(Items.COBBLESTONE,64));h.assertTrue(!CargoCustody.mayStartFoodTransport(body),"No paid bread and no grain gives no emergency work exemption");stock.setItem(0,new ItemStack(Items.WHEAT,64));
    var dest=LogisticsRoutes.chest(l,e,mine);for(int slot=0;slot<dest.getContainerSize();slot++)dest.setItem(slot,new ItemStack(Items.DIRT,64));h.assertTrue(!CargoCustody.mayStartFoodTransport(body),"Full producer store gives no fictitious recovery route");
-  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());}h.succeed();
+  }finally{for(var r:s.residents()){var n=l.getEntity(r.id());if(n!=null)n.discard();}SettlementData.get(l.getServer()).remove(s.id());PhysicalFixtureChunks.release(l,chunks);}h.succeed();});
  }
 
 }
