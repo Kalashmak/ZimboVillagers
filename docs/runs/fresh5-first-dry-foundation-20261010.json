@@ -1,0 +1,174 @@
+{
+  "captured_utc": "2026-10-09T22:53:34.053183+00:00",
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "world": "run-client-1\\saves\\astra-smoke-1791497240499",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "job": "9cc2caa1-0b75-46d6-82c5-5793ee82c131",
+  "mine": "59448609-34ff-3aab-8226-f8592e87a464",
+  "target": [
+    -2425,
+    32,
+    -2353
+  ],
+  "stock": [
+    -2415,
+    67,
+    -2396
+  ],
+  "take": {
+    "schema": 1,
+    "committed": 1,
+    "pos": -663555277176765,
+    "before": {
+      "id": "minecraft:dirt",
+      "Count": 59
+    },
+    "kind": "take",
+    "id": [
+      -1303484115,
+      -1004392034,
+      -1667316606,
+      -1389306637
+    ],
+    "slot": 3,
+    "after": {
+      "id": "minecraft:dirt",
+      "Count": 58
+    },
+    "dimension": "minecraft:overworld"
+  },
+  "place": {
+    "schema": 1,
+    "committed": 1,
+    "pos": -666304056070112,
+    "before": {
+      "Name": "minecraft:air"
+    },
+    "kind": "block",
+    "id": [
+      -471339809,
+      -1908131177,
+      -2090212304,
+      1341539459
+    ],
+    "after": {
+      "Name": "minecraft:dirt"
+    },
+    "dimension": "minecraft:overworld"
+  },
+  "ownership": {
+    "mine": [
+      1497662985,
+      889141931,
+      -2111375271,
+      780641380
+    ],
+    "dryFloor": 1,
+    "receipt": [
+      -471339809,
+      -1908131177,
+      -2090212304,
+      1341539459
+    ]
+  },
+  "saved_region_cells": [
+    {
+      "pos": [
+        -2425,
+        32,
+        -2353
+      ],
+      "block": "minecraft:dirt"
+    },
+    {
+      "pos": [
+        -2425,
+        33,
+        -2353
+      ],
+      "block": "minecraft:air"
+    },
+    {
+      "pos": [
+        -2425,
+        34,
+        -2353
+      ],
+      "block": "minecraft:air"
+    },
+    {
+      "pos": [
+        -2425,
+        35,
+        -2353
+      ],
+      "block": "minecraft:air"
+    },
+    {
+      "pos": [
+        -2425,
+        36,
+        -2353
+      ],
+      "block": "minecraft:air"
+    },
+    {
+      "pos": [
+        -2425,
+        37,
+        -2353
+      ],
+      "block": "minecraft:air"
+    }
+  ],
+  "closed41_mine": {
+    "floorStep": 12,
+    "mineStage": "FLOOR",
+    "run": 0,
+    "cell": 0,
+    "stage": "choose",
+    "prospectFloor": 12,
+    "prospectLength": 240,
+    "prospectExtension": 1,
+    "tool": {
+      "id": "minecraft:stone_pickaxe",
+      "Count": 1,
+      "tag": {
+        "Damage": 6
+      }
+    }
+  },
+  "current_mine": {
+    "floorStep": 24,
+    "mineStage": "EAST",
+    "run": 34,
+    "cell": 0,
+    "stage": "dig",
+    "prospectFloor": 24,
+    "prospectLength": 48,
+    "prospectExtension": 1,
+    "tool": {
+      "id": "minecraft:stone_pickaxe",
+      "Count": 1,
+      "tag": {
+        "Damage": 96
+      }
+    }
+  },
+  "private_directory": "build/checkpoints/fresh5-first-dry-foundation-20261010",
+  "sha256": {
+    "closed-old-observer.log": "aa6a6803d4a9949c17a05861083403e26606560631cdb09d6992d3bd933b1380",
+    "closed41-mine.bin": "13873087357b1f14936d4e46cc5cfe533bc381894dc30cc62dc34f7d81036607",
+    "current-mine.bin": "3129e510b70b7b89caaeea9376eb60e693f50d31687971a89cdc726a56cb3743",
+    "ownership.bin": "3b695e8a00f18b4da35286e274a4ca0621ad8d5cf7b76e1647773309d4ef9fa1",
+    "seal_place.bin": "02fa1518e431226c557c73d89b2453c9790b833fef36797f4dba1e197543f76a",
+    "seal_take.bin": "ca049d69b9941b09d6c2d6cd22eba57e14e215ed2e2360e78c0e08208a6dea91",
+    "region/r.-5.-5.mca": "18aa4e5778a137901ba43345d25d816b094b33d9d2f4a47a9857a20483963404"
+  },
+  "retrospective_capture": true,
+  "original_pending_snapshot_available": false,
+  "main_world_modified": false,
+  "limitations": "Committed original receipts prove one real dirt debit and AIR-to-dirt placement. Ownership and saved region agree. The old read-only observer stopped on its water-only assertion without saving its pending snapshot; the observer now recognizes explicit dry foundations. Current mine, ownership and saved region are separately read live files, not an atomic world checkpoint. No claim of new iron delivery or maximum development.",
+  "maximum_verified": false,
+  "live_log_hashed": false
+}

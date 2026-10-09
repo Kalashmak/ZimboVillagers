@@ -543,3 +543,8 @@ Miners can now repair a missing dry foundation beneath a solid gallery face befo
 ### Continuing village: source42
 
 The same natural village resumed after a complete normal save with paid dry-foundation repairs loaded. All1976 runtime files match the tested build. Its restaurant has487/489 materials and still needs two lanterns; the next observation must confirm actual iron supply and construction. The child has61400/72000 recorded attendance ticks. Maximum development remains unverified.
+
+
+### First natural dry foundation
+
+The continuing village paid one dirt from its actual stock and used it to support a solid mine face over an air pocket. The committed debit and placement receipts, ownership record and saved terrain agree; excavation continued past the repaired cell. The restaurant still needs two lanterns, so iron supply and physical completion remain unverified. This retrospective capture has no original pending-work snapshot: the previous read-only observer assumed water and was corrected to recognize explicit dry foundations. Maximum development remains unverified.
