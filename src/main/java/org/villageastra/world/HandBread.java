@@ -36,7 +36,26 @@ public final class HandBread {
  public static Path path(ServerLevel l,UUID settlement){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-handbread/"+settlement+".bin");}
  /** The village's job: stage idle|fund|work|output, id, units, wheat, bread, paid, withdrawals, source, labor, needLabor, output, rest, breadTries,
   *  restTries, lastTick; baked (all jobs) and lastBaker. */
- public static CompoundTag inspect(ServerLevel l,UUID settlement){var p=path(l,settlement);return Files.exists(p)?NbtRecord.read(p):new CompoundTag();}
+ private static long INSPECT_READS;
+ /** Number of verified record reads, for native sensing checks. */
+ public static synchronized long inspectReads(){return INSPECT_READS;}
+ private record BreadStamp(int tick,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record BreadRead(BreadStamp stamp,CompoundTag tag){}
+ private static final Map<MinecraftServer,Map<Path,BreadRead>> BREAD_READS=new WeakHashMap<>();
+ /** AD468: only verified job sensing is shared in this actual server tick. Every authoritative write remains immediate. */
+ public static synchronized CompoundTag inspect(ServerLevel l,UUID settlement){
+  var p=path(l,settlement).toAbsolutePath().normalize();
+  if(!Files.exists(p)){var cache=BREAD_READS.get(l.getServer());if(cache!=null)cache.remove(p);return new CompoundTag();}
+  try{
+   var a=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);
+   var stamp=new BreadStamp(l.getServer().getTickCount(),AtomicRecord.revision(p),a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());
+   var cache=BREAD_READS.computeIfAbsent(l.getServer(),server->new LinkedHashMap<Path,BreadRead>(16,.75F,true){
+    @Override protected boolean removeEldestEntry(Map.Entry<Path,BreadRead> entry){return size()>256;}
+   });
+   var seen=cache.get(p);if(seen!=null&&seen.stamp().equals(stamp))return seen.tag().copy();
+   INSPECT_READS++;var tag=NbtRecord.read(p);cache.put(p,new BreadRead(stamp,tag));return tag.copy();
+  }catch(IOException ex){throw new IllegalStateException("Cannot read "+p,ex);}
+ }
  // ---- the gate ---------------------------------------------------------------------------------
  /** A station of this type is staffed: its own worker may work there now (eligible, and not stopped by hunger), or its machinery turns it. */
  private static boolean staffed(ServerLevel l,SettlementData.Entry e,String type){

@@ -1,0 +1,35 @@
+{
+  "owned_files": {
+    "src/main/java/org/villageastra/world/HandBread.java": "acaecdab247224db7016a5ec2d74deb7a0ad3b6eef2814707578700d88470001",
+    "src/main/java/org/villageastra/gametest/HandBreadReadCacheGameTests.java": "60a337703e02b2dd16334c127e426962854237b090d9dafe01fb0e8f817b904e"
+  },
+  "parallel_commit": "e120e5fa71a0f1c7dd298f1e33e8a40c34923bb1",
+  "checks": [
+    {
+      "log": "docs/runs/handbread-read-integrated-private-20261009.log",
+      "sha256": "2e1aaafcb85630c534b35c0bbdb392fe9fd0100ca0d85f88b777cfa376ce28f3",
+      "native_passed": 28,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "docs/runs/handbread-read-integrated-independent-20261009.log",
+      "sha256": "706d082786eb0cf48aec6f656d4e23808117debdd09d335acf58ead178acc9ee",
+      "native_passed": 28,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "release_binary_updated": false,
+  "limits": "Per actual server tick, normalized path, AtomicRecord revision and available file metadata; bounded weak server namespace; deep copied tags. No write, claim, labor, inventory, recipe or clock changes. Windows creation metadata replacement exercised, fileKey null. Independent real JVM runs and actual dimension sharing exercised; simultaneous two-server same-JVM isolation is a typed namespace invariant, not a claimed test. No natural-runtime/global speed percentage. Source38 remains previous frozen runtime."
+}

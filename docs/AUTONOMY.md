@@ -471,3 +471,10 @@ Both integrated source copies passed 43 native progression, annex, construction,
 
 
 The child born after the third completed farm grew naturally into an educated adult. The saved registry records 84,680 ticks of actual school attendance, adult life and completed education; age and education were not granted. The village has eleven living residents. Restaurant construction materials continue to be supplied and crafted by the village. Brief missed meals have occurred before the kitchen is complete and are retained in the growth evidence; later real meals clear them. This remains partial progression, not a maximum-development result.
+
+
+### Repeated bread-job checks
+
+Residents now share a verified bread-job read within the same real server tick and receive independent copies. A write or changed file metadata forces another read immediately; unchanged records are verified again on the next tick. The cache is bounded and separated by server. Food stocks, decisions, claims and all production transactions retain their original behavior.
+
+Native checks reduced 100 unchanged inspections to one file verification and the actual workshop/baking goal pair from two to one. Paid wheat, full baking labor, exactly-once output, worker handover, furnace priorities, damaged records and Windows file replacement were checked. Both integrated copies passed 28 native checks and 166 fresh unit tests. This is a reduction in repeated reads, with no measured overall speed percentage. The continuing natural village has not loaded this change yet; maximum progression remains unverified.
