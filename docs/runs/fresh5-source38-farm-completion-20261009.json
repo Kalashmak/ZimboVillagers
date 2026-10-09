@@ -1,0 +1,22 @@
+{
+  "source_commit": "44b8163a47c9a9d3dea80b4910088f764efad9a4",
+  "runtime_files": 1955,
+  "same_world": "run-client-1/saves/astra-smoke-1791497240499",
+  "resume_active_ticks": 12628900,
+  "completed_project": "4d5cb748-9c09-4e88-999a-7d2d517720dc",
+  "operations": 467,
+  "permanent_cells_checked": 329,
+  "stable_properties_checked": 293,
+  "field_soils_checked": 80,
+  "geometry_differences": 0,
+  "remaining_scaffolds": 0,
+  "registrations": 1,
+  "evidence": {
+    "docs/runs/fresh5-project-4d5cb748-9c09-4e88-999a-7d2d517720dc-funded.json": "a65bedefa6b81079dba571ca1596f33d7ad36f2ec9308b30431e96bff2da29c1",
+    "docs/runs/fresh5-project-4d5cb748-9c09-4e88-999a-7d2d517720dc-complete.json": "50b726cc48d2da0456cf671d05f6549b78a3b9244eac0aec75699aaff850f8ef",
+    "docs/runs/fresh5-project-4d5cb748-9c09-4e88-999a-7d2d517720dc-geometry-source38.json": "0de749a2a9b87bf58edcc97ae9c10fe2a8f0a734f80cf6b5b0e1bfbc60a8a524"
+  },
+  "previous_closed_log_sha256": "e488e6baa754c9a27b738398a3256a85639b68f43feaf3167d037ce4f2c0c700",
+  "maximum_verified": false,
+  "limits": "Same naturally developing village, no rollback, grants, revival or reduced cost/labor. Exact paid missing scaffold recorded separately as loss without refund or fabricated removal receipt. Physical completed level-I farm verified; full 115 research/civilization VI/terminal buildings still pending."
+}
