@@ -29,7 +29,9 @@ public final class FarmGameTests {
   h.assertTrue(kept.level()==2&&OwnershipEvents.disallowedPlacement(h.getLevel(),FarmField.cells(entry,kept).get(40)),"A farm kept at level II still refuses a block on its field");h.succeed();
  }
  private static void deathWithStage(GameTestHelper h,boolean till){
-  var level=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var s=StarterVillage.create(level,origin);var r=s.residents().stream().filter(x->x.profession()==Profession.FARMER).findFirst().orElseThrow();var worker=(ResidentEntity)level.getEntity(r.id());
+  var level=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var chunks=PhysicalFixtureChunks.force(level,origin,-12,45,-4,35);var s=StarterVillage.create(level,origin);var r=s.residents().stream().filter(x->x.profession()==Profession.FARMER).findFirst().orElseThrow();
+  h.startSequence().thenWaitUntil(()->h.assertTrue(level.getEntity(r.id()) instanceof ResidentEntity,"Actual fixture farmer is registered before death test")).thenExecute(()->{
+  var worker=(ResidentEntity)level.getEntity(r.id());try{
   var stock=(Container)level.getBlockEntity(origin.offset(1,1,4));var tool=WorldJournal.take(level,UUID.randomUUID(),origin.offset(1,1,4),slot(stock,Items.STONE_HOE),stock.getItem(slot(stock,Items.STONE_HOE)).copy());
   var id=UUID.randomUUID();var target=origin.offset(0,1,21);
   if(till){level.setBlock(target,Blocks.AIR.defaultBlockState(),3);level.setBlock(target.below(),Blocks.DIRT.defaultBlockState(),3);WorldJournal.place(level,id,target.below(),Blocks.DIRT.defaultBlockState(),Blocks.FARMLAND.defaultBlockState());}
@@ -40,6 +42,7 @@ public final class FarmGameTests {
   h.assertTrue(pile.countItem(Items.STONE_HOE)==1&&pile.getItem(slot(pile,Items.STONE_HOE)).getDamageValue()==(till?1:0),"Actual hoe and pending till durability retained once");
   h.assertTrue(pile.countItem(Items.WHEAT_SEEDS)==(till?0:1)&&pile.countItem(Items.OAK_SAPLING)==0,"Farmer cargo is wheat seed, not a forester sapling");
   h.assertTrue(stock.countItem(Items.WHEAT_SEEDS)==(till?16:15),"Existing seed withdrawal is neither refunded nor repeated");h.succeed();
+  }finally{for(var resident:s.residents()){var body=level.getEntity(resident.id());if(body!=null)body.discard();}SettlementData.get(level.getServer()).remove(s.id());PhysicalFixtureChunks.release(level,chunks);}});
  }
  @GameTest(template="empty",timeoutTicks=200) public static void farmerDeathPreservesActualSeedKind(GameTestHelper h){deathWithStage(h,false);}
  @GameTest(template="empty",timeoutTicks=200) public static void tillingBeforeCheckpointConsumesHoeOnce(GameTestHelper h){deathWithStage(h,true);}

@@ -208,13 +208,13 @@ public final class ResidentEntity extends PathfinderMob {
                     @Override public void prepare(net.minecraft.world.level.PathNavigationRegion region,net.minecraft.world.entity.Mob mob){coordinateNodes.clear();super.prepare(region,mob);}
                     @Override public void done(){super.done();coordinateNodes.clear();}
                     @Override public int getNeighbors(net.minecraft.world.level.pathfinder.Node[] neighbors,net.minecraft.world.level.pathfinder.Node from){
-                        int count=super.getNeighbors(neighbors,from);if(!reversibleRoute)return count;int kept=0;
+                        int count=super.getNeighbors(neighbors,from);int kept=0;
                         // The vanilla step-up recursion can still emit a two-block descent under an overhang.
                         // A one-way cave step can lead straight back onto the isolated
                         // ledge just left by controlled descent. Recovery memory must
                         // guide the expedition planner as well as wall climbing.
                         // Exclude unsafe floating headroom during search so a longer safe detour can still be found.
-                        for(int i=0;i<count;i++)if(Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos()))&&ShoreEscapeGoal.clearWaterNode(ResidentEntity.this,neighbors[i].asBlockPos()))neighbors[kept++]=neighbors[i];return kept;
+                        for(int i=0;i<count;i++)if(ResidentStepClearance.cropLanding(level,from,neighbors[i])&&(!reversibleRoute||Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos()))&&ShoreEscapeGoal.clearWaterNode(ResidentEntity.this,neighbors[i].asBlockPos())))neighbors[kept++]=neighbors[i];return kept;
                     }
                     @Override public net.minecraft.world.level.pathfinder.BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter blocks,int x,int y,int z,net.minecraft.world.entity.Mob mob){
                         var state=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y,z));
