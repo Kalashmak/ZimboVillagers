@@ -1,0 +1,41 @@
+{
+  "source_commit": "4ddf20c844884ed2664cd92c86ff36b10130470a",
+  "world": "run-client-1/saves/astra-smoke-1791497240499",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "resume_clock": 13456270,
+  "runtime_manifest": "docs/runs/full-growth-fresh5-runtime-segment40-20261009.json",
+  "runtime_files": 1972,
+  "pid": 43236,
+  "session": 47594,
+  "closed_previous": {
+    "log": "docs/runs/full-growth-fresh5-segment39-20261009-saved.log",
+    "sha256": "001b7047881c9f7897c890fd050248e5b2b4a11220c255d95eb4a0bed2eadea9",
+    "last_sample": [
+      "13455523",
+      "1",
+      "18"
+    ],
+    "normal_exit": true,
+    "all_dimensions_saved": true,
+    "full_acceptance": false,
+    "source_commit": "27f442518426e8d3c5ec32af5de17aa82e47c2fa",
+    "checkpoint": "build/checkpoints/full-growth-fresh5-segment39-20261009"
+  },
+  "last_observation": [
+    "13456270",
+    "1",
+    "18",
+    "restaurant",
+    "false",
+    "false",
+    "0/532"
+  ],
+  "loaded_changes": [
+    "AD471 automatic laboratory staffing",
+    "AD472 scientific progress across paid custody",
+    "AD473 shared work-record reader"
+  ],
+  "maximum_verified": false,
+  "live_log_hashed": false,
+  "release_binary_updated": false
+}
