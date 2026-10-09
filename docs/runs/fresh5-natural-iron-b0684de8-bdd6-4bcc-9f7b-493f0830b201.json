@@ -1,0 +1,75 @@
+{
+  "actor": "c5413250-60ae-3ac8-bfca-b9faca85e66d",
+  "job": "b0684de8-bdd6-4bcc-9f7b-493f0830b201",
+  "loan": "8dedd2a2-d7ef-4e6c-88f6-fc6bc49b13be",
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "target": [
+    -2439,
+    36,
+    -2418
+  ],
+  "receipt": {
+    "schema": 1,
+    "committed": 1,
+    "pos": -670152347033564,
+    "before": {
+      "Name": "minecraft:iron_ore"
+    },
+    "kind": "block",
+    "loot": [
+      {
+        "id": "minecraft:raw_iron",
+        "Count": 1
+      }
+    ],
+    "id": [
+      -1335341592,
+      -1110029364,
+      -1619310273,
+      137409025
+    ],
+    "after": {
+      "Name": "minecraft:air"
+    },
+    "dimension": "minecraft:overworld"
+  },
+  "tool_receipt": {
+    "schema": 1,
+    "committed": 1,
+    "pos": -663555277176765,
+    "before": {
+      "id": "minecraft:stone_pickaxe",
+      "Count": 1,
+      "tag": {
+        "Damage": 4
+      }
+    },
+    "kind": "take",
+    "id": [
+      2127798327,
+      -2056175799,
+      -1342406498,
+      -7223703
+    ],
+    "slot": 97,
+    "after": {
+      "id": "minecraft:air",
+      "Count": 0,
+      "tag": {
+        "Damage": 4
+      }
+    },
+    "dimension": "minecraft:overworld"
+  },
+  "private_directory": "build/checkpoints/fresh5-natural-iron-b0684de8-bdd6-4bcc-9f7b-493f0830b201",
+  "sha256": {
+    "first-observed.bin": "60d373d51b6f8f3ea4d2eb319ac547b6e389110b42bbc3b88f04024dc63dab3c",
+    "current-work.bin": "60d373d51b6f8f3ea4d2eb319ac547b6e389110b42bbc3b88f04024dc63dab3c",
+    "ore-receipt.bin": "6757514b0b2bff03f2389879a2731e4648ac742e22ce6d57dd2d90c38c3fea5c",
+    "tool-receipt.bin": "d4fb40b0450dbe9736e6932aadea2ad8cc5cdae5e1def23dc62a31ddc8b363bf"
+  },
+  "captured_utc": "2026-10-09T23:04:46.662616+00:00",
+  "world_modified": false,
+  "maximum_verified": false,
+  "limits": "Natural harvest and paid tool receipts only; actual return, smelting, crafting and construction require separate evidence. The first observed record may already contain paid work."
+}

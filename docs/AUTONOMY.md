@@ -548,3 +548,8 @@ The same natural village resumed after a complete normal save with paid dry-foun
 ### First natural dry foundation
 
 The continuing village paid one dirt from its actual stock and used it to support a solid mine face over an air pocket. The committed debit and placement receipts, ownership record and saved terrain agree; excavation continued past the repaired cell. The restaurant still needs two lanterns, so iron supply and physical completion remain unverified. This retrospective capture has no original pending-work snapshot: the previous read-only observer assumed water and was corrected to recognize explicit dry foundations. Maximum development remains unverified.
+
+
+### Restaurant supplied entirely by the village
+
+The same natural village has now paid all489 restaurant materials, including the final two lanterns. Original receipts confirm actual cave iron mining, tool payment and return to the town hall; a subsequent paid nugget job and the fully funded project were retained. Construction has532 operations, and physical completion is still pending. The new adult recovered from illness and has67820/72000 recorded schooling ticks; graduation remains pending. No items, health, education or construction progress were granted. Maximum development remains unverified.

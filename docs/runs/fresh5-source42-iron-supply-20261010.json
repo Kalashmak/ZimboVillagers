@@ -1,0 +1,244 @@
+{
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "captured_utc": "2026-10-09T23:06:16.478007+00:00",
+  "source_capture_utc": "2026-10-09T23:05:23.376853+00:00",
+  "natural_completed_job": "b0684de8-bdd6-4bcc-9f7b-493f0830b201",
+  "loan": "8dedd2a2-d7ef-4e6c-88f6-fc6bc49b13be",
+  "paid_delivery_cargo": [
+    {
+      "id": "minecraft:cobblestone",
+      "Count": 1
+    },
+    {
+      "id": "minecraft:raw_iron",
+      "Count": 1
+    },
+    {
+      "id": "minecraft:stone_pickaxe",
+      "Count": 1,
+      "tag": {
+        "Damage": 6
+      }
+    }
+  ],
+  "delivery_address": [
+    -2415,
+    67,
+    -2396
+  ],
+  "receipts": {
+    "earlier-iron": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -669877469122524,
+      "before": {
+        "Name": "minecraft:iron_ore"
+      },
+      "kind": "block",
+      "loot": [
+        {
+          "id": "minecraft:raw_iron",
+          "Count": 1
+        }
+      ],
+      "id": [
+        -1903856615,
+        419644205,
+        -1981493335,
+        2083774064
+      ],
+      "after": {
+        "Name": "minecraft:air"
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "latest-iron": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -670152347033564,
+      "before": {
+        "Name": "minecraft:iron_ore"
+      },
+      "kind": "block",
+      "loot": [
+        {
+          "id": "minecraft:raw_iron",
+          "Count": 1
+        }
+      ],
+      "id": [
+        -1335341592,
+        -1110029364,
+        -1619310273,
+        137409025
+      ],
+      "after": {
+        "Name": "minecraft:air"
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "latest-tool": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -663555277176765,
+      "before": {
+        "id": "minecraft:stone_pickaxe",
+        "Count": 1,
+        "tag": {
+          "Damage": 4
+        }
+      },
+      "kind": "take",
+      "id": [
+        2127798327,
+        -2056175799,
+        -1342406498,
+        -7223703
+      ],
+      "slot": 97,
+      "after": {
+        "id": "minecraft:air",
+        "Count": 0,
+        "tag": {
+          "Damage": 4
+        }
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "delivery-0": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -663555277176765,
+      "before": {
+        "id": "minecraft:cobblestone",
+        "Count": 3
+      },
+      "kind": "inventory",
+      "id": [
+        726208635,
+        2014919047,
+        -1988963462,
+        77479418
+      ],
+      "slot": 91,
+      "after": {
+        "id": "minecraft:cobblestone",
+        "Count": 4
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "delivery-1": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -663555277176765,
+      "before": {
+        "id": "minecraft:air",
+        "Count": 0
+      },
+      "kind": "inventory",
+      "id": [
+        -1077291237,
+        871709873,
+        -1080328128,
+        -1717785751
+      ],
+      "slot": 76,
+      "after": {
+        "id": "minecraft:raw_iron",
+        "Count": 1
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "delivery-2": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -663555277176765,
+      "before": {
+        "id": "minecraft:air",
+        "Count": 0,
+        "tag": {
+          "Damage": 4
+        }
+      },
+      "kind": "inventory",
+      "id": [
+        1390652143,
+        -1489159061,
+        -2100124201,
+        857769709
+      ],
+      "slot": 97,
+      "after": {
+        "id": "minecraft:stone_pickaxe",
+        "Count": 1,
+        "tag": {
+          "Damage": 6
+        }
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "nugget-input": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -663555277176765,
+      "before": {
+        "id": "minecraft:iron_ingot",
+        "Count": 1
+      },
+      "kind": "take",
+      "id": [
+        -772465864,
+        2101491571,
+        -2135740040,
+        1539660740
+      ],
+      "slot": 52,
+      "after": {
+        "id": "minecraft:air",
+        "Count": 0
+      },
+      "dimension": "minecraft:overworld"
+    }
+  },
+  "project": "e5a5bff9-b670-49d4-b8d1-5375dbd0493f",
+  "project_materials": 488,
+  "project_cost": 489,
+  "project_missing": {
+    "minecraft:lantern": 1
+  },
+  "current_craft": {
+    "recipe": "minecraft:iron_nugget",
+    "stage": "work",
+    "labor": 60,
+    "needLabor": 3600,
+    "paid": [
+      {
+        "id": "minecraft:iron_ingot",
+        "Count": 1
+      }
+    ],
+    "outputs": [
+      {
+        "id": "minecraft:iron_nugget",
+        "Count": 9
+      }
+    ]
+  },
+  "private_directory": "build/checkpoints/fresh5-restaurant-lantern-chain-source42",
+  "sha256": {
+    "delivery-0-receipt.bin": "093d312f6a365ea3a7e615f643737308365cde48152f968272d57c6c3ab151d2",
+    "delivery-1-receipt.bin": "ff91f12938edf5704c4565bb299f60714cdf84e2159a01a7461078bac5c6ad9e",
+    "delivery-2-receipt.bin": "d3bf82352c52ae6a059e745af374107a4a553f685e05b484a3ec01d7565e6f09",
+    "earlier-iron-receipt.bin": "fd6a76870b5e2293143a42b54c1e0829c5c3269c5ad4e9c07ac1c25734305034",
+    "hall.bin": "0ea4da5aedad5fd3079d05c4d3b1a44e308d7bbf451cbbba270e6f5b3c8e7eca",
+    "latest-iron-receipt.bin": "6757514b0b2bff03f2389879a2731e4648ac742e22ce6d57dd2d90c38c3fea5c",
+    "latest-tool-receipt.bin": "d4fb40b0450dbe9736e6932aadea2ad8cc5cdae5e1def23dc62a31ddc8b363bf",
+    "natural.bin": "58b2bce82d089742a9a0ca3715bde46e41204abccc7d7cc561983c40fc425b13",
+    "nugget-input-receipt.bin": "60c7f7383aaeabaf51cef9e9b4abed9573ce887e2046549f0363d06168121208",
+    "project.bin": "a4419387b6b01e7b76f7f4e573bfd40cfa5e6b1507e8d37cf0e9ed2f2bce4cb6"
+  },
+  "world_modified": false,
+  "maximum_verified": false,
+  "limitations": "Two committed natural cave iron harvests and one complete three-item delivery are verified. These cave cells are separate from the repaired gallery; no claim that the dry foundation directly yielded this iron. The earlier job final return record was not captured. Current project and workshop are separately read records, not an atomic checkpoint. The second lantern, physical restaurant completion and maximum progression remain pending at this capture."
+}

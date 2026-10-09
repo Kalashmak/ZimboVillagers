@@ -1,0 +1,19 @@
+{
+  "event": "adult",
+  "child": "2e012c7c-2733-3afd-9f15-13bc2fdcf6d8",
+  "born": 13614280,
+  "life": "ADULT",
+  "school_ticks": 66900,
+  "educated": false,
+  "sick": true,
+  "profession": null,
+  "absolute_saved_clock": 13895618,
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "private_record": "build/checkpoints/fresh5-child-2e012c7c-2733-3afd-9f15-13bc2fdcf6d8-adult.dat",
+  "sha256": "3188668c4e38a75496a6d7087040cc6f74c7619478a083b9c3ac041c1cb15c61",
+  "captured_utc": "2026-10-09T22:59:28.616953+00:00",
+  "world_modified": false,
+  "maximum_verified": false,
+  "limits": "First read-only saved-registry observation of this condition, not its exact transition tick. No claim that a profession proves its physical output."
+}
