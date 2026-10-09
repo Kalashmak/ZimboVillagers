@@ -360,3 +360,10 @@ When the last empty field plot becomes grass or dirt after a seed has been withd
 ### Local geometry before leasing a mineral route
 
 A mineral survey checks whether the loaded neighbourhood contains any dry supported working platform before loading a distant route corridor. Fully enclosed ore with no such platform advances the ordinary survey cursor. An unloaded neighbourhood remains eligible for the existing loading and route checks. Direct extraction and short covered quarry faces retain their original visibility, reversible movement, paid tools, safety and labor requirements.
+
+
+### Equipment recycling and real iron shortages
+
+A workshop can smelt equipment already in its available stock, but does not manufacture new tools or armor solely to recycle them into a nugget. Missing raw-input reports apply the same protection for a final product's accumulated ingredients as recipe planning. A chain awaiting its second nugget therefore requests additional raw iron when its one ingot must remain available for the chain; that ingot is not counted again as the source of its missing nugget. An extra ingot still makes nine nuggets through the ordinary lossless recipe. Fuel, yields, labor, demand priorities and paid item transfers are unchanged.
+
+The continuing natural village exposed unused shovel recycling during school supply. Separate recipe tests reproduced both manufacturing a new shovel for recycling and hiding the missing ore demand. These observations establish a supply defect; completion of the school and maximum village progression still require observation in the same world.

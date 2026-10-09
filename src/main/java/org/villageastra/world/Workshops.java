@@ -374,12 +374,21 @@ public final class Workshops {
  // Prefer shortages with real village suppliers over an uncraftable compressed block or loot item.
  // This ranks missing inputs only; an already supplied recipe remains usable regardless of its source.
  private static long unsupported(SettlementData.Entry e,List<Input> inputs){return inputs.stream().filter(in->Arrays.stream(in.ingredient().getItems()).noneMatch(s->e!=null?raw(e,s.getItem()):RAW.values().stream().anyMatch(items->items.contains(s.getItem()))||NaturalSupplyGoal.provides(s.getItem())||s.is(net.minecraft.tags.ItemTags.LOGS)||s.is(net.minecraft.tags.ItemTags.SAPLINGS)||s.is(net.minecraft.tags.ItemTags.WOOL))).mapToLong(Input::count).sum();}
+ // Equipment recycling consumes existing surplus equipment; it never warrants
+ // manufacturing new equipment solely to burn it for a single nugget.
+ private static boolean recyclesEquipment(Job job){
+  if(job.fuelTicks()<=0||job.inputs().size()!=1||job.outputs().size()!=1)return false;
+  var out=job.outputs().get(0);if(!out.is(Items.IRON_NUGGET)&&!out.is(Items.GOLD_NUGGET))return false;
+  var options=job.inputs().get(0).ingredient().getItems();
+  return options.length>0&&Arrays.stream(options).allMatch(s->s.isDamageableItem()||s.getItem() instanceof HorseArmorItem);
+ }
  /** Missing tools are production dependencies too; they remain reusable tools in the paid job. */
  private static List<Input> dependencies(Job job){if(job.tool()==null)return job.inputs();var all=new ArrayList<>(job.inputs());all.add(job.tool());return all;}
  private static Job seek(ServerLevel l,Spec spec,Container chest,Item target,int wanted,int depth,int bank,Map<PlanKey,Job> memo,Set<Item> visiting){
   for(var template:candidates(l,spec,target,wanted)){
    var job=withoutAncestors(template,visiting);if(job==null)continue;
    var ready=funded(l,spec,chest,job,bank,true);if(ready!=null)return ready;
+   if(recyclesEquipment(job))continue;
    // A mixed tag may use a real stocked alternative, but must not reopen an
    // unfunded forest of interchangeable wood recipes. Raw shortages are
    // published separately by leaves; reconsider when the gatherer supplies it.
@@ -401,8 +410,12 @@ public final class Workshops {
   var spec=spec(l,e,b);return spec==null?List.of():needs(l,e,spec,chest,wants,inspect(l,b.id()).getInt("fuelBank"));
  }
  private static List<Input> needs(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,List<Want> wants,int bank){
-  chest=chest instanceof PlanInventory?chest:new PlanInventory(chest);
-  for(var want:wants)for(var option:want.ingredient().getItems()){var result=new ArrayList<Input>();if(needs(l,e,spec,chest,option.getItem(),want.count(),0,bank,result))return result;}
+  var stock=chest instanceof PlanInventory planned?planned:new PlanInventory(chest);
+  for(int from=0;from<wants.size();){int end=groupEnd(wants,from);
+   stock.conversionKeep=conversionKeep(l,spec,stock,wants.subList(from,end));
+   for(var want:wants.subList(from,end))for(var option:want.ingredient().getItems()){var result=new ArrayList<Input>();if(needs(l,e,spec,stock,option.getItem(),want.count(),0,bank,result))return result;}
+   from=end;
+  }
   return List.of();
  }
  private static boolean needs(ServerLevel l,SettlementData.Entry e,Spec spec,Container chest,Item target,int wanted,int depth,int bank,List<Input> result){
@@ -415,8 +428,12 @@ public final class Workshops {
    // Shortage expansion retains its conservative cycle pruning. Unlike a
    // stocked job, an unfunded tag cannot establish which alternative will
    // actually be supplied; widening it here exhausts the finite search budget.
-   for(var job:jobs){if(job.inputs().stream().anyMatch(in->visiting.stream().anyMatch(item->in.matches(new ItemStack(item)))))continue;var path=new ArrayList<Input>();boolean possible=true;
-    for(var in:dependencies(job)){int missing=in.count()-available(chest,in);if(missing<=0)continue;List<Input> selected=null;long score=Long.MAX_VALUE,unavailable=Long.MAX_VALUE;
+   for(var job:jobs){if(job.inputs().stream().anyMatch(in->visiting.stream().anyMatch(item->in.matches(new ItemStack(item)))))continue;
+    if(recyclesEquipment(job)&&job.inputs().stream().anyMatch(in->available(chest,in)<in.count()))continue;
+    var path=new ArrayList<Input>();boolean possible=true;
+    for(var in:dependencies(job)){int held=available(chest,in);
+     if(chest instanceof PlanInventory stock&&reversible(l,spec,unit(job),stock))held=Math.max(0,held-stock.conversionKeep.getOrDefault(in.ingredient().getItems()[0].getItem(),0));
+     int missing=in.count()-held;if(missing<=0)continue;List<Input> selected=null;long score=Long.MAX_VALUE,unavailable=Long.MAX_VALUE;
      for(var option:in.ingredient().getItems()){var sub=leaves(l,e,spec,chest,option.getItem(),missing,depth+1,bank,visiting,memo,budget);if(sub==null)continue;long cost=sub.stream().mapToLong(Input::count).sum(),absent=unsupported(e,sub);if(absent<unavailable||absent==unavailable&&cost<score){score=cost;unavailable=absent;selected=sub;}}
      if(selected==null){possible=false;break;}path.addAll(selected);}
     if(!possible)continue;int fuel=fuel(chest)+bank;if(job.fuelTicks()>fuel)path.add(new Input(WorkshopFuel.demand(),Math.max(1,(job.fuelTicks()-fuel+1599)/1600)));
