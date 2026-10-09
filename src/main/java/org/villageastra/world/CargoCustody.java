@@ -115,6 +115,9 @@ public final class CargoCustody {
     return;
    }
    worker.getNavigation().stop();
+   if(HallFundingCustody.rejoin(sourceLevel,t)){
+    t.putInt("index",items.size());t.putBoolean("complete",true);save(server,t);worker.displayWorkItem(ItemStack.EMPTY);return;
+   }
    if(!WorldJournal.deposit(level,Settlement.childId(id,"return/"+index),stock,item)){worker.workStatus("return_stock_full");return;}
    t.putInt("index",index+1);save(server,t);return;
   }

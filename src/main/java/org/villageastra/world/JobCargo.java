@@ -40,7 +40,8 @@ public final class JobCargo {
   var hall=root(level).resolve("data/astra-upgrades/"+entry.settlement().id()+".bin");
   if(Files.exists(hall)){
    var state=NbtRecord.read(hall);
-   if(!state.getBoolean("complete")&&state.hasUUID("worker")&&state.getUUID("worker").equals(worker.getUUID())&&(death||resident==null||!resident.alive()||resident.profession()!=Profession.BUILDER))
+   if(!state.getBoolean("complete")&&state.hasUUID("worker")&&state.getUUID("worker").equals(worker.getUUID())&&(death||resident==null||!resident.alive()||resident.profession()!=Profession.BUILDER)
+      &&(death||resident==null||!resident.alive()||!HallFundingCustody.keep(jobLevel,entry.settlement(),state)))
     job(jobs,"hall",entry.settlement().id(),hall(jobLevel,state,items));
   }
   if(worker.blockWork()!=null&&!WorkClaim.retired(root(level).resolve("data/astra-journal"),worker.blockWork().id())&&(death||resident==null||resident.profession()!=Profession.BUILDER)){
