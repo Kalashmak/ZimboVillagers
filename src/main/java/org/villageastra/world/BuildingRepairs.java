@@ -43,6 +43,10 @@ public final class BuildingRepairs {
   // AD-112: a core stands when it is this building's core at the design's grade or above; a lower grade still lacks its rings.
   if(design.getBlock() instanceof BuildingCoreBlock)return now.is(design.getBlock())&&now.getValue(BuildingCoreBlock.GRADE)>=design.getValue(BuildingCoreBlock.GRADE);
   if(now.getBlock()==design.getBlock())return true;
+  // A paid repair of a legacy building can use local wood for the same
+  // component. A birch stair still closes the missing roof; do not repeatedly
+  // queue its replacement solely because the old drawing used dark oak.
+  if(BuildingWood.replace(now,"oak").getBlock()==BuildingWood.replace(design,"oak").getBlock())return true;
   // Soil lives: grass dies to dirt under a sapling, a hoe turns it to farmland, feet wear a path — it is still the yard's ground.
   if(soil(now)&&soil(design))return true;
   // AD-143: where the design has a chair or a table, any furniture stands — a chair or table of another wood, or the stair seat and fence

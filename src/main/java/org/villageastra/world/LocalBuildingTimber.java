@@ -19,9 +19,15 @@ public final class LocalBuildingTimber {
  }
  public static boolean requote(ServerLevel l,SettlementData.Entry e){
   if(e.settlement().governance().playerMayor()!=null||!HallUpgradeGoal.pending(l,e.settlement().id()))return false;
-  var state=HallUpgradeGoal.inspect(l,e.settlement().id());
+ var state=HallUpgradeGoal.inspect(l,e.settlement().id());
+  // Older generated buildings did not freeze a local timber species. An
+  // untouched repair may use the observed supply for its missing components;
+  // occupied geometry and already withdrawn materials stay exactly as they are.
+  boolean legacyRepair=state.getBoolean("repair")&&state.hasUUID("building")&&state.getInt("upgradeLevel")<=1
+      &&e.settlement().buildings().stream().anyMatch(b->b.id().equals(state.getUUID("building"))&&b.wood().isEmpty()
+          &&b.type().equals(BuildingBlueprints.base(state.getString("design")))&&BuildingPlacement.origin(e,b).asLong()==state.getLong("origin")&&b.rotation()==state.getInt("rotation"));
   if(!BuildingOrders.isBuilding(state)||state.getBoolean("funded")||state.getInt("index")!=0
-     ||state.hasUUID("building")||state.getBoolean("repair")||state.getBoolean("relocate")||!state.getString("wood").isEmpty())return false;
+     ||(state.hasUUID("building")||state.getBoolean("repair"))&&!legacyRepair||state.getBoolean("relocate")||!state.getString("wood").isEmpty())return false;
   String wood=BuildingWood.choose(l,e,state.getString("design"));if(wood.isEmpty())return false;
   var cost=new CompoundTag();var oldCost=state.getCompound("cost");
   for(var key:oldCost.getAllKeys()){String next=item(key,wood);cost.putInt(next,cost.getInt(next)+oldCost.getInt(key));}

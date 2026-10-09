@@ -19,7 +19,9 @@ public final class StarterTimberGameTests {
    var layout=BuildingWood.apply(BuildingBlueprints.layout("home",net.minecraft.core.BlockPos.ZERO),wood);
    h.assertTrue(layout.values().stream().noneMatch(s->{var id=net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(s.getBlock()).getPath();return id.contains("dark_oak")||id.contains("spruce");}),"Whole bill uses the supplied species");
    hall.clearContent();f.chestBlock().clearContent();
-   h.assertTrue(BuildingWood.choose(f.l,f.e,"home").isEmpty(),"No invented source in an empty forest and empty stores");
+   h.assertTrue(hall.isEmpty()&&f.chestBlock().isEmpty(),"Both actual timber stocks are empty");
+   var next=BuildingWood.choose(f.l,f.e,"home");
+   h.assertTrue(next.isEmpty(),"No invented source in an empty forest and empty stores: wood="+next+" searched="+ForestWork.searched(f.hutId)+" remembered="+ForestWork.inReach(f.hutId));
    h.assertTrue(MayorPlanner.plan(f.l,f.e)==null,"NPC cannot freeze an unsupported legacy timber bill");
    f.chestBlock().setItem(0,new ItemStack(Items.DARK_OAK_SAPLING));
    h.assertTrue(BuildingWood.choose(f.l,f.e,"home").isEmpty(),"A lone dark-oak sapling is not a growable source");
