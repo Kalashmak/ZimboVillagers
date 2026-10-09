@@ -468,3 +468,6 @@ Both integrated source copies passed 33 native construction, hall, storage and p
 Maximum-development validation now checks each registered fixed annex against its actual permanent plan, real parent, canonical location and turn, minimum parent working level and existing stock chest. Destroyed stations or structures cannot count as a completed service merely because the registry still contains them. Fixed annexes have no invented level-VI upgrade. Existing dynamic equipment states and working annexes during an ordinary parent renovation retain their behavior.
 
 Both integrated source copies passed 43 native progression, annex, construction, stock and return checks plus 166 fresh unit tests. The continuing natural village has not loaded this validation change yet; full maximum progression remains unverified.
+
+
+The child born after the third completed farm grew naturally into an educated adult. The saved registry records 84,680 ticks of actual school attendance, adult life and completed education; age and education were not granted. The village has eleven living residents. Restaurant construction materials continue to be supplied and crafted by the village. Brief missed meals have occurred before the kitchen is complete and are retained in the growth evidence; later real meals clear them. This remains partial progression, not a maximum-development result.

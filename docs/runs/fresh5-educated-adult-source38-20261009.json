@@ -1,0 +1,36 @@
+{
+  "source_commit": "44b8163a47c9a9d3dea80b4910088f764efad9a4",
+  "captured_utc": "2026-10-09T20:32:18.728740+00:00",
+  "snapshot_sha256": "ee828c7a836da18ee996c20e413049bdd13bab7701ec6ee0c9a61276d4c44e55",
+  "private_snapshot": "build\\checkpoints\\fresh5-educated-adult-source38-20261009\\villageastra.dat",
+  "resident": {
+    "schoolTicks": 84680,
+    "lastMeal": 12866680,
+    "born": 12650680,
+    "skin": 4,
+    "life": "ADULT",
+    "home": [
+      -637315459,
+      -1707528062,
+      -1264879953,
+      -527145969
+    ],
+    "educated": 1,
+    "recruit": 0,
+    "name": "\u0422\u0430\u0438\u0441 \u0417\u0430\u0440\u044f",
+    "drillTicks": 0,
+    "military": 0,
+    "id": [
+      -985583024,
+      1622031048,
+      -1077233158,
+      -897194387
+    ],
+    "homelessSince": -1,
+    "missedMeals": 0
+  },
+  "alive": 11,
+  "natural_birth_record": "docs/runs/fresh5-natural-child-source38-20261009.json",
+  "granted_age_or_education": false,
+  "maximum_verified": false
+}
