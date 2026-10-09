@@ -81,7 +81,8 @@ public final class ResourceExpedition {
   for(var e:SettlementData.get(l.getServer()).entries()){
    if(!e.dimension().equals(l.dimension().location().toString())||!visited(l,e,test))continue;
    for(var r:e.settlement().residents()){
-    if(!r.alive()||r.profession()!=org.villageastra.domain.Profession.MINER||l.getEntity(r.id())!=null)continue;
+    if(l.getEntity(r.id())!=null){SavedMinerLookup.forget(l,r.id());continue;}
+    if(!r.alive()||r.profession()!=org.villageastra.domain.Profession.MINER)continue;
     var b=e.settlement().workplace(r.id());
     if(b==null||!b.type().equals("mine")||!java.nio.file.Files.exists(MineWork.path(l,b.id())))continue;
     var work=MineWork.read(l,b);
@@ -91,6 +92,9 @@ public final class ResourceExpedition {
     var to=BuildingPlacement.at(e,b,access[0],access[1],access[2]);
     if(to.distSqr(e.center())>HomeNeighborhood.RECOVERY_REACH*HomeNeighborhood.RECOVERY_REACH
       ||to.getY()<l.getMinBuildHeight()||to.getY()>=l.getMaxBuildHeight())continue;
+    var saved=SavedMinerLookup.find(l,e,r.id());
+    if(saved!=null&&TouchLoad.ensure(l,saved)==TouchLoad.Touch.OK)
+     l.getChunkSource().addRegionTicket(MINE_RETURN,new net.minecraft.world.level.ChunkPos(saved),3,r.id());
     var start=new net.minecraft.world.level.ChunkPos(BuildingPlacement.origin(e,b));var end=new net.minecraft.world.level.ChunkPos(to);
     int steps=Math.max(Math.abs(end.x-start.x),Math.abs(end.z-start.z));
     for(int i=0;i<=steps;i++){
@@ -125,5 +129,5 @@ public final class ResourceExpedition {
    hold(npc);en.setValue(renewed(npc,trip,server.getTickCount()));
   }
  }
- public static void clear(){MOVING.clear();}
+ public static void clear(){MOVING.clear();SavedMinerLookup.clear();}
 }
