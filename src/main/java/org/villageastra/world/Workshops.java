@@ -117,7 +117,27 @@ public final class Workshops {
   for(var en:HALL_CRAFTS.entrySet())if(done.contains(en.getKey())&&listed(en.getValue(),s))return true;return false;}
  public static Collection<Spec> specs(){return SPECS.values();}
  public static Path path(ServerLevel l,UUID building){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-workshop/"+building+".bin");}
- public static CompoundTag inspect(ServerLevel l,UUID building){var p=path(l,building);return Files.exists(p)?NbtRecord.read(p):new CompoundTag();}
+ private static long INSPECT_READS;
+ /** Number of actual verified job reads, for development diagnostics. */
+ public static synchronized long inspectReads(){return INSPECT_READS;}
+ private record WorkshopStamp(int tick,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record WorkshopRead(WorkshopStamp stamp,CompoundTag tag){}
+ private static final Map<net.minecraft.server.MinecraftServer,Map<Path,WorkshopRead>> WORKSHOP_READS=new WeakHashMap<>();
+ /** Share verified job sensing within one actual server tick, never physical inventory or demand.
+  * Atomic writes invalidate immediately even when size and timestamp are unchanged; copies protect paid cargo. */
+ public static synchronized CompoundTag inspect(ServerLevel l,UUID building){
+  var p=path(l,building).toAbsolutePath().normalize();
+  if(!Files.exists(p)){var cache=WORKSHOP_READS.get(l.getServer());if(cache!=null)cache.remove(p);return new CompoundTag();}
+  try{
+   var a=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);
+   var stamp=new WorkshopStamp(l.getServer().getTickCount(),AtomicRecord.revision(p),a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());
+   var cache=WORKSHOP_READS.computeIfAbsent(l.getServer(),server->new LinkedHashMap<Path,WorkshopRead>(16,.75F,true){
+    @Override protected boolean removeEldestEntry(Map.Entry<Path,WorkshopRead> entry){return size()>256;}
+   });
+   var cached=cache.get(p);if(cached!=null&&cached.stamp().equals(stamp))return cached.tag().copy();
+   INSPECT_READS++;var tag=NbtRecord.read(p);cache.put(p,new WorkshopRead(stamp,tag));return tag.copy();
+  }catch(IOException ex){throw new IllegalStateException("Cannot read "+p,ex);}
+ }
  // ---- demand ------------------------------------------------------------------------------
  private static Settlement.Building stockBuilding(SettlementData.Entry e){return e.settlement().buildings().stream().filter(b->b.type().equals("warehouse")).findFirst().orElseGet(()->e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null));}
  public static Settlement.Building hall(SettlementData.Entry e){return e.settlement().buildings().stream().filter(b->b.type().equals("town_hall")).findFirst().orElse(null);}

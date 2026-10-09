@@ -438,3 +438,10 @@ The continuing natural world completed this house after the repair: the builder 
 The mayor no longer searches all block-operation receipts of a modern farm for a legacy hay-storage migration when its bill contains no positive hay-block requirement. Actual old hay projects still check committed placements before any migration; paid cargo, withdrawal counters and waiting projects remain unchanged. The native control recorded 1,000 receipt searches across 100 modern-farm passes; the corrected path records zero and leaves the project record unwritten. Both source copies pass 13 related native checks, with 166 unit tests fresh in the trial and independent final. This removes an observed repeated filesystem query; it is not a measured percentage increase in overall village speed.
 
 The continuing natural village resumed its current saved world with this change and all 1,942 runtime files matching the verified build. Farm funding continues through ordinary production; maximum progression remains unverified.
+
+
+### Verified workshop sensing
+
+Workshop decisions now share a verified copy of an unchanged job record within one actual server tick. The bounded cache checks record revisions and file metadata, returns independent nested copies, and revalidates on the next tick. Actual inventory and recipe demand remain live; paid operations and furnace writes invalidate immediately. The native control recorded 100 journal reads for 100 calls; the corrected version records one. Deletion, recreation, corrupt checksums, eviction and physical inventory changes remain covered. The isolated implementation passed eight workshop checks and 166 unit tests; both integrated source copies then passed 21 workshop, farm and planner checks. This is a local read reduction, not a measured percentage improvement in total simulation speed.
+
+The workshop sensing cache has not yet been loaded into the continuing natural village; maximum progression remains unverified.
