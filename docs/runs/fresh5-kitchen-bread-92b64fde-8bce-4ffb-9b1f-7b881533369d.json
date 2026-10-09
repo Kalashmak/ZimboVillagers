@@ -1,0 +1,212 @@
+{
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "restaurant": "77d7837b-6ce1-3cd3-b02c-dde876a5f90a",
+  "captured_utc": "2026-10-09T23:25:42.320666+00:00",
+  "job": "92b64fde-8bce-4ffb-9b1f-7b881533369d",
+  "workshop": {
+    "schema": 1,
+    "outputs": [
+      {
+        "id": "minecraft:bread",
+        "Count": 2
+      }
+    ],
+    "inputs": [
+      {
+        "count": 4,
+        "ingredient": "{\"item\":\"villageastra:flour\"}"
+      }
+    ],
+    "recipe": "custom:bread",
+    "building": [
+      2010612603,
+      1826700499,
+      -1339236888,
+      1990588682
+    ],
+    "needLabor": 320,
+    "labor": 320,
+    "withdrawals": 5,
+    "lastTick": 14115994,
+    "output": 1,
+    "stage": "idle",
+    "paid": [
+      {
+        "id": "villageastra:flour",
+        "Count": 4
+      },
+      {
+        "id": "minecraft:stick",
+        "Count": 1
+      },
+      {
+        "id": "minecraft:stick",
+        "Count": 1
+      },
+      {
+        "id": "minecraft:stick",
+        "Count": 1
+      },
+      {
+        "id": "minecraft:stick",
+        "Count": 1
+      }
+    ],
+    "workSince": 14115634,
+    "id": [
+      -1833545762,
+      -1949413381,
+      -1692435576,
+      355677853
+    ],
+    "fuelTicks": 400
+  },
+  "receipts": {
+    "input/0": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "villageastra:flour",
+        "Count": 4
+      },
+      "kind": "take",
+      "id": [
+        1547448655,
+        -1069730624,
+        -1263389378,
+        -1378674876
+      ],
+      "slot": 2,
+      "after": {
+        "id": "minecraft:air",
+        "Count": 0
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/1": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 16
+      },
+      "kind": "take",
+      "id": [
+        2096295048,
+        -1291176906,
+        -1822915073,
+        1678592370
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 15
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/2": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 15
+      },
+      "kind": "take",
+      "id": [
+        -919663003,
+        -257148856,
+        -1656098125,
+        2050238699
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 14
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/3": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 14
+      },
+      "kind": "take",
+      "id": [
+        -1192232463,
+        -970508966,
+        -1428632145,
+        -1225114787
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 13
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/4": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 13
+      },
+      "kind": "take",
+      "id": [
+        -643501640,
+        -188665313,
+        -1965032882,
+        -1374895970
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 12
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "output/0": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:bread",
+        "Count": 10
+      },
+      "kind": "inventory",
+      "id": [
+        1834297337,
+        -1925500281,
+        -1748354940,
+        -402123466
+      ],
+      "slot": 1,
+      "after": {
+        "id": "minecraft:bread",
+        "Count": 12
+      },
+      "dimension": "minecraft:overworld"
+    }
+  },
+  "private_directory": "build/checkpoints/fresh5-kitchen-bread-92b64fde-8bce-4ffb-9b1f-7b881533369d",
+  "sha256": {
+    "workshop.bin": "2183b034ebe51652d2b181f4552fe77d192309f37f900fc47515b7f3646bbcd6",
+    "input-0.bin": "d5250a670f45fc1a79823256e695db9c2bcf0cde2457366296af1dd16f7e3a5e",
+    "input-1.bin": "22d067d7721aa8da4829f48176482dd7a6bab624e29171a48b6839a2458cd9dd",
+    "input-2.bin": "fbf12fa2e7a78a7196113c62fefdc5d4409639ac33eec4f82a61322b9059963b",
+    "input-3.bin": "6cdeaf864ea514c5a1b83400e23fc5fa3907588b3af24ca11cdc61199369b6ea",
+    "input-4.bin": "039a3fb48b60f3a2146049ae9aca096fafaa4c2a143a2dd9c46bc8b8cbaa34c7",
+    "output-0.bin": "58e694c191a4c1d1a0c3521f38fdee147018a1a540793f665156672493cb6581"
+  },
+  "world_modified": false,
+  "maximum_verified": false,
+  "limitations": "Read-only completed kitchen batch and related committed receipts. Captured independently of the mutable registry and regions; no assertion about uninterrupted food sufficiency."
+}

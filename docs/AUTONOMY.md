@@ -563,3 +563,8 @@ The village finished all538 construction operations. Its saved restaurant matche
 ### First paid restaurant meal
 
 The new restaurant independently baked two bread. Six committed receipts confirm four flour and four sticks consumed from its own chest, followed by an exact bread increase from13 to15. The town hall is also producing flour from wheat before a mill becomes available. The completed kitchen-work record was observed but not retained before the next job replaced it; original input and output receipts are preserved. This confirms actual meal production, while sustained food supply and maximum village development remain under observation.
+
+
+### Second kitchen batch and graduate employment
+
+A second autonomous bread batch now has its complete saved work record and six committed receipts: four flour, four sticks,400 fuel ticks and320 work produced two bread. The naturally educated adult also recovered and took a forester position; its original registry snapshot is retained. These are observed milestones in the continuing village, which remains at civilization I and18/115 research.
