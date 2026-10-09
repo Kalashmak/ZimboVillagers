@@ -268,14 +268,15 @@ public final class BuildingOrders {
   clears.sort(Comparator.<Op>comparingInt(o->-o.pos.getY()).thenComparingInt(o->o.pos.getZ()).thenComparingInt(o->o.pos.getX()));lower.sort(order);upper.sort(order);
   // AD-069: the doorway stays an open gap until the very end — a closed door stops a builder who steps the last block straight in,
   // so the door leaves are the last blocks of the building, set after the scaffolds are down. Plaques also wait until their supports stand.
-  var doors=new ArrayList<Op>();for(var list:List.of(lower,upper))for(var it=list.iterator();it.hasNext();){var op=it.next();if(op.after.getBlock() instanceof DoorBlock||op.after.getBlock() instanceof SignBlock){doors.add(op);it.remove();}}
+  var beds=new ArrayList<Op>();
+  var doors=new ArrayList<Op>();for(var list:List.of(lower,upper))for(var it=list.iterator();it.hasNext();){var op=it.next();if(op.after.getBlock() instanceof BedBlock){beds.add(op);it.remove();}else if(op.after.getBlock() instanceof DoorBlock||op.after.getBlock() instanceof SignBlock){doors.add(op);it.remove();}}
   doors.sort(order);
   var ops=new ArrayList<Op>();ops.addAll(clears);ops.addAll(fills);ops.addAll(lower);
   if(stands)for(var c:columns)for(int y=1;y<=c.top();y++)ops.add(new Op(origin.offset(c.x(),y,c.z()),air,scaffold,"villageastra:timber_scaffold",""));
   ops.addAll(upper);
   if(stands)for(var c:columns)for(int y=c.top();y>=1;y--){var rel=new BlockPos(c.x(),y,c.z());ops.add(new Op(origin.offset(rel),scaffold,air,"","villageastra:timber_scaffold"));var capOp=capOps.get(rel);if(capOp!=null)ops.add(capOp);}
   else ops.addAll(capOps.values());
-  ops.addAll(doors);
+  ops.addAll(doors);beds.sort(order);ops.addAll(beds);
   var list=new ListTag();var cost=new CompoundTag();var ground=new HashSet<Op>(clears);ground.addAll(fills);
   for(var op:ops){
    var t=new CompoundTag();if(anyDesign)t.putInt("phase",ground.contains(op)?0:2);t.putLong("pos",op.pos.asLong());t.put("before",NbtUtils.writeBlockState(op.before));t.put("after",NbtUtils.writeBlockState(op.after));

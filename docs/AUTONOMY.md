@@ -412,3 +412,12 @@ The continuing natural village loaded this build after a normal save and resume,
 Repeated tool checks share a verified work-record copy within one actual server tick. Atomic-write revisions and file metadata invalidate the record immediately; the next tick rereads it. Stock contents and resident assignments are still queried afresh, so adding or removing a real spare tool changes availability immediately. Repair quantities, tool tiers, research reserves, funding and labor are unchanged. A native regression reduces 100 unchanged funding views from 100 reads to one and covers caller copies, same-time same-size wear changes, deletion, recreation, separate workplaces and checksum rejection. Both copies pass 19 related native checks and 166 unit tests; the main final unit task was up-to-date, and the independent final ran fresh.
 
 The continuing natural village loaded this tool-sensing change after a normal save and resume, with all 1,940 runtime files matching the verified build. Maximum progression remains unverified.
+
+
+### Completing a house with a missing bed half
+
+The continuing natural village funded all 419 materials and completed its 474 original operations, but one actual bed foot was absent and registration correctly refused. Builders can now append a separate replacement operation when the cell is empty, supported and its exact planned partner remains. This requires another real bed from stock; it does not restore a block for free or replay a committed operation. Original funding, operation identities and receipts remain retained. New plans assemble beds after the structure, and helpers cannot bring independent halves forward. A later demolition phase of a relocation does not block the new bed.
+
+Both copies pass 20 related native checks and 166 unit tests, including empty-stock refusal, one actual replacement withdrawal, physical installation and registration, changed-cell guards, completed-building and relocation boundaries, rotated homes, repairs, construction access and funding reserves. The exact trigger of the real missing half remains unproven: a support-only experiment did not reproduce it. Earlier failed results and the correction of a test setup that changed its remaining partner are retained.
+
+This bed-completion change is not yet loaded into the continuing natural world; maximum progression remains unverified.

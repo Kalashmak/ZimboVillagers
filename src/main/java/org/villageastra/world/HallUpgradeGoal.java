@@ -669,7 +669,10 @@ public final class HallUpgradeGoal extends Goal {
     cargo.set(slot,ItemStack.EMPTY.save(new CompoundTag()));state.putInt("returns",state.getInt("returns")+1);save();return;
    }
    var entry=SettlementData.get(l.getServer()).entry(worker.settlementId());
-   if(entry==null||!BuildingOrders.complete(l,entry,state)){worker.workStatus("changed_target");return;}
+   if(entry==null||!BuildingOrders.complete(l,entry,state)){
+    if(entry!=null&&BedConstruction.queuePaidMissingHalf(l,state)){save();worker.workStatus("missing_building_materials");return;}
+    worker.workStatus("changed_target");return;
+   }
    state.putBoolean("complete",true);save();worker.displayWorkItem(ItemStack.EMPTY);worker.workStatus("construction_complete");return;
   }
   long gameTime=l.getGameTime();int chosen=-1,handy=-1;var eye=worker.getEyePosition();
@@ -689,7 +692,7 @@ public final class HallUpgradeGoal extends Goal {
    if(!eligible(operations,index,i))break;
    var candidate=operations.getCompound(i);if(candidate.getBoolean("done")||candidate.getLong("retry")>gameTime||claimedByOther(id,i,gameTime))continue;
    if(accessFirst&&candidate.getInt("phase")>=0)continue;
-   if(helper&&!helpable(l,candidate,layer))continue;
+   if(!BedConstruction.ready(l,operations,candidate)||helper&&!helpable(l,candidate,layer))continue;
    boolean blocked=false;
    // AD-069: a scaffold column is not taken down while any earlier operation is still to be worked from it — a deferred roof block must not
    // find its column already gone (home_2 stood under a column whose lower part had been dismantled out of turn).
@@ -710,7 +713,7 @@ public final class HallUpgradeGoal extends Goal {
    // relocate-fix: never a door leaf. AD-069 puts the leaves last on purpose — the doorway is the builder's own way in and out while the
    // house stands open — and handy work walked straight past that: hanging a door from inside shut the builder in with its scaffold
    // columns outside, and the site waited on a cell it could no longer reach (home@1 at 858/914).
-   boolean placing=!candidate.contains("return")&&!wanted.after().isAir()&&!wanted.before().is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())&&!(wanted.after().getBlock() instanceof DoorBlock);
+   boolean placing=!candidate.contains("return")&&!wanted.after().isAir()&&!wanted.before().is(org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get())&&!(wanted.after().getBlock() instanceof DoorBlock)&&!(wanted.after().getBlock() instanceof BedBlock);
    // Everything that can be placed from where the worker already stands — on the ground or inside the column it occupies — is done before it walks away.
    // relocate-fix: a ground operation is handy only to a worker on the ground — one up in a scaffold column would sink for it, and the
    // next tick, lower, find the column's own operation first again: it bobbed at y2.5..2.9 of the column for good (AD-129 home_2).
@@ -721,7 +724,7 @@ public final class HallUpgradeGoal extends Goal {
   }
   if(chosen<0&&!helper){
    // Everything left is on a retry pause: the earliest unfinished operation is taken up again at once instead of the site standing idle.
-   for(int i=index;i<operations.size()&&chosen<0&&eligible(operations,index,i);i++)if(!operations.getCompound(i).getBoolean("done")&&!claimedByOther(id,i,gameTime)){chosen=i;operations.getCompound(i).putLong("retry",0);save();}
+   for(int i=index;i<operations.size()&&chosen<0&&eligible(operations,index,i);i++)if(!operations.getCompound(i).getBoolean("done")&&!claimedByOther(id,i,gameTime)&&BedConstruction.ready(l,operations,operations.getCompound(i))){chosen=i;operations.getCompound(i).putLong("retry",0);save();}
   }
   if(chosen<0){if(helper&&yieldIdlePlacement(l,operations))return;worker.workStatus(helper?"helping_waits":"waiting_for_access");return;}
   int current=handy>=0?handy:chosen;var op=operations.getCompound(current);claim(id,current,gameTime);working=current;
@@ -899,7 +902,7 @@ public final class HallUpgradeGoal extends Goal {
  public static boolean helpable(ServerLevel l,CompoundTag op,int layer){
   if(op.contains("stand")||op.contains("return")||op.getBoolean("dismantle"))return false;
   var step=HallConstructionPlan.step(op);var sc=org.villageastra.VillageAstra.TIMBER_SCAFFOLD.get();
-  if(step.pos().getY()>layer||step.before().is(sc)||step.after().is(sc)||step.after().getBlock() instanceof DoorBlock||step.after().getBlock() instanceof BuildingCoreBlock)return false;
+  if(step.pos().getY()>layer||step.before().is(sc)||step.after().is(sc)||step.after().getBlock() instanceof DoorBlock||step.after().getBlock() instanceof BedBlock||step.after().getBlock() instanceof BuildingCoreBlock)return false;
   return step.after().isAir()||step.after().canSurvive(l,step.pos());
  }
  public static boolean eligible(ListTag ops,int index,int i){return index>=ops.size()||i>=ops.size()||ops.getCompound(i).getInt("phase")<=ops.getCompound(index).getInt("phase");}
