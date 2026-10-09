@@ -258,6 +258,7 @@ public final class ResidentEntity extends PathfinderMob {
         goalSelector.addGoal(1, new SafeDescentGoal(this));
         goalSelector.addGoal(0, new SolidEscapeGoal(this));
         // Verified shallow-pit recovery may interrupt floating; submerged water still uses FloatGoal.
+        goalSelector.addGoal(-1, new CaveEscapeGoal(this));
         goalSelector.addGoal(0, new PitEscapeGoal(this));
         goalSelector.addGoal(0, new FoliageEscapeGoal(this));
         goalSelector.addGoal(0, new ShoreEscapeGoal(this));

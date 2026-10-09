@@ -26,7 +26,7 @@ public final class RecoveryReturnCycleGameTests {
   "...######............/#########......#...../#########............/####................#/####...............##/...................##/...................##/...................##/...................../...................../...................../...................../......#######......../......#######......../......#######......../......#######......../..#...#######......../###...#######......../###................../###................../###..................",
   "...#.#############.../###...##.#########.../####.........#####.../####..........###...#/####...............##/...................##/...................##/...................##/...................../...................../...................../...................../......#######......../......###.###......../......#.....#......../......#.....#......../......#.....#......../###...#######......../###................../###................../###.................."
  };
- @GameTest(template="empty",batch="recovery_return_cycle",timeoutTicks=4200)
+ @GameTest(template="empty",batch="recovery_return_cycle",timeoutTicks=12000)
  public static void carrierStopsRepeatingAClimbUndoneByItsReturnPath(GameTestHelper h)throws Exception{
   var l=h.getLevel();var at=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(at.getX()+135168,160,at.getZ());
   var held=PhysicalFixtureChunks.force(l,base,-3,23,-3,23);
@@ -41,13 +41,15 @@ public final class RecoveryReturnCycleGameTests {
    public void tick(){if(npc.tickCount%20==0&&npc.onGround())npc.getNavigation().moveTo(ResourceReturnRoute.plan(npc,target),.8);}
    public void stop(){npc.getNavigation().stop();}
   });
-  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Cave chunk ready")).thenExecute(()->l.addFreshEntity(npc));
-  Runnable clean=()->{npc.discard();PhysicalFixtureChunks.release(l,held);};
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(npc.blockPosition()),"Cave chunk ready")).thenExecute(()->h.assertTrue(l.addFreshEntity(npc),"Real carrier registered"));
+  boolean[] done={false};Runnable clean=()->{done[0]=true;npc.discard();PhysicalFixtureChunks.release(l,held);};
   var repeatedRim=base.offset(13,6,9);boolean[] visited={false};
   h.onEachTick(()->{
+   if(done[0])return;
    if(npc.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(repeatedRim))<.25)visited[0]=true;
    if(npc.tickCount>0&&npc.tickCount%100==0)com.mojang.logging.LogUtils.getLogger().info("RECOVERY_CYCLE pos={} ticks={} goals={} visited={}",npc.position().subtract(base.getX(),base.getY(),base.getZ()),npc.tickCount,npc.runningGoals(),visited[0]);
-   if(visited[0]&&npc.onGround()&&npc.getY()>=base.getY()+4&&npc.getZ()>=base.getZ()+16.5&&npc.getX()>=base.getX()+11.5){h.assertTrue(npc.getHealth()==npc.getMaxHealth(),"Alternative recovery preserves health");clean.run();h.succeed();}});
-  h.runAtTickTime(4000,()->{String why="Carrier repeats the lower ledge: "+npc.position()+" base="+base+" ticks="+npc.tickCount+" goals="+npc.runningGoals();clean.run();h.assertTrue(false,why);});
+   if(visited[0]&&npc.onGround()&&npc.getY()>=base.getY()+4&&npc.getZ()>=base.getZ()+16.5&&npc.getX()>=base.getX()+11.5){h.assertTrue(npc.getHealth()==npc.getMaxHealth(),"Alternative recovery preserves health");clean.run();h.succeed();return;}
+   if(npc.tickCount>=4000){String why="Carrier repeats the lower ledge: "+npc.position()+" base="+base+" ticks="+npc.tickCount+" goals="+npc.runningGoals();clean.run();h.assertTrue(false,why);}});
+  h.runAtTickTime(11500,()->{if(done[0])return;String why="Carrier fixture did not finish ticking: bodyTicks="+npc.tickCount;clean.run();h.assertTrue(false,why);});
  }
 }

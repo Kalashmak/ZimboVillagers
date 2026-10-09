@@ -17,13 +17,13 @@ public final class ResourceReturnRoute {
    float water=worker.getPathfindingMalus(BlockPathTypes.WATER);
    try{worker.setPathfindingMalus(BlockPathTypes.WATER,-1F);dry=worker.routeTo(target,1,NaturalSupplyGoal.ROUTE_RANGE);}
    finally{worker.setPathfindingMalus(BlockPathTypes.WATER,water);}
-   if(dry!=null&&dry.canReach())return kept(dry);
+   if(dry!=null&&dry.canReach()){CaveEscapeGoal.observe(worker,target,true);return kept(dry);}
   }
   var ordinary=worker.routeTo(target,1,NaturalSupplyGoal.ROUTE_RANGE);
   if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&worker.tickCount%1200==0)com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE returnPlan pos={} dryReached={} dryEnd={} wetReached={} wetEnd={} wetSafe={}",worker.blockPosition(),dry!=null&&dry.canReach(),dry==null?null:dry.getEndNode(),ordinary!=null&&ordinary.canReach(),ordinary==null?null:ordinary.getEndNode(),ordinary!=null&&ShoreEscapeGoal.clearSwimPath(worker,ordinary));
-  if(ordinary!=null&&ordinary.canReach()&&ShoreEscapeGoal.clearSwimPath(worker,ordinary))return kept(ordinary);
+  if(ordinary!=null&&ordinary.canReach()&&ShoreEscapeGoal.clearSwimPath(worker,ordinary)){CaveEscapeGoal.observe(worker,target,true);return kept(ordinary);}
   // A dry partial route may reach a ledge where the existing pit recovery can help.
   // In water, wait for the shore recovery rather than walking a known dead end forever.
-  return kept(dry);
+  CaveEscapeGoal.observe(worker,target,false);return kept(dry);
  }
 }
