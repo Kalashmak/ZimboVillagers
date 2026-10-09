@@ -523,3 +523,8 @@ The same natural village resumed at clock13456270 after a normal complete save. 
 ### Shared resource-state checks
 
 Mining and forestry scheduling reuse the existing validated work-state reader. Decisions about cargo, tools and available storage still inspect current conditions. Both copies passed nine existing native cases and166 fresh unit tests, covering full storage, physical delivery, timber support, emergency hand felling and immediate tool-state changes. No overall speed percentage is claimed. The continuing natural world still runs source40; maximum development remains unverified.
+
+
+### Scientific parcels and full laboratories
+
+If scientists fill a laboratory while its porter is carrying paid scientific works, the porter returns the parcel through normal cargo handling and can resume other deliveries. Existing deposit records still recover at their original laboratory. Both hall and warehouse sources were tested with actual walking, conserved finite cargo and repeated journal recovery; normal delivery also passed. Both integrated copies passed31 native scenarios and166 fresh unit tests. The natural village still runs source40 and has not yet loaded this fix; its maximum development remains unverified.

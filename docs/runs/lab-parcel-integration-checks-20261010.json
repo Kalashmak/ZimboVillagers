@@ -1,0 +1,127 @@
+{
+  "ad": "AD474",
+  "agent_commit": "4621dfcc28c951d28af8091a39a1a60ed5990354",
+  "agent_proof": "docs/runs/lab-parcel-overflow-final-20261010.json",
+  "source_before": {
+    "private": "39bffda3b391b49b45a12bbabd623b3a99f0ff2e",
+    "public": "105398313f024caf3f6a357fda1bae46f54d0128"
+  },
+  "owned_files": {
+    "src/main/java/org/villageastra/world/PorterWork.java": "965e80104c1fbc0de0c90ba47639d171931dbddb22873310fbd78e4ba508d9f0",
+    "src/main/java/org/villageastra/gametest/LabParcelOverflowGameTests.java": "84ca3d0943522ad0bfa2a01a3e61c3dd69b683d5bf8e86586e54c94f390cabee"
+  },
+  "raw_agent_evidence": [
+    "docs/runs/lab-parcel-overflow-base-production-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-baseline-20261010.json",
+    "docs/runs/lab-parcel-overflow-baseline-20261010.log",
+    "docs/runs/lab-parcel-overflow-baseline-test-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-final-20261010.md",
+    "docs/runs/lab-parcel-overflow-final-filter-20261010.txt",
+    "docs/runs/lab-parcel-overflow-final-LabParcelOverflowGameTests-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-final-PorterWork-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-final-regression-20261010.log",
+    "docs/runs/lab-parcel-overflow-first-fixed-20261010.json",
+    "docs/runs/lab-parcel-overflow-first-fixed-production-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-first-fixed-test-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-fixed-first-20261010.log",
+    "docs/runs/lab-parcel-overflow-fixed-physical-20261010.log",
+    "docs/runs/lab-parcel-overflow-fixed-warehouse-20261010.log",
+    "docs/runs/lab-parcel-overflow-second-fixed-test-20261010.java.txt",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.client.OfficeGridTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.client.ResearchTreeModelTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.client.SchematicModelTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.CastleLotsTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.CivilizationTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.ConstructionTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.CoreRecipesTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.DiningMathTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.ElectionRollTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FarChartTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FarmFieldTableTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FarmLotTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FarmYieldTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FirstHouseBaselineTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FoodYieldTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FramedWindowResourcesTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.FurnitureResourcesTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.GiftValueTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.GovernanceTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.LocalisationTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.MineAreaTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.MineDriveTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.NaturalLayoutTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.OrganicLotsTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.RationsTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.ResearchCatalogTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.ResearchMigrationTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.ResidentProfileTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.RestaurantCapacityTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.SettlementTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.domain.VillageNamesTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.persistence.AtomicRecordTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.world.ForesterHutTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.world.HallSiteTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.world.VillageStyleDoorTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.world.WallOutlineTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.world.WarehouseBalanceTest.xml",
+    "docs/runs/lab-parcel-overflow-units-20261010/TEST-org.villageastra.world.WarehouseDesignTest.xml"
+  ],
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "checks": [
+    {
+      "log": "docs/runs/lab-parcel-integration-private-20261010.log",
+      "sha256": "240f413851d2c1505ea00b490c18f07de8fe6a4b5375b419e77cca3f46837737",
+      "native_passed": 31,
+      "fresh_units": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "docs/runs/lab-parcel-integration-independent-20261010.log",
+      "sha256": "3171ada5e956b52ddd355907acb263471c3ce73d4d23c4fc90e6679b4b2a4956",
+      "native_passed": 31,
+      "fresh_units": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "agent_attempts": {
+    "baseline": {
+      "log": "docs/runs/lab-parcel-overflow-baseline-20261010.log",
+      "passed": 0,
+      "expected_failed": 1,
+      "production": "unchanged"
+    },
+    "first_fixed": {
+      "log": "docs/runs/lab-parcel-overflow-fixed-first-20261010.log",
+      "passed": 0,
+      "fixture_failed": 3,
+      "production": "fixed"
+    },
+    "second_fixed": {
+      "log": "docs/runs/lab-parcel-overflow-fixed-physical-20261010.log",
+      "passed": 0,
+      "fixture_failed": 3,
+      "production": "same fixed"
+    },
+    "corrected_physical": {
+      "log": "docs/runs/lab-parcel-overflow-fixed-warehouse-20261010.log",
+      "passed": 4,
+      "failed": 0
+    },
+    "final_regression": {
+      "log": "docs/runs/lab-parcel-overflow-final-regression-20261010.log",
+      "passed": 21,
+      "failed": 0,
+      "fresh_unit_passed": 166
+    }
+  },
+  "limits": "Standing hall/laboratory/warehouse geometry is a fixture; research resources and works are actually paid. Sixty-four outputs use explicit complete labor-clock periods. Canonical porter walks and returns finite paid cargo physically. Reload means fresh signed custody reads and journal replay on the same server, not a process restart. This is a reproduced full-destination cargo bug, not proof of the cause of any current natural-world stall or of maximum growth. Main remains frozen Source40."
+}

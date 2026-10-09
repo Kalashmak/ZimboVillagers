@@ -88,12 +88,14 @@ public final class PorterWork {
     if(receiving!=null&&!LogisticsRoutes.fits(receiving,java.util.List.of(item))){release(l,w.getUUID());w.workStatus("logistics_supply_changed");return;}
    }
   }
-  if(t.getString("stage").equals("deliver")&&!WorldJournal.exists(l,operation(t,"put"))&&(item.is(net.minecraft.world.item.Items.WHEAT)&&b.get().type().equals("farm")||LogisticsRoutes.bulkDestination(b.get(),item))){
+  boolean scientificOverflow=b.get().type().equals("laboratory")&&org.villageastra.server.BookResearch.work(item);
+  if(t.getString("stage").equals("deliver")&&!WorldJournal.exists(l,operation(t,"put"))&&(scientificOverflow||item.is(net.minecraft.world.item.Items.WHEAT)&&b.get().type().equals("farm")||LogisticsRoutes.bulkDestination(b.get(),item))){
    var sourceId=t.getUUID("source");var source=e.settlement().buildings().stream().filter(x->x.id().equals(sourceId)).findFirst().orElse(null);
-   if(source!=null&&source.type().equals("town_hall")&&!LogisticsRoutes.fits(c,List.of(item))){
+   if(source!=null&&(source.type().equals("town_hall")||scientificOverflow&&source.type().equals("warehouse"))&&!LogisticsRoutes.fits(c,List.of(item))){
     // A farm can fill after surplus left the hall. Mark the paid parcel before
     // opening normal custody, then physically return it rather than pinning
-    // the only courier at a full farm forever. Existing deposit intents retain
+    // the only courier at a full farm forever. Scientific outputs can likewise
+    // fill a laboratory after stock's works were withdrawn. Existing deposit intents retain
     // their recorded destination and are never redirected.
     t.putBoolean("returnOverflow",true);NbtRecord.write(path(l,w.getUUID()),t);
     CargoCustody.beginReturn(w);w.workStatus("returning_cargo");return;
