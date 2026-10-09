@@ -139,6 +139,13 @@ public final class ResidentEntity extends PathfinderMob {
         var nav = createNavigation(level()); configure(nav); return ResidentPlannedRoute.keep(nav.createPath(target, accuracy),accuracy,0,PATH_BUDGET);
     }
     private boolean reversibleRoute,recoveryTransit;
+    private java.util.Set<net.minecraft.core.BlockPos> occupiedRouteNodes=java.util.Set.of();
+    /** A stalled carrier's observed occupied landing is excluded only during this synchronous search. */
+    public net.minecraft.world.level.pathfinder.Path routeAround(net.minecraft.core.BlockPos target,int accuracy,int range,java.util.Set<net.minecraft.core.BlockPos> occupied){
+        var previous=occupiedRouteNodes;occupiedRouteNodes=java.util.Set.copyOf(occupied);
+        try{return routeTo(target,accuracy,range);}finally{occupiedRouteNodes=previous;}
+    }
+
     /** A verified climb may cross remembered floor to its anchor; its exit is checked separately. */
     net.minecraft.world.level.pathfinder.Path routeToRecoveryAnchor(net.minecraft.core.BlockPos target){
         boolean previous=recoveryTransit;recoveryTransit=true;
@@ -226,6 +233,7 @@ public final class ResidentEntity extends PathfinderMob {
                         for(int i=0;i<count;i++)if(ResidentStepClearance.cropLanding(level,from,neighbors[i])&&(!reversibleRoute||Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos()))&&clearWater(neighbors[i].asBlockPos())))neighbors[kept++]=neighbors[i];return kept;
                     }
                     @Override public net.minecraft.world.level.pathfinder.BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter blocks,int x,int y,int z,net.minecraft.world.entity.Mob mob){
+                        if(!occupiedRouteNodes.isEmpty()&&occupiedRouteNodes.contains(new net.minecraft.core.BlockPos(x,y,z)))return net.minecraft.world.level.pathfinder.BlockPathTypes.BLOCKED;
                         var state=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y,z));
                         // Vanilla labels pointed dripstone as open despite its solid tapered collision shape.
                         // A return route must go around the column instead of entering it or cutting between two.

@@ -11,15 +11,16 @@ public final class ResourceReturnRoute {
  private static Path kept(Path path){return path==null?null:new ReturnPath(path);}
  // Deliveries already accept distance squared <= 5; one adjacent node remains inside that reach.
  // The nominal stand can contain a lectern or another work block beneath the hall ceiling.
- public static Path plan(ResidentEntity worker,BlockPos target){
+ public static Path plan(ResidentEntity worker,BlockPos target){return plan(worker,target,java.util.Set.of());}
+ public static Path plan(ResidentEntity worker,BlockPos target,java.util.Set<BlockPos> occupied){
   Path dry=null;
   if(worker.onGround()&&!worker.isInWaterOrBubble()){
    float water=worker.getPathfindingMalus(BlockPathTypes.WATER);
-   try{worker.setPathfindingMalus(BlockPathTypes.WATER,-1F);dry=worker.routeTo(target,1,NaturalSupplyGoal.ROUTE_RANGE);}
+   try{worker.setPathfindingMalus(BlockPathTypes.WATER,-1F);dry=occupied.isEmpty()?worker.routeTo(target,1,NaturalSupplyGoal.ROUTE_RANGE):worker.routeAround(target,1,NaturalSupplyGoal.ROUTE_RANGE,occupied);}
    finally{worker.setPathfindingMalus(BlockPathTypes.WATER,water);}
    if(dry!=null&&dry.canReach()){CaveEscapeGoal.observe(worker,target,true);return kept(dry);}
   }
-  var ordinary=worker.routeTo(target,1,NaturalSupplyGoal.ROUTE_RANGE);
+  var ordinary=occupied.isEmpty()?worker.routeTo(target,1,NaturalSupplyGoal.ROUTE_RANGE):worker.routeAround(target,1,NaturalSupplyGoal.ROUTE_RANGE,occupied);
   if(Boolean.getBoolean("villageastra.firstHouseSmoke")&&worker.tickCount%1200==0)com.mojang.logging.LogUtils.getLogger().info("ASTRA_FIRST_HOUSE returnPlan pos={} dryReached={} dryEnd={} wetReached={} wetEnd={} wetSafe={}",worker.blockPosition(),dry!=null&&dry.canReach(),dry==null?null:dry.getEndNode(),ordinary!=null&&ordinary.canReach(),ordinary==null?null:ordinary.getEndNode(),ordinary!=null&&ShoreEscapeGoal.clearSwimPath(worker,ordinary));
   if(ordinary!=null&&ordinary.canReach()&&ShoreEscapeGoal.clearSwimPath(worker,ordinary)){CaveEscapeGoal.observe(worker,target,true);return kept(ordinary);}
   // A dry partial route may reach a ledge where the existing pit recovery can help.

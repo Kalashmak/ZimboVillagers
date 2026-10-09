@@ -15,6 +15,28 @@ import java.util.*;
 /** Durable custody transfer: return physically, or leave a finite container at the actual death location. */
 public final class CargoCustody {
  private CargoCustody(){}
+ private record ReturnProgress(BlockPos target,net.minecraft.world.phys.Vec3 anchor,int since){}
+ private static final Map<ResidentEntity,ReturnProgress> RETURN_PROGRESS=new WeakHashMap<>();
+ /** Keep an advancing native path; a stalled, physically occupied next landing gets a scoped safe detour. */
+ private static net.minecraft.world.level.pathfinder.Path returnRoute(ResidentEntity worker,BlockPos target){
+  var progress=RETURN_PROGRESS.get(worker);
+  if(progress==null||!progress.target().equals(target)||worker.position().distanceToSqr(progress.anchor())>.25||worker.tickCount<progress.since()){
+   progress=new ReturnProgress(target,worker.position(),worker.tickCount);RETURN_PROGRESS.put(worker,progress);
+  }
+  var nav=worker.getNavigation();var current=nav.getPath();
+  boolean retained=!nav.isDone()&&current instanceof ResourceReturnRoute.ReturnPath&&current.canReach()&&current.getTarget().equals(target);
+  if(retained&&worker.tickCount-progress.since()<100)return current;
+  if(retained){
+   var next=current.getNextNodePos();double half=worker.getBbWidth()/2D+.05;
+   var box=new net.minecraft.world.phys.AABB(next.getX()+.5-half,next.getY(),next.getZ()+.5-half,next.getX()+.5+half,next.getY()+worker.getBbHeight(),next.getZ()+.5+half);
+   if(next.distSqr(worker.blockPosition())<=4&&!worker.level().getEntities(worker,box,e->e.isAlive()&&e.isPushable()).isEmpty()){
+    var around=ResourceReturnRoute.plan(worker,target,Set.of(next));
+    if(around!=null&&around.canReach())return around;
+   }
+  }
+  return ResourceReturnRoute.plan(worker,target);
+ }
+
  private static final Map<MinecraftServer,Map<UUID,Optional<CompoundTag>>> CACHE=new WeakHashMap<>();
  private static final Map<MinecraftServer,Map<UUID,String>> ADMITTED=new WeakHashMap<>();
  private static Path directory(MinecraftServer server){return server.getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-custody");}
@@ -98,12 +120,12 @@ public final class CargoCustody {
      if(t.contains("returnWaypoint")){
       var waypoint=BlockPos.of(t.getLong("returnWaypoint"));
       if(worker.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(waypoint))>2.25){
-       var leg=ResourceReturnRoute.plan(worker,waypoint);
+       var leg=returnRoute(worker,waypoint);
        if(leg!=null&&leg.canReach()){worker.getNavigation().moveTo(leg,.8);return;}
       }
       t.remove("returnWaypoint");save(server,t);
      }
-     var route=ResourceReturnRoute.plan(worker,stock.east());
+     var route=returnRoute(worker,stock.east());
      if((route==null||!route.canReach())&&worker.onGround()&&level.getGameTime()>=t.getLong("mineRouteCheck")){
       t.putLong("mineRouteCheck",level.getGameTime()+200);
       var throughMine=MineReturnWaypoints.plan(worker,entry);
