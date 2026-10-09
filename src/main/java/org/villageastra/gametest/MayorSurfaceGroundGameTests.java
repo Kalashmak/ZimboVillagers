@@ -23,12 +23,15 @@ public final class MayorSurfaceGroundGameTests {
  @GameTest(template="empty",batch="mayor_site_routes",timeoutTicks=100)
  public static void flatReachableSiteKeepsItsProposalAndRequiresPhysicalArrival(GameTestHelper h){route(h,false);}
  @SuppressWarnings("unchecked") private static void route(GameTestHelper h,boolean drop){
-  var l=h.getLevel();var origin=h.absolutePos(BlockPos.ZERO);var base=new BlockPos(origin.getX()+262144+(drop?0:65536),120,origin.getZ());var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),base);SettlementData.get(l.getServer()).add(e);
+  var l=h.getLevel();var origin=h.absolutePos(BlockPos.ZERO);int startX=origin.getX()+262144+(drop?0:65536),top=120;
+  for(int x=0;x<=65;x++)for(int z=-2;z<=2;z++)top=Math.max(top,l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,startX+x,origin.getZ()+z)+16);
+  var base=new BlockPos(startX,top,origin.getZ());var s=Settlement.initial(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),base);SettlementData.get(l.getServer()).add(e);
   try{
    var field=MayorPlanner.class.getDeclaredField("PROPOSALS");field.setAccessible(true);var proposals=(Map<UUID,MayorPlanner.Proposal>)field.get(null);
    var cursorField=MayorPlanner.class.getDeclaredField("CURSOR");cursorField.setAccessible(true);var cursors=(Map<UUID,Integer>)cursorField.get(null);cursors.put(s.id(),100);
    for(int x=0;x<=65;x++)for(int z=-2;z<=2;z++)for(int y=0;y<=16;y++)l.setBlock(base.offset(x,y,z),y==(drop&&x>=35?0:12)?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
    var site=base.offset(60,drop?0:12,0);var proposal=new MayorPlanner.Proposal("farm",site,"shortage");proposals.put(s.id(),proposal);
+   h.assertTrue(site.equals(MayorPlanner.siteGround(l,site)),"Prepared site is the exposed surface, without naturally generated ground above it");
    var r=s.residents().stream().filter(v->v.profession()==Profession.MAYOR).findFirst().orElseThrow();var body=VillageAstra.RESIDENT.get().create(l);body.bind(s.id(),r);body.setNoAi(true);body.moveTo(base.getX()+2.5,base.getY()+13,base.getZ()+.5);body.setOnGround(true);h.assertTrue(l.addFreshEntity(body),"Mayor body registered");body.tickCount=20;
    try{
     var path=body.routeTo(site.above(),0);h.assertTrue(HarvestAccess.reversible(path)!=drop,"Fixture has the expected reversible native route");var goal=new MayorSiteGoal(body,true);h.assertTrue(goal.canUse(),"The mayor has a real proposal");goal.tick();

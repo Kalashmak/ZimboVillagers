@@ -61,13 +61,16 @@ public final class MayorPlannerGameTests {
   h.succeed();
  }
  @GameTest(template="empty",batch="mayor_site",timeoutTicks=200) public static void mayorApprovesOnlyAtTheSurveyedSite(GameTestHelper h){
-  var l=h.getLevel();var center=h.absolutePos(new BlockPos(24,3,20));var s=new Settlement(UUID.randomUUID());
+  var l=h.getLevel();var at=h.absolutePos(new BlockPos(24,3,20));int startX=at.getX()+655360,top=120;
+  for(int x=-52;x<=52;x++)for(int z=-45;z<=45;z++)top=Math.max(top,l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,startX+x,at.getZ()+z)+16);
+  var center=new BlockPos(startX,top,at.getZ());var s=new Settlement(UUID.randomUUID());
   s.addBuilding(new Settlement.Building(Settlement.childId(s.id(),"building/town_hall"),"town_hall",0,0,0));
   var home=new Settlement.Home(UUID.randomUUID(),1,1,true);s.addHome(home);var mayor=new Resident(UUID.randomUUID(),Resident.Life.ADULT,false,Profession.MAYOR,null,-1);s.admit(mayor,home.id());
   var e=new SettlementData.Entry(s,l.dimension().location().toString(),center);SettlementData.get(l.getServer()).add(e);
-  for(int x=-22;x<=22;x++)for(int z=-19;z<=19;z++){var p=center.offset(x,0,z);l.setBlock(p.below(),Blocks.STONE.defaultBlockState(),2);l.setBlock(p,Blocks.GRASS_BLOCK.defaultBlockState(),2);for(int y=1;y<=18;y++)l.setBlock(p.above(y),Blocks.AIR.defaultBlockState(),2);}
+  for(int x=-52;x<=52;x++)for(int z=-45;z<=45;z++){var p=center.offset(x,0,z);l.setBlock(p.below(),Blocks.STONE.defaultBlockState(),2);l.setBlock(p,Blocks.GRASS_BLOCK.defaultBlockState(),2);for(int y=1;y<=18;y++)l.setBlock(p.above(y),Blocks.AIR.defaultBlockState(),2);}
+  h.assertTrue(center.equals(MayorPlanner.siteGround(l,center)),"Isolated prepared plot is the exposed surface; neighboring test roofs cannot cover it");
   BlockPos site=null;for(int pass=0;pass<20&&site==null;pass++)site=MayorPlanner.site(l,e,"home");
-  var probe=BuildingOrders.survey(l,e,"home",0,center.offset(-14,0,-3));var heights=new StringBuilder();for(int r=12;r<=20;r+=4){int x=center.getX()+r,z=center.getZ();heights.append(l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1-center.getY()).append(",");}
+  var probe=BuildingOrders.survey(l,e,"home",0,center.offset(-34,0,-3));h.assertTrue(GrowthPlots.available(e,"home",center.offset(-34,0,-3),0)&&probe.ok(),"Prepared plot includes a surveyed house beyond the hall's actual expansion reserve");var heights=new StringBuilder();for(int r=12;r<=20;r+=4){int x=center.getX()+r,z=center.getZ();heights.append(l.getHeight(net.minecraft.world.level.levelgen.Heightmap.Types.MOTION_BLOCKING_NO_LEAVES,x,z)-1-center.getY()).append(",");}
   h.assertTrue(site!=null&&BuildingOrders.survey(l,e,"home",0,site).ok(),"A surveyed free site is found near the hall; explicit pad site: "+probe.reason()+" "+probe.conflicts().stream().limit(6).map(c->c.subtract(center).toShortString()).toList()+" heights "+heights);
   var npc=VillageAstra.RESIDENT.get().create(l);npc.bind(s.id(),mayor);npc.setNoAi(true);npc.moveTo(center.getX()+.5,center.getY()+1,center.getZ()+.5,0,0);l.addFreshEntity(npc);
   h.assertTrue(MayorPlanner.plan(l,e)==null,"A housing shortage alone must not invent an unobserved timber source");

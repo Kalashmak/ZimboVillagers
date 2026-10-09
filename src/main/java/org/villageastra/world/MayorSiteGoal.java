@@ -23,7 +23,12 @@ public final class MayorSiteGoal extends Goal {
   if(l.hasChunkAt(p.site())&&!p.site().equals(MayorPlanner.siteGround(l,p.site()))){MayorPlanner.abandonSite(e.settlement().id(),p);mayor.workStatus("mayor_rejected_ground");return;}
   var status=MayorPlanner.approveAtSite(l,e,mayor);mayor.workStatus("mayor_"+status);
   if(status.equals("walking")){
-   var path=mayor.routeTo(p.site().above(),0);
+   // Keep the supported detour while it is being walked. A jumping body
+   // cannot start a new ground search; that is not an unreachable site.
+   if(!mayor.onGround())return;
+   var target=p.site().above();var current=mayor.getNavigation().getPath();
+   if(current!=null&&!mayor.getNavigation().isDone()&&current.getTarget().equals(target)&&HarvestAccess.reversible(current))return;
+   var path=mayor.routeTo(target,0,BuildingOrders.REACH);
    if(!HarvestAccess.reversible(path)){MayorPlanner.abandonSite(e.settlement().id(),p);mayor.getNavigation().stop();mayor.workStatus("mayor_unreachable_site");return;}
    mayor.getNavigation().moveTo(path,.8);
   }
