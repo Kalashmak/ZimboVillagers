@@ -66,7 +66,7 @@ public final class NaturalSupplyGoal extends Goal {
  private SettlementData.Entry entry(){if(!(worker.level() instanceof ServerLevel)||worker.settlementId()==null||worker.escortPlayer()!=null)return null;var e=SettlementData.get(worker.getServer()).entry(worker.settlementId());return e!=null&&e.dimension().equals(worker.level().dimension().location().toString())&&eligible(e.settlement().resident(worker.getUUID()))?e:null;}
  private void save(){advanceSearchArea();state.putBoolean("discoveryFirst",discoveryFirst);state.putInt("surveyRadius",surveyRadius);state.putInt("surveyCursor",cursor);state.putInt("plantSurveyCursor",plantCursor);state.putInt("looseSurveyCursor",looseCursor);if(surveyY==Integer.MAX_VALUE)state.remove("surveyY");else state.putInt("surveyY",surveyY);NbtRecord.write(path((ServerLevel)worker.level(),worker.getUUID()),state);}
  private void saveSurvey(){advanceSearchArea();int next=cursor;if(state.getBoolean("discoveryFirst")!=discoveryFirst||state.getInt("looseSurveyCursor")!=looseCursor||state.getInt("plantSurveyCursor")!=plantCursor||state.getInt("surveyRadius")!=surveyRadius||!state.contains("surveyCursor")||state.getInt("surveyCursor")!=next||(state.contains("surveyY")?state.getInt("surveyY"):Integer.MAX_VALUE)!=surveyY)save();}
- /** AD-131 (check fix 7): no logs Р Р†Р вЂљРІР‚Сњ wood is the forester's, felled a whole wild tree at a time (ForestWork), never a log out of a crown. */
+ /** AD-131 (check fix 7): no logs Р В Р вЂ Р В РІР‚С™Р Р†Р вЂљРЎСљ wood is the forester's, felled a whole wild tree at a time (ForestWork), never a log out of a crown. */
  public static boolean natural(BlockState s){return !s.requiresCorrectToolForDrops()&&(s.is(BlockTags.SAND)||s.is(BlockTags.DIRT)||s.is(BlockTags.FLOWERS)||s.is(Blocks.GRAVEL)||s.is(Blocks.CLAY)||s.is(Blocks.MOSS_BLOCK)||s.is(Blocks.SUGAR_CANE)||s.is(Blocks.CACTUS));}
  /** Capability of this gatherer, not a promise that the biome contains the deposit. */
  public static boolean provides(Item item){if(item==Items.CLAY_BALL||item==Items.FLINT)return true;if(!(item instanceof BlockItem block)||item==Items.GRASS_BLOCK||item==Items.PODZOL||item==Items.MYCELIUM||item==Items.ROOTED_DIRT)return false;return natural(block.getBlock().defaultBlockState());}
@@ -113,11 +113,25 @@ public final class NaturalSupplyGoal extends Goal {
   return Set.of("dig","deliver","sapling","replant","nursery_soil").contains(stage)
       ||stage.equals("choose")&&!Set.of("no_trees_in_reach","seeking_trees","evening","output_full").contains(status);
  }
+ /** A full mine chest may pause its unpaid delivery while the same miner supplies another demand.
+  * The durable load and its tool remain owned by the mining job; an existing intent still finishes first. */
+ public static boolean miningDeliveryBlocked(ServerLevel l,SettlementData.Entry e,ResidentEntity worker,CompoundTag work){
+  var mine=e.settlement().workplace(worker.getUUID());
+  if(mine==null||!mine.type().equals("mine")||!work.hasUUID("worker")||!work.getUUID("worker").equals(worker.getUUID())
+    ||!work.getString("stage").equals("deliver")||!work.getString("status").equals("output_full")
+    ||!work.hasUUID("operation")||MineOreWork.active(work))return false;
+  var cargo=work.getList("cargo",Tag.TAG_COMPOUND);int index=work.getInt("delivered");
+  if(index<0||index>=cargo.size()||WorldJournal.exists(l,Settlement.childId(work.getUUID("operation"),"delivery/"+index)))return false;
+  var item=ItemStack.of(cargo.getCompound(index));var output=LogisticsRoutes.position(e,mine);
+  return !item.isEmpty()&&l.hasChunkAt(output)&&l.getBlockEntity(output) instanceof net.minecraft.world.Container c
+      &&!LogisticsRoutes.fits(c,List.of(item));
+ }
  public static boolean primaryResourcePending(ServerLevel l,SettlementData.Entry e,ResidentEntity worker){
   if(primaryForestryPending(l,e,worker))return true;
   var person=e.settlement().resident(worker.getUUID());var b=e.settlement().workplace(worker.getUUID());
   if(person==null||person.profession()!=Profession.MINER||b==null)return false;
   var file=MineWork.path(l,b.id());if(!Files.exists(file))return false;var work=NbtRecord.read(file);
+  if(miningDeliveryBlocked(l,e,worker,work))return false;
   // Do not pin every mining stage: missing materials or a better pick may require
   // a surface trip. Only delivery and already funded beam placement finish first.
   return MineOreWork.active(work)||work.getString("stage").equals("deliver")

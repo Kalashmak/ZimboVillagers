@@ -25,6 +25,7 @@ public final class SurfaceQuarry {
  }
  public static boolean mayStart(ServerLevel l,SettlementData.Entry e,ResidentEntity worker){
   var r=e.settlement().resident(worker.getUUID());var b=e.settlement().workplace(worker.getUUID());
-  return r!=null&&r.profession()==Profession.MINER&&b!=null&&worker.getY()>=BuildingPlacement.origin(e,b).getY()&&blocked(MineWork.read(l,b));
+  if(r==null||r.profession()!=Profession.MINER||b==null||worker.getY()<BuildingPlacement.origin(e,b).getY())return false;
+  var work=MineWork.read(l,b);return blocked(work)||NaturalSupplyGoal.miningDeliveryBlocked(l,e,worker,work);
  }
 }
