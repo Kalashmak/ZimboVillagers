@@ -50,8 +50,22 @@ public final class LogisticsRoutes {
  /** AD-147: the same search, the sources limited to {@code only} (null: every source) and taken nearest to {@code from} first (null: by id,
   *  as before), and a route kept only when {@code accept} takes it (null: any). */
  private static Route find(ServerLevel l,SettlementData.Entry e,Settlement.Building dest,Demand demand,int load,Predicate<Settlement.Building> only,BlockPos from,Predicate<Route> accept){var target=chest(l,e,dest);if(target==null)return null;int missing=demand.target-count(target,demand.matches)-PorterWork.reserved(l,e,dest.id(),demand.matches,true);if(missing<=0)return null;
+  return find(l,e,dest,demand,load,only,from,accept,stack->missing);
+ }
+ private static Route find(ServerLevel l,SettlementData.Entry e,Settlement.Building dest,Demand demand,int load,Predicate<Settlement.Building> only,BlockPos from,Predicate<Route> accept,java.util.function.ToIntFunction<ItemStack> missing){
+  var target=chest(l,e,dest);if(target==null)return null;
   var order=e.settlement().buildings().stream().sorted(Comparator.comparing(Settlement.Building::id));if(from!=null)order=order.sorted(Comparator.comparingDouble(b->position(e,b).distSqr(from)));
-  for(var source:order.toList()){if(source.id().equals(dest.id())||!(Set.of("farm","forester","mine","livestock","town_hall","warehouse").contains(source.type())||Workshops.spec(source.type())!=null)||only!=null&&!only.test(source))continue;var c=chest(l,e,source);if(c==null)continue;for(int slot=0;slot<c.getContainerSize();slot++){var stack=c.getItem(slot);if(stack.isEmpty()||!demand.matches.test(stack))continue;int available=count(c,s->ItemStack.isSameItemSameTags(s,stack))-reserve(source,stack)-constructionReserve(l,e,source,stack)-PorterWork.reserved(l,e,source.id(),s->ItemStack.isSameItemSameTags(s,stack),false);int amount=Math.min(load,Math.min(missing,Math.min(available,stack.getCount())));if(amount>0){var item=stack.copyWithCount(amount);if(room(target,item)){var route=new Route(source,dest,item);if(accept==null||accept.test(route))return route;}}}}return null;
+  for(var source:order.toList()){if(source.id().equals(dest.id())||!(Set.of("farm","forester","mine","livestock","town_hall","warehouse").contains(source.type())||Workshops.spec(source.type())!=null)||only!=null&&!only.test(source))continue;var c=chest(l,e,source);if(c==null)continue;for(int slot=0;slot<c.getContainerSize();slot++){var stack=c.getItem(slot);if(stack.isEmpty()||!demand.matches.test(stack))continue;int available=count(c,s->ItemStack.isSameItemSameTags(s,stack))-reserve(source,stack)-constructionReserve(l,e,source,stack)-PorterWork.reserved(l,e,source.id(),s->ItemStack.isSameItemSameTags(s,stack),false);int amount=Math.min(load,Math.min(missing.applyAsInt(stack),Math.min(available,stack.getCount())));if(amount>0){var item=stack.copyWithCount(amount);if(room(target,item)){var route=new Route(source,dest,item);if(accept==null||accept.test(route))return route;}}}}return null;
+ }
+ /** Recomputed fuel shortages already exclude the chest and its paid fuel bank. Wait for an existing fuel parcel before choosing
+  * another fuel kind; counting coal and sticks as interchangeable items would reserve the wrong burn time. */
+ private static Route input(ServerLevel l,SettlementData.Entry e,Settlement.Building dest,Workshops.Input input,int load,BlockPos from,Predicate<Route> accept){
+  var stock=chest(l,e,dest);if(stock==null)return null;
+  if(input.fuelTicks()<=0)return find(l,e,dest,new Demand("workshop_input",input::matches,input.count()+count(stock,input::matches)),load,null,from,accept);
+  if(PorterWork.reserved(l,e,dest.id(),input::matches,true)>0)return null;
+  return find(l,e,dest,new Demand("workshop_fuel",input::matches,0),load,null,from,accept,stack->{
+   int burn=WorkshopFuel.ticks(stack);return burn<=0?0:(input.fuelTicks()+burn-1)/burn;
+  });
  }
  /** Hall stock already counted for an approved project stays at the hall (AD-137: the reserve of HallReserve). */
  public static int constructionReserve(ServerLevel l,SettlementData.Entry e,Settlement.Building source,ItemStack stack){
@@ -158,7 +172,7 @@ public final class LogisticsRoutes {
  private static Route constructionInputs(ServerLevel l,SettlementData.Entry e,List<Workshops.Want> wants,BlockPos from,int load,Predicate<Route> accept){
   for(var want:wants)if(want.need()==NEED_BUILD){var dest=e.settlement().buildings().stream().filter(b->b.id().equals(want.destination())).findFirst().orElse(null);if(dest==null)continue;
    var c=chest(l,e,dest);var spec=Workshops.spec(l,e,dest);if(c==null||spec==null)continue;
-   for(var input:Workshops.needs(l,e,spec,HallReserve.view(l,e,c),List.of(want))){var route=find(l,e,dest,new Demand("construction_input",input::matches,input.count()+count(c,input::matches)),load,null,from,accept);if(route!=null)return route;}
+   for(var input:Workshops.needs(l,e,dest,HallReserve.view(l,e,c),List.of(want))){var route=input(l,e,dest,input,load,from,accept);if(route!=null)return route;}
   }return null;
  }
  /** The need class a route of this building's courier answers (for the card): the class of the first want it serves, or output. */
@@ -220,7 +234,7 @@ public final class LogisticsRoutes {
    // delivery first. Clearing that surplus prevents an output-full deadlock.
    if(Workshops.plan(l,e,own,ownStock,wants)!=null)return SmithyDelivery.post(own)&&SmithyDelivery.delivers(l,e)?null:from(l,e,own,LOAD);
    for(var input:Workshops.needs(l,e,own,ownStock,wants)){
-    var route=find(l,e,own,new Demand("workshop_input",input::matches,input.count()+count(ownStock,input::matches)));
+    var route=input(l,e,own,input,LOAD,null,null);
     if(route!=null)return route;
    }
   }

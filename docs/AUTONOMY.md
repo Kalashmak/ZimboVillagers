@@ -568,3 +568,8 @@ The new restaurant independently baked two bread. Six committed receipts confirm
 ### Second kitchen batch and graduate employment
 
 A second autonomous bread batch now has its complete saved work record and six committed receipts: four flour, four sticks,400 fuel ticks and320 work produced two bread. The naturally educated adult also recovered and took a forester position; its original registry snapshot is retained. These are observed milestones in the continuing village, which remains at civilization I and18/115 research.
+
+
+### Fuel parcels match the selected fuel
+
+Workers now calculate current fuel deliveries from actual burn time. A400-tick shortage fetches four sticks, eight bamboo or one coal, within the existing carrying limit. Construction reservations, incoming parcels and chest capacity remain respected. Construction input requests also account for fuel already paid into the building. Both copies passed34 native checks and166 fresh unit tests, including a baker physically delivering all four paid sticks without duplicate output. The continuing natural world has not loaded this patch yet; maximum autonomous development remains unverified.

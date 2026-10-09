@@ -1,0 +1,167 @@
+{
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "captured_utc": "2026-10-09T23:37:23.727269+00:00",
+  "private_directory": "build/checkpoints/fresh5-fuel-hauling-source42",
+  "world_modified": false,
+  "maximum_verified": false,
+  "trips": [
+    {
+      "job": "75652e20-c739-47a0-bc4a-a35732bc1c16",
+      "receipts": {
+        "take": {
+          "schema": 1,
+          "committed": 1,
+          "pos": -673450881912766,
+          "before": {
+            "id": "minecraft:stick",
+            "Count": 47
+          },
+          "kind": "take",
+          "id": [
+            -1530793025,
+            1998861204,
+            -2004168461,
+            -138186200
+          ],
+          "slot": 2,
+          "after": {
+            "id": "minecraft:stick",
+            "Count": 46
+          },
+          "dimension": "minecraft:overworld"
+        },
+        "put": {
+          "schema": 1,
+          "committed": 1,
+          "pos": -691043068182459,
+          "before": {
+            "id": "minecraft:stick",
+            "Count": 13
+          },
+          "kind": "inventory",
+          "id": [
+            -1597286956,
+            -1982582547,
+            -1672343194,
+            104928878
+          ],
+          "slot": 0,
+          "after": {
+            "id": "minecraft:stick",
+            "Count": 14
+          },
+          "dimension": "minecraft:overworld"
+        }
+      }
+    },
+    {
+      "job": "6b180429-4348-41df-b115-48a451e6efd2",
+      "receipts": {
+        "take": {
+          "schema": 1,
+          "committed": 1,
+          "pos": -673450881912766,
+          "before": {
+            "id": "minecraft:stick",
+            "Count": 44
+          },
+          "kind": "take",
+          "id": [
+            -550354417,
+            -563593644,
+            -1207900438,
+            -215785167
+          ],
+          "slot": 2,
+          "after": {
+            "id": "minecraft:stick",
+            "Count": 43
+          },
+          "dimension": "minecraft:overworld"
+        },
+        "put": {
+          "schema": 1,
+          "committed": 1,
+          "pos": -691043068182459,
+          "before": {
+            "id": "minecraft:stick",
+            "Count": 12
+          },
+          "kind": "inventory",
+          "id": [
+            172016452,
+            -46711470,
+            -1665983712,
+            -1371559113
+          ],
+          "slot": 0,
+          "after": {
+            "id": "minecraft:stick",
+            "Count": 13
+          },
+          "dimension": "minecraft:overworld"
+        }
+      }
+    },
+    {
+      "job": "fe882dd3-ed90-45ae-8a4c-b268c389a203",
+      "receipts": {
+        "take": {
+          "schema": 1,
+          "committed": 1,
+          "pos": -673450881912766,
+          "before": {
+            "id": "minecraft:stick",
+            "Count": 34
+          },
+          "kind": "take",
+          "id": [
+            380145132,
+            70269990,
+            -1944525196,
+            -603364833
+          ],
+          "slot": 2,
+          "after": {
+            "id": "minecraft:stick",
+            "Count": 33
+          },
+          "dimension": "minecraft:overworld"
+        },
+        "put": {
+          "schema": 1,
+          "committed": 1,
+          "pos": -691043068182459,
+          "before": {
+            "id": "minecraft:stick",
+            "Count": 14
+          },
+          "kind": "inventory",
+          "id": [
+            -151786483,
+            2088120377,
+            -1517818036,
+            -319065974
+          ],
+          "slot": 0,
+          "after": {
+            "id": "minecraft:stick",
+            "Count": 15
+          },
+          "dimension": "minecraft:overworld"
+        }
+      }
+    }
+  ],
+  "sha256": {
+    "6b180429-4348-41df-b115-48a451e6efd2-put.bin": "83a43649d314b4ee13d4c242c7003981dad35801bbbf3f211f9ba162571ce865",
+    "6b180429-4348-41df-b115-48a451e6efd2-take.bin": "16c189b5965ee8a7cb1a6fe5002d4bb3fa206485724a65dbc91b1e6096aa50c5",
+    "75652e20-c739-47a0-bc4a-a35732bc1c16-put.bin": "dfff9994c7e777e7f309f88fb74fc856aa4b198bcc939c9b9908cf33bf838b0d",
+    "75652e20-c739-47a0-bc4a-a35732bc1c16-take.bin": "e8aff8af09cda56b8958e8e0a125a060361f71f6d97b6fef8df733c684e3d067",
+    "fe882dd3-ed90-45ae-8a4c-b268c389a203-put.bin": "76cb7eb6fab3997fc65364d50e065ddec5cb587a2ce8c4049fb2ecb231d830af",
+    "fe882dd3-ed90-45ae-8a4c-b268c389a203-take.bin": "a9d5b070be95bd087053f416a88d793fb70a5a77138755a155056167ac5dc3d0"
+  },
+  "diagnosis": "Workshops.leaves converts the missing burn time to ceil(gap/1600), then LogisticsRoutes.find treats it as the count of any fuel. A400-tick gap requires4 sticks or8 bamboo, but it currently requests1 item. Three immutable take/put pairs prove actual one-stick trips between the same forester and kitchen, roughly84 blocks apart.",
+  "limits": "The mutable completed porter trip records were not retained before subsequent trips replaced them. Their original journal pairs remain verified. The small parcels add travel overhead; this does not prove they are the only cause of recurring single missed meals. No recipe, labor, stock, health or clock was changed."
+}

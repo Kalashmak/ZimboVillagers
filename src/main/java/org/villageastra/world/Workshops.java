@@ -28,7 +28,11 @@ public final class Workshops {
   public Want as(int need){return new Want(ingredient,count,destination,need);}
  }
  private static void add(List<Want> result,int need,Collection<Want> wants){for(var w:wants)result.add(w.need()==0?w.as(need):w);}
- public record Input(Ingredient ingredient,int count){public boolean matches(ItemStack s){return !s.isEmpty()&&ingredient.test(s);}}
+ /** Fuel shortages retain their exact missing burn time; count remains the legacy coal-equivalent display amount. */
+ public record Input(Ingredient ingredient,int count,int fuelTicks){
+  public Input(Ingredient ingredient,int count){this(ingredient,count,0);}
+  public boolean matches(ItemStack s){return !s.isEmpty()&&ingredient.test(s);}
+ }
  /** AD-139: levels — from a working level on, a recipe's batch and fuel ticks ({batch,fuel}); minLevel — the level that opens it. */
  private record Custom(String id,List<Input> inputs,List<ItemStack> outputs,int fuelTicks,Input tool,int toolDamage,long labor,int batch,int minLevel,Map<Integer,int[]> levels){
   Custom at(int level){if(levels.isEmpty())return this;int[] o=null;for(var en:new TreeMap<>(levels).entrySet())if(en.getKey()<=level)o=en.getValue();
@@ -456,15 +460,15 @@ public final class Workshops {
      int missing=in.count()-held;if(missing<=0)continue;List<Input> selected=null;long score=Long.MAX_VALUE,unavailable=Long.MAX_VALUE;
      for(var option:in.ingredient().getItems()){var sub=leaves(l,e,spec,chest,option.getItem(),missing,depth+1,bank,visiting,memo,budget);if(sub==null)continue;long cost=sub.stream().mapToLong(Input::count).sum(),absent=unsupported(e,sub);if(absent<unavailable||absent==unavailable&&cost<score){score=cost;unavailable=absent;selected=sub;}}
      if(selected==null){possible=false;break;}path.addAll(selected);}
-    if(!possible)continue;int fuel=fuel(chest)+bank;if(job.fuelTicks()>fuel)path.add(new Input(WorkshopFuel.demand(),Math.max(1,(job.fuelTicks()-fuel+1599)/1600)));
+    if(!possible)continue;int fuel=fuel(chest)+bank;if(job.fuelTicks()>fuel)path.add(new Input(WorkshopFuel.demand(),Math.max(1,(job.fuelTicks()-fuel+1599)/1600),job.fuelTicks()-fuel));
     long cost=path.stream().mapToLong(Input::count).sum(),absent=unsupported(e,path);
     if(absent<bestUnsupported||absent==bestUnsupported&&cost<bestCost){bestCost=cost;bestUnsupported=absent;best=path;}
    }if(best!=null)memo.put(key,best);return best;
   }finally{visiting.remove(target);}
  }
  // ---- durable execution -------------------------------------------------------------------
- private static ListTag inputsTag(List<Input> inputs){var list=new ListTag();for(var in:inputs){var t=new CompoundTag();t.putString("ingredient",in.ingredient().toJson().toString());t.putInt("count",in.count());list.add(t);}return list;}
- private static List<Input> inputs(ListTag list){var result=new ArrayList<Input>();for(var raw:list){var t=(CompoundTag)raw;result.add(new Input(Ingredient.fromJson(JsonParser.parseString(t.getString("ingredient"))),t.getInt("count")));}return result;}
+ private static ListTag inputsTag(List<Input> inputs){var list=new ListTag();for(var in:inputs){var t=new CompoundTag();t.putString("ingredient",in.ingredient().toJson().toString());t.putInt("count",in.count());if(in.fuelTicks()>0)t.putInt("fuelTicks",in.fuelTicks());list.add(t);}return list;}
+ private static List<Input> inputs(ListTag list){var result=new ArrayList<Input>();for(var raw:list){var t=(CompoundTag)raw;result.add(new Input(Ingredient.fromJson(JsonParser.parseString(t.getString("ingredient"))),t.getInt("count"),t.getInt("fuelTicks")));}return result;}
  private static List<ItemStack> stacks(ListTag list){var result=new ArrayList<ItemStack>();for(var raw:list)result.add(ItemStack.of((CompoundTag)raw));return result;}
  private static ListTag stacksTag(List<ItemStack> stacks){var list=new ListTag();for(var s:stacks)list.add(s.save(new CompoundTag()));return list;}
  private static int burn(ItemStack s){return net.minecraftforge.common.ForgeHooks.getBurnTime(s,RecipeType.SMELTING)*s.getCount();}
