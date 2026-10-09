@@ -6,13 +6,14 @@ import net.minecraft.tags.BlockTags;
 import net.minecraft.world.level.block.CropBlock;
 import net.minecraft.world.level.block.state.BlockState;
 import org.villageastra.domain.Settlement;
+import org.villageastra.domain.AnnexTypes;
 import org.villageastra.server.SettlementData;
 
 /** Acceptance checks must reject unloaded or mostly missing buildings, unlike a repair request's threshold. */
 public final class TerminalProgress {
  private TerminalProgress(){}
  public static int missing(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
-  String design=BuildingTiers.layoutId(e.settlement(),b.type(),BuildingTiers.max(b.type()));
+  String design=AnnexTypes.annex(b.type())?b.type():BuildingTiers.layoutId(e.settlement(),b.type(),BuildingTiers.max(b.type()));
   var layout=new LinkedHashMap<>(BuildingPlacement.layout(e,b,design));
   if(b.type().equals("farm")&&!FarmField.legacy(e.settlement()))for(var cell:FarmBarn.layout(BuildingTiers.max(b.type()),e.settlement().westField(b.id())).entrySet())
    layout.put(BuildingPlacement.at(e,b,cell.getKey().getX(),cell.getKey().getY(),cell.getKey().getZ()),cell.getValue());
@@ -38,9 +39,23 @@ public final class TerminalProgress {
   }
   return count;
  }
+ /** Annexes keep their fixed plan, not a level VI; registry presence alone is not a working service. */
+ private static String annexBlocker(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
+  var kind=Annexes.kind(b.type());if(kind==null)return "annex_definition";
+  var id=e.settlement().annexParent(b.id());var parent=e.settlement().buildings().stream().filter(p->p.id().equals(id)).findFirst().orElse(null);
+  if(parent==null||!parent.type().equals(kind.parent()))return "annex_parent";
+  if(b.rotation()!=parent.rotation()||!BuildingPlacement.origin(e,b).equals(Annexes.origin(e,parent,kind)))return "annex_site";
+  if(BuildingTiers.built(e,parent)<kind.parentLevel())return "annex_parent_level";
+  int missing=missing(l,e,b);if(missing>0)return "missing="+missing;
+  if(!l.hasChunkAt(BuildingPlacement.origin(e,parent))||BuildingLevels.level(l,e,parent)<kind.parentLevel())return "annex_parent_working";
+  var stock=LogisticsRoutes.position(e,b);
+  return !l.hasChunkAt(stock)||!(l.getBlockEntity(stock) instanceof OwnedChestEntity)?"annex_stock":"";
+ }
  public static Map<String,String> blockers(ServerLevel l,SettlementData.Entry e){
   var result=new TreeMap<String,String>();
-  for(var b:e.settlement().buildings())if(BuildingTiers.upgradable(b.type())){
+  for(var b:e.settlement().buildings())if(AnnexTypes.annex(b.type())){
+   String reason=annexBlocker(l,e,b);if(!reason.isEmpty())result.put(b.type()+"/"+b.id(),reason);
+  }else if(BuildingTiers.upgradable(b.type())){
    int max=BuildingTiers.max(b.type()),working=BuildingLevels.level(l,e,b);String key=b.type()+"/"+b.id();
    if(BuildingTiers.built(e,b)<max||working<max){result.put(key,"built="+BuildingTiers.built(e,b)+" working="+working+" required="+max);continue;}
    int missing=missing(l,e,b);if(missing>0)result.put(key,"missing="+missing);

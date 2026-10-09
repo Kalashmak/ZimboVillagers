@@ -1,0 +1,35 @@
+{
+  "owned_files": {
+    "src/main/java/org/villageastra/world/TerminalProgress.java": "4d6c9866eaa67ea8d9d4d59dd7e3419db05ec976703453936ea09faaf33ff7fc",
+    "src/main/java/org/villageastra/gametest/TerminalAnnexGameTests.java": "c968f79183869e057dbaf494ebc8384808720ca7561d91ab2171ffa1029babbf"
+  },
+  "parallel_commit": "09861108665cdd01453091970487a0cf60fa74f7",
+  "checks": [
+    {
+      "log": "docs/runs/terminal-annex-integrated-private-20261009.log",
+      "sha256": "0d6c875381fd6dff8a1d070be810f5fe5783de0eddddd2b7f2bacaadc26925e5",
+      "native_passed": 43,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "docs/runs/terminal-annex-integrated-independent-final-20261009.log",
+      "sha256": "7b7760ed8a14e5ebd31c15807460c1cd8db01ecf136bef8376e0415d52fe6837",
+      "native_passed": 43,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "release_binary_updated": false,
+  "limits": "Stricter physical fixed-annex acceptance only. No new level VI annex, stock ownership/staff/resource gates, balance/labor/cost changes. Original baseline and fixture/environment NOT_RUN/FAIL trials retained. Source38 continuing natural world still previous frozen runtime; cannot claim MAX."
+}

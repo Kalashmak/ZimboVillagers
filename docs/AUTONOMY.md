@@ -461,3 +461,10 @@ A castle village now addresses the stock chest actually placed by its castle des
 If a paid temporary scaffold is already missing when its removal is selected, builders can record the loss and finish bookkeeping without returning a nonexistent item. This requires the exact earlier paid placement and its committed file and chunk receipt. A genuinely recorded removal instead recovers its single normal return. Separate signed loss accounting can replay after a interrupted project save; the original approved operation chain remains intact. The cause of the observed scaffold loss has not been established.
 
 Both integrated source copies passed 33 native construction, hall, storage and progression checks plus 166 unit tests. The continuing natural village loaded these changes in segment 38, with all 1,955 frozen runtime files verified. Builders finished the previously blocked farm: 467 operations, materials supplied by the village, remaining tools returned and exactly one building registration. A saved-world check found no differences in 329 permanent cells and 293 stable properties, checked all 80 field soil cells and found no remaining temporary scaffolds. Full 115-research, civilization-VI progression remains unverified.
+
+
+### Physical acceptance of fixed annexes
+
+Maximum-development validation now checks each registered fixed annex against its actual permanent plan, real parent, canonical location and turn, minimum parent working level and existing stock chest. Destroyed stations or structures cannot count as a completed service merely because the registry still contains them. Fixed annexes have no invented level-VI upgrade. Existing dynamic equipment states and working annexes during an ordinary parent renovation retain their behavior.
+
+Both integrated source copies passed 43 native progression, annex, construction, stock and return checks plus 166 fresh unit tests. The continuing natural village has not loaded this validation change yet; full maximum progression remains unverified.
