@@ -248,8 +248,11 @@ public final class ConstructionNetwork {
  public static void send(net.minecraft.server.level.ServerPlayer player){CHANNEL.send(PacketDistributor.PLAYER.with(()->player),new Snapshot(view(player)));}
  public static void clear(){BUILDING_FOCUS.clear();SENT.clear();LAST_REQUEST.clear();ATLAS_LAST.clear();passes=0;ConstructionDrafts.clear();MayorSurvey.clear();OfficeOverview.clear();}
  public static void tick(net.minecraft.server.MinecraftServer server){
-  passes++;ConstructionDrafts.prune(server);SENT.keySet().retainAll(server.getPlayerList().getPlayers().stream().map(p->p.getUUID()).toList());
-  LAST_REQUEST.keySet().retainAll(SENT.keySet());BUILDING_FOCUS.keySet().retainAll(SENT.keySet());
+  passes++;ConstructionDrafts.prune(server);var online=server.getPlayerList().getPlayers().stream().map(p->p.getUUID()).toList();
+  SENT.keySet().retainAll(online);LAST_REQUEST.keySet().retainAll(online);BUILDING_FOCUS.keySet().retainAll(online);
+  // Background cards share the existing five-tick heartbeat. Explicit orders
+  // still call send immediately; custody and worker decisions do not use snapshots.
+  if(passes%5!=0)return;
   for(var player:server.getPlayerList().getPlayers()){
    var tag=view(player);var previous=SENT.get(player.getUUID());
    if(Boolean.getBoolean("villageastra.constructionSmoke")&&passes%10==0)com.mojang.logging.LogUtils.getLogger().info("ASTRA_CONSTRUCTION server snapshot={} player={}",tag.getAllKeys(),player.blockPosition());

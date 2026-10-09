@@ -14,7 +14,7 @@ public final class ConstructionViewGameTests {
  @GameTest(template="empty",timeoutTicks=200) public static void viewFollowsPaidQueueWithoutWorldMutation(GameTestHelper h){
   var l=h.getLevel();var origin=h.absolutePos(new BlockPos(2,3,2));var village=StarterVillage.create(l,origin);var e=SettlementData.get(l.getServer()).entry(village.id());HallUpgradeGoal.request(l,e);
   var state=HallUpgradeGoal.inspect(l,village.id());var original=state.copy();var plan=HallConstructionPlan.read(state);var view=ConstructionViews.nearby(l,origin);
-  h.assertTrue(plan.operations().size()==view.getInt("total")&&view.getList("cells",Tag.TAG_COMPOUND).size()==plan.operations().size(),"View is the executor queue, not a replacement blueprint");
+  h.assertTrue(view.hasUUID("id")&&view.getUUID("id").equals(plan.id())&&plan.operations().size()==view.getInt("total")&&view.getList("cells",Tag.TAG_COMPOUND).size()==plan.operations().size(),"View is the executor queue, not a replacement blueprint");
   h.assertTrue(view.getInt("conflicts")==0&&view.getInt("hidden")==0,"Initial approved project is consistent");
   for(var raw:view.getList("materials",Tag.TAG_COMPOUND)){var row=(CompoundTag)raw;h.assertTrue(plan.materials().get(row.getString("item"))==row.getInt("required"),"Estimate and physical queue agree");}
   h.assertTrue(original.equals(HallUpgradeGoal.inspect(l,village.id())),"Viewing never modifies funding or work state");
@@ -24,7 +24,7 @@ public final class ConstructionViewGameTests {
   l.setBlock(step.pos(),step.before(),3);h.assertTrue(WorldJournal.place(l,plan.operations().get(0).id(),step.pos(),step.before(),step.after()),"Existing execution journal applies exact step");state.putInt("index",1);
   var file=l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-upgrades/"+village.id()+".bin");NbtRecord.write(file,state);
   var next=ConstructionViews.nearby(l,origin);h.assertTrue(next.getList("cells",Tag.TAG_COMPOUND).size()==view.getList("cells",Tag.TAG_COMPOUND).size()-1&&next.getInt("index")==1,"Completed operation disappears from both view and estimate");
-  state.putBoolean("complete",true);NbtRecord.write(file,state);h.assertTrue(!ConstructionViews.nearby(l,origin).hasUUID("id"),"Complete project has no ghost");h.succeed();
+  state.putBoolean("complete",true);NbtRecord.write(file,state);var finished=ConstructionViews.nearby(l,origin);h.assertTrue(!finished.hasUUID("id")||!finished.getUUID("id").equals(plan.id()),"Complete project has no ghost; another nearby pending project may still be shown");h.succeed();
  }
 
  /** OWNER_REQUEST 9.10–9.11: bushes stand on the plot of an ordered house. Once the crew has cleared them the same order goes on — the
