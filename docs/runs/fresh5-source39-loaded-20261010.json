@@ -1,0 +1,42 @@
+{
+  "source_commit": "27f442518426e8d3c5ec32af5de17aa82e47c2fa",
+  "world": "run-client-1/saves/astra-smoke-1791497240499",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "resume_clock": 13124751,
+  "runtime_manifest": "docs/runs/full-growth-fresh5-runtime-segment39-20261009.json",
+  "runtime_files": 1968,
+  "pid": 32976,
+  "session": 44505,
+  "closed_previous": {
+    "log": "docs/runs/full-growth-fresh5-segment38-20261009-saved.log",
+    "sha256": "334e8265d569c94f299ddb3bd2668063d8115b6709bdb90e00b637ff989f0268",
+    "last_sample": [
+      "13124248",
+      "1",
+      "18"
+    ],
+    "normal_exit": true,
+    "all_dimensions_saved": true,
+    "full_acceptance": false,
+    "source_commit": "44b8163a47c9a9d3dea80b4910088f764efad9a4",
+    "checkpoint": "build/checkpoints/full-growth-fresh5-segment38-20261009"
+  },
+  "last_observation": [
+    "13142605",
+    "1",
+    "18",
+    "restaurant",
+    "false",
+    "false",
+    "0/532"
+  ],
+  "loaded_changes": [
+    "AD467 physical terminal annex validation",
+    "AD468 verified bread-job sensing",
+    "AD469 verified parcel sensing",
+    "AD470 sick-owner cold furnace refueling"
+  ],
+  "maximum_verified": false,
+  "live_log_hashed": false,
+  "release_binary_updated": false
+}
