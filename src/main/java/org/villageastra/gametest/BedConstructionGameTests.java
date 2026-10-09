@@ -64,6 +64,11 @@ public final class BedConstructionGameTests {
     h.assertTrue(!saved.getBoolean("funded")&&!saved.getBoolean("complete")&&saved.getList("ops",Tag.TAG_COMPOUND).size()==3,"Completed old queue must request one replacement operation");
     h.assertTrue(l.getBlockState(foot).isAir()&&stock.isEmpty(),"Empty stock cannot restore a paid half for free");
     h.assertTrue(saved.getCompound("cost").getInt("minecraft:white_bed")==1&&saved.getCompound("initialCost").getInt("minecraft:white_bed")==1&&saved.getInt("index")==2,"Original paid queue and its cost are retained; replacement needs another actual bed");
+    var untouched=saved.copy();var view=org.villageastra.server.ConstructionViews.project(l,e,base,saved);
+    h.assertTrue(view.getInt("total")==3&&view.getInt("progress")==2&&view.getLong("unique")==2&&view.getList("materials",Tag.TAG_COMPOUND).getCompound(0).getInt("required")==1,"Live construction view accepts the paid repair while retaining raw progress and one required bed");
+    h.assertTrue(saved.equals(untouched),"Reading the repair view cannot rewrite original paid history");
+    var invalid=saved.copy();invalid.getList("ops",Tag.TAG_COMPOUND).getCompound(2).remove("bedReplacement");boolean refused=false;try{HallConstructionPlan.read(invalid);}catch(IllegalArgumentException expected){refused=true;}h.assertTrue(refused,"An unmarked broken state chain is still rejected");
+    invalid=saved.copy();invalid.getList("ops",Tag.TAG_COMPOUND).getCompound(0).putBoolean("done",false);refused=false;try{HallConstructionPlan.read(invalid);}catch(IllegalArgumentException expected){refused=true;}h.assertTrue(refused,"A repair cannot conceal unfinished original work");
     stock.setItem(0,new ItemStack(Items.WHITE_BED));supplied[0]=true;
    }
    if(saved.getBoolean("complete")){

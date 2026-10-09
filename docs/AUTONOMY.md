@@ -420,4 +420,11 @@ The continuing natural village funded all 419 materials and completed its 474 or
 
 Both copies pass 20 related native checks and 166 unit tests, including empty-stock refusal, one actual replacement withdrawal, physical installation and registration, changed-cell guards, completed-building and relocation boundaries, rotated homes, repairs, construction access and funding reserves. The exact trigger of the real missing half remains unproven: a support-only experiment did not reproduce it. Earlier failed results and the correction of a test setup that changed its remaining partner are retained.
 
-This bed-completion change is not yet loaded into the continuing natural world; maximum progression remains unverified.
+The initial load requested a real paid replacement but exposed a fatal construction-view callback: the historical bed placement and its later repair do not form one uninterrupted state chain. The interrupted world and crash evidence were preserved without rollback.
+
+
+### Reading a paid repair queue
+
+The construction view now represents the current reconstruction of a validated bed-replacement cell while retaining every historical operation and receipt in the saved queue. General state-chain validation remains strict: an unmarked broken chain or a replacement crossing unfinished original work is rejected. The native paid-builder test now calls the actual construction view before providing its replacement bed and verifies progress, unique cells, the single required item and unchanged saved history. Both copies pass 24 related native checks; 166 unit tests ran fresh in the main trial and independent final, while the main final unit task was up-to-date.
+
+This repair-view follow-up is not yet loaded into the continuing natural world; maximum progression remains unverified.
