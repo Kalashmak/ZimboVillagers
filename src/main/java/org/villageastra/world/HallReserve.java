@@ -63,6 +63,16 @@ public final class HallReserve {
   // Reuse this call's verified plan; stock remains live and the next call checks its own stamp.
   var c=chest(l,e);return c==null?0:Math.min(snap.reserved().getOrDefault(item,0),LogisticsRoutes.count(c,s->s.is(item)));
  }
+ /** One verified plan and one live stock scan for the costs on a building card. The result belongs to this call only. */
+ public static Map<Item,Integer> keptFrom(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
+  var snap=active(l,e);if(snap.reserved().isEmpty())return Map.of();
+  boolean own=snap.target()==null?b.type().equals("town_hall"):snap.target().equals(b.id());if(own)return Map.of();
+  var c=chest(l,e);if(c==null)return Map.of();
+  var totals=new HashMap<Item,Integer>();
+  for(int i=0;i<c.getContainerSize();i++){var stack=c.getItem(i);if(!stack.isEmpty()&&snap.reserved().containsKey(stack.getItem()))totals.merge(stack.getItem(),stack.getCount(),Integer::sum);}
+  totals.replaceAll((item,count)->Math.min(count,snap.reserved().get(item)));
+  return Map.copyOf(totals);
+ }
  /** The hall stock of this item any consumer but the builder may take. */
  public static int available(ServerLevel l,SettlementData.Entry e,Item item){var c=chest(l,e);return c==null?0:Math.max(0,LogisticsRoutes.count(c,s->s.is(item))-reserved(l,e,item));}
  private static OwnedChestEntity chest(ServerLevel l,SettlementData.Entry e){var hall=Workshops.hall(e);return hall==null?null:LogisticsRoutes.chest(l,e,hall);}

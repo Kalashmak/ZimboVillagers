@@ -214,8 +214,8 @@ public final class BuildingTiers {
    var research=new ListTag();for(var id:missingResearch(l,e,b.type(),kept+1))research.add(StringTag.valueOf(id));t.put("research",research);
    var hall=Workshops.hall(e);var chest=hall==null?null:LogisticsRoutes.chest(l,e,hall);int lack=0;
    // The office shows each item as have/need, the ones still missing first (at most COST_ROWS; the totals above stay for older readers).
-   var rows=new ArrayList<CompoundTag>();
-   for(var entry:cost.entrySet()){var item=BuiltInRegistries.ITEM.get(new ResourceLocation(entry.getKey()));int have=chest==null?0:LogisticsRoutes.count(chest,s->s.is(item))-HallReserve.keptFrom(l,e,b,item);lack+=Math.max(0,entry.getValue()-have);
+   var rows=new ArrayList<CompoundTag>();var keptStock=HallReserve.keptFrom(l,e,b);
+   for(var entry:cost.entrySet()){var item=BuiltInRegistries.ITEM.get(new ResourceLocation(entry.getKey()));int have=chest==null?0:LogisticsRoutes.count(chest,s->s.is(item))-keptStock.getOrDefault(item,0);lack+=Math.max(0,entry.getValue()-have);
     var row=new CompoundTag();row.putString("item",entry.getKey());row.putInt("need",entry.getValue());row.putInt("have",have);rows.add(row);}
    rows.sort(Comparator.<CompoundTag>comparingInt(r->r.getInt("have")-r.getInt("need")).thenComparing(r->r.getString("item")));
    var list=new ListTag();for(var row:rows)if(list.size()<COST_ROWS)list.add(row);

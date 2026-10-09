@@ -197,4 +197,31 @@ public final class BuildReserveGameTests {
   }finally{done(t);}
   h.succeed();
  }
+ @GameTest(template="empty",batch="card_reserve",timeoutTicks=100)
+ public static void cardStockReadsKeepSameTickCustodyAndLivePause(GameTestHelper h){
+  var t=town(h,0);
+  try{
+   var other=new Settlement.Building(UUID.randomUUID(),"farm",20,0,0);
+   t.chest.setItem(0,new ItemStack(Items.COBBLESTONE,4));t.chest.setItem(1,new ItemStack(Items.COBBLESTONE,3));t.chest.setItem(2,new ItemStack(Items.LANTERN,2));
+   var state=project(Map.of(Items.COBBLESTONE,10,Items.LANTERN,1));queue(t,state);
+   var first=HallReserve.keptFrom(t.l,t.e,other);
+   h.assertTrue(first.equals(Map.of(Items.COBBLESTONE,7,Items.LANTERN,1)),"Split stacks are bounded by the live reserve");
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,t.hall).isEmpty(),"The project owner sees its own stock");
+   h.assertTrue(builderTakes(t,state,Items.COBBLESTONE,4).getCount()==4,"The builder really takes four");
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other).equals(Map.of(Items.COBBLESTONE,3,Items.LANTERN,1)),"A same-tick paid withdrawal updates both reserve and stock");
+   t.chest.setItem(0,new ItemStack(Items.COBBLESTONE,9));
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other).get(Items.COBBLESTONE)==6,"A same-tick delivery reads live inventory");
+   h.assertTrue(first.get(Items.COBBLESTONE)==7,"An earlier card retains its own snapshot");
+   var mayor=UUID.randomUUID();var g=t.s.governance();g.appointPlayer(mayor);var id=HallConstructionPlan.projectId(state);
+   h.assertTrue(g.setPaused(mayor,g.epoch(),g.revision(),id,true)&&HallReserve.keptFrom(t.l,t.e,other).isEmpty(),"Pause is live without rewriting the plan");
+   h.assertTrue(g.setPaused(mayor,g.epoch(),g.revision(),id,false)&&HallReserve.keptFrom(t.l,t.e,other).get(Items.COBBLESTONE)==6,"Resume is live too");
+   state.putBoolean("funded",true);queue(t,state);
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other).isEmpty(),"Same-tick funding releases the remaining reserve");
+   HallUpgradeGoal.drop(t.l,t.s.id());
+   var next=project(Map.of(Items.COBBLESTONE,2));next.putUUID("building",other.id());queue(t,next);
+   h.assertTrue(HallReserve.keptFrom(t.l,t.e,other).isEmpty()&&HallReserve.keptFrom(t.l,t.e,t.hall).get(Items.COBBLESTONE)==2,"Replacement changes the owner and never adds old reservations");
+  }finally{done(t);}
+  h.succeed();
+ }
+
 }
