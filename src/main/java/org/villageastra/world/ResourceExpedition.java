@@ -19,6 +19,7 @@ public final class ResourceExpedition {
   }return ready;
  }
  private static final TicketType<UUID> TICKET=TicketType.create("villageastra_resource_trip",Comparator.comparing(UUID::toString),100);
+ private static final TicketType<UUID> MINE_RETURN=TicketType.create("zimbovillagers_mine_return",Comparator.comparing(UUID::toString),400);
  public static void hold(ResidentEntity npc){if(npc.level() instanceof ServerLevel l)l.getChunkSource().addRegionTicket(TICKET,npc.chunkPosition(),3,npc.getUUID());}
  private record Trip(ServerLevel level,boolean test,long renewed,long stalledSince,long chunk){}
  private static final Map<UUID,Trip> MOVING=new HashMap<>();
@@ -63,13 +64,49 @@ public final class ResourceExpedition {
     ||npc.blockPosition().distSqr(e.center())>HomeNeighborhood.RECOVERY_REACH*HomeNeighborhood.RECOVERY_REACH)return false;
   var r=e.settlement().resident(npc.getUUID());
   if(r==null||!r.alive()||r.profession()==null||e.settlement().workplace(r.id())==null)return false;
+  return visited(l,e,test);
+ }
+ private static boolean visited(ServerLevel l,SettlementData.Entry e,boolean test){
   if(test)return TouchLoad.ticking(l,e.center());
   var cp=new net.minecraft.world.level.ChunkPos(e.center());int reach=l.getServer().getPlayerList().getSimulationDistance();
   return l.players().stream().anyMatch(p->Math.abs(p.chunkPosition().x-cp.x)<=reach&&Math.abs(p.chunkPosition().z-cp.z)<=reach);
  }
+ /** Ordinary miners also leave the player's view while walking their long galleries. */
+ public static void working(ResidentEntity npc,boolean test){
+  if(npc.level() instanceof ServerLevel l&&l.getEntity(npc.getUUID())==npc&&localWorker(npc,test))follow(npc,test);
+ }
+ /** A body already saved outside the view edge cannot enroll itself. Reopen only its
+  * claimed, bounded mine route while the village is visited; native persistence restores it. */
+ private static void recoverMineRoutes(ServerLevel l,boolean test){
+  for(var e:SettlementData.get(l.getServer()).entries()){
+   if(!e.dimension().equals(l.dimension().location().toString())||!visited(l,e,test))continue;
+   for(var r:e.settlement().residents()){
+    if(!r.alive()||r.profession()!=org.villageastra.domain.Profession.MINER||l.getEntity(r.id())!=null)continue;
+    var b=e.settlement().workplace(r.id());
+    if(b==null||!b.type().equals("mine")||!java.nio.file.Files.exists(MineWork.path(l,b.id())))continue;
+    var work=MineWork.read(l,b);
+    if(!work.hasUUID("worker")||!work.getUUID("worker").equals(r.id())||work.getBoolean("complete")
+      ||!work.contains("access",net.minecraft.nbt.Tag.TAG_INT_ARRAY))continue;
+    var access=work.getIntArray("access");if(access.length!=3)continue;
+    var to=BuildingPlacement.at(e,b,access[0],access[1],access[2]);
+    if(to.distSqr(e.center())>HomeNeighborhood.RECOVERY_REACH*HomeNeighborhood.RECOVERY_REACH
+      ||to.getY()<l.getMinBuildHeight()||to.getY()>=l.getMaxBuildHeight())continue;
+    var start=new net.minecraft.world.level.ChunkPos(BuildingPlacement.origin(e,b));var end=new net.minecraft.world.level.ChunkPos(to);
+    int steps=Math.max(Math.abs(end.x-start.x),Math.abs(end.z-start.z));
+    for(int i=0;i<=steps;i++){
+     int x=steps==0?start.x:start.x+(int)Math.round((end.x-start.x)*(double)i/steps);
+     int z=steps==0?start.z:start.z+(int)Math.round((end.z-start.z)*(double)i/steps);
+     var cp=new net.minecraft.world.level.ChunkPos(x,z);
+     if(TouchLoad.ensure(l,cp.getWorldPosition())!=TouchLoad.Touch.OK)continue;
+     l.getChunkSource().addRegionTicket(MINE_RETURN,cp,3,r.id());
+    }
+   }
+  }
+ }
  /** A loaded saved body at the non-ticking view edge cannot run its goal to enroll itself after restart. */
  public static void recoverLoaded(ServerLevel l,boolean test){
   if(!test&&l.getServer().getPlayerCount()==0)return;
+  recoverMineRoutes(l,test);
   var data=SettlementData.get(l.getServer());
   for(var entity:l.getAllEntities())if(entity instanceof ResidentEntity npc&&npc.isAlive()&&npc.settlementId()!=null&&!MOVING.containsKey(npc.getUUID())){
    var e=data.entry(npc.settlementId());var record=e==null?null:e.settlement().resident(npc.getUUID());

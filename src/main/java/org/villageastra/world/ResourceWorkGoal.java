@@ -236,6 +236,7 @@ public final class ResourceWorkGoal extends Goal {
         status(!miner&&!farmer&&state.getString("stage").equals("dig")?"walking_to_tree":"walking");return false;
     }
     @Override public void tick(){
+        ResourceExpedition.working(worker,withoutPlayers);
         // AD-122: a miner who has begun a block works it every tick, like a player holding the mouse button; walking and everything else keep the one-second call.
         // With a batch in hand he turns to the next cell of his drive at once, and starts a block the tick he stands at it.
         boolean face=miner&&state!=null&&(state.getString("stage").equals("dig")&&(state.getInt("labor")>0||atFace())||state.getString("stage").equals("choose")&&!state.getList("cargo",Tag.TAG_COMPOUND).isEmpty());
