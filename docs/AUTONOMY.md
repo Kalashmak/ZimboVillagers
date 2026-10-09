@@ -411,4 +411,4 @@ The continuing natural village loaded this build after a normal save and resume,
 
 Repeated tool checks share a verified work-record copy within one actual server tick. Atomic-write revisions and file metadata invalidate the record immediately; the next tick rereads it. Stock contents and resident assignments are still queried afresh, so adding or removing a real spare tool changes availability immediately. Repair quantities, tool tiers, research reserves, funding and labor are unchanged. A native regression reduces 100 unchanged funding views from 100 reads to one and covers caller copies, same-time same-size wear changes, deletion, recreation, separate workplaces and checksum rejection. Both copies pass 19 related native checks and 166 unit tests; the main final unit task was up-to-date, and the independent final ran fresh.
 
-This tool-sensing change is not yet loaded into the continuing natural world; maximum progression remains unverified.
+The continuing natural village loaded this tool-sensing change after a normal save and resume, with all 1,940 runtime files matching the verified build. Maximum progression remains unverified.
