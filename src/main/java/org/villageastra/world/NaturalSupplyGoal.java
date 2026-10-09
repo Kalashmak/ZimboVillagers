@@ -162,6 +162,19 @@ public final class NaturalSupplyGoal extends Goal {
   // same shaft floor, native route, safety, paid tool and per-block labor guards.
   var quarryDemand=new HashSet<Item>(wanted);quarryDemand.retainAll(Set.of(Items.RAW_IRON,Items.RAW_COPPER,Items.RAW_GOLD,Items.COAL,Items.DIAMOND,Items.REDSTONE,Items.LAPIS_LAZULI,Items.EMERALD,Items.ANDESITE,Items.GRANITE,Items.DIORITE,Items.TUFF,Items.SANDSTONE,Items.RED_SANDSTONE));
   boolean deepQuarry=quarry&&!quarryDemand.isEmpty();
+  if(deepQuarry&&chest!=null){
+   // A deposit skipped before a paid tool existed must be reconsidered nearby.
+   // Remember tool kinds, not wear or slots: ordinary use does not restart the survey.
+   var available=new HashSet<String>();
+   for(int slot=0;slot<chest.getContainerSize();slot++){var pick=chest.getItem(slot);
+    if(pick.getItem() instanceof PickaxeItem&&pick.getDamageValue()<pick.getMaxDamage()
+        &&HallReserve.free(l,LogisticsRoutes.position(e,hall),pick)>0)
+     available.add(net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(pick.getItem()).toString());
+   }
+   var previous=new HashSet<String>();for(var kind:state.getList("quarryToolKinds",Tag.TAG_STRING))previous.add(kind.getAsString());
+   if(state.contains("quarryToolKinds")&&!previous.containsAll(available)){cursor=0;surveyY=Integer.MAX_VALUE;}
+   if(!state.contains("quarryToolKinds")||!previous.equals(available)){var kinds=new ListTag();available.stream().sorted().forEach(kind->kinds.add(StringTag.valueOf(kind)));state.put("quarryToolKinds",kinds);saveSurvey();}
+  }
   // Expensive nearby leads may use an entire allowance. Give an exhausted miner
   // every other fresh window to its durable discovery cursor first. Retried
   // selectors share that choice and the original elapsed/native-plan budget.
@@ -200,11 +213,13 @@ public final class NaturalSupplyGoal extends Goal {
   * candidate still needs fresh safety, loot and reversible native-route checks;
   * a successful revisit starts a new unpaid job, never replays delivered cargo. */
  private boolean resumeLoose(ServerLevel l,Set<Item> wanted,Set<BlockPos> reserved,long deadline,long plans){
-  if(!state.getBoolean("complete")||state.getBoolean("quarry")||state.getBoolean("looseResumeChecked")
-    ||!state.contains("target")||!state.contains("before"))return false;
-  var material=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),state.getCompound("before"));
+  if(!state.getBoolean("complete")||state.getBoolean("looseResumeChecked")
+      ||Collections.disjoint(wanted,Set.of(Items.SAND,Items.RED_SAND,Items.CLAY_BALL,Items.GRAVEL,Items.FLINT,Items.DIRT)))return false;
+  var lead=completedLoose(l,state)?state:state.getCompound("looseLead");
+  if(!completedLoose(l,lead))return false;
+  var material=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),lead.getCompound("before"));
   if(!(material.is(BlockTags.SAND)||material.is(BlockTags.DIRT)||material.is(Blocks.GRAVEL)||material.is(Blocks.CLAY))||!mayYield(material,wanted))return false;
-  var previous=BlockPos.of(state.getLong("target"));
+  var previous=BlockPos.of(lead.getLong("target"));
   if(!l.hasChunkAt(previous)||!ResourceExpedition.survey(worker,previous))return false;
   var candidates=new ArrayList<BlockPos>();
   for(var p:BlockPos.betweenClosed(previous.offset(-4,-2,-4),previous.offset(4,2,4)))
@@ -383,7 +398,21 @@ public final class NaturalSupplyGoal extends Goal {
   }return false;
  }
  private boolean pauseSurvey(int y){cursor--;surveyY=y;surveyPending=true;saveSurvey();return false;}
- private boolean begin(BlockPos pos,BlockPos stand,BlockState before,boolean stone){state=new CompoundTag();state.putUUID("id",UUID.randomUUID());state.putLong("target",pos.asLong());state.putLong("stand",stand.asLong());state.put("before",NbtUtils.writeBlockState(before));state.putBoolean("quarry",stone);state.putString("stage",stone?"tool":"dig");save();return true;}
+ /** Remember a confirmed completed deposit as a lead, never as stock or cargo. */
+ private static boolean completedLoose(ServerLevel l,CompoundTag trip){
+  if(!trip.getBoolean("complete")||trip.getBoolean("quarry")||!trip.hasUUID("id")||!trip.contains("target")||!trip.contains("before"))return false;
+  var material=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),trip.getCompound("before"));
+  if(!(material.is(BlockTags.SAND)||material.is(BlockTags.DIRT)||material.is(Blocks.GRAVEL)||material.is(Blocks.CLAY)))return false;
+  var receipt=WorldJournal.inspectCommitted(l,trip.getUUID("id"));
+  return receipt!=null&&receipt.getString("kind").equals("block")&&receipt.getLong("pos")==trip.getLong("target")&&receipt.getCompound("before").equals(trip.getCompound("before"));
+ }
+ private boolean begin(BlockPos pos,BlockPos stand,BlockState before,boolean stone){
+  var l=(ServerLevel)worker.level();var lead=state.getCompound("looseLead").copy();
+  if(completedLoose(l,state)){lead=new CompoundTag();lead.putUUID("id",state.getUUID("id"));lead.putBoolean("complete",true);lead.putLong("target",state.getLong("target"));lead.put("before",state.getCompound("before").copy());}
+  var tools=state.getList("quarryToolKinds",Tag.TAG_STRING).copy();boolean observedTools=state.contains("quarryToolKinds");
+  state=new CompoundTag();if(!lead.isEmpty())state.put("looseLead",lead);if(observedTools)state.put("quarryToolKinds",tools);
+  state.putUUID("id",UUID.randomUUID());state.putLong("target",pos.asLong());state.putLong("stand",stand.asLong());state.put("before",NbtUtils.writeBlockState(before));state.putBoolean("quarry",stone);state.putString("stage",stone?"tool":"dig");save();return true;
+ }
  @Override public boolean canContinueToUse(){return entry()!=null&&(test||worker.getServer().getPlayerCount()>0)&&active(state)&&!CargoCustody.pending(worker.getServer(),worker.getUUID());}
  // A long reachable trip must not expire while making new progress toward its destination.
  private void resetTravel(){travel=0;bestDistance=Double.POSITIVE_INFINITY;}

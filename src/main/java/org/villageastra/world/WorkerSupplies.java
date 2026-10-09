@@ -13,6 +13,12 @@ public final class WorkerSupplies {
  private WorkerSupplies(){}
  private static CompoundTag resource(ServerLevel l,Settlement.Building b){var file=MineWork.path(l,b.id());return Files.exists(file)?NbtRecord.read(file):new CompoundTag();}
  public static boolean eligible(Resident r,Settlement.Building b){return r!=null&&r.alive()&&r.life()==Resident.Life.ADULT&&b!=null&&(Set.of("farm","forester","mine").contains(b.type())||Workshops.spec(b.type())!=null);}
+ /** A tool held by a paused delivery still belongs to that job; a quarry needs its own paid loan. */
+ private static boolean quarryFallback(ServerLevel l,SettlementData.Entry e,CompoundTag work){
+  if(SurfaceQuarry.blocked(work))return true;
+  return work.hasUUID("worker")&&l.getEntity(work.getUUID("worker")) instanceof ResidentEntity worker
+      &&NaturalSupplyGoal.miningDeliveryBlocked(l,e,worker,work);
+ }
  private static Ingredient tools(String type){return Ingredient.of(switch(type){case "mine"->net.minecraft.tags.ItemTags.PICKAXES;case "forester"->net.minecraft.tags.ItemTags.AXES;default->net.minecraft.tags.ItemTags.HOES;});}
  public static List<Workshops.Want> wants(ServerLevel l,SettlementData.Entry e){return wants(l,e,null);}
  public static List<Workshops.Want> wants(ServerLevel l,SettlementData.Entry e,UUID workplace){var result=new ArrayList<Workshops.Want>();var hall=Workshops.hall(e);if(hall==null)return result;boolean delivers=SmithyDelivery.delivers(l,e);
@@ -34,7 +40,7 @@ public final class WorkerSupplies {
     if(missing>0)result.add(new Workshops.Want(Ingredient.of(stone),missing,b.id()));
    }
    if(b.type().equals("mine")&&t.getString("stage").equals("seal_fetch")&&HallReserve.count(l,e,hall,c,MineSealing::material)==0)result.add(new Workshops.Want(Ingredient.of(Items.DIRT),1,hall.id()));
-   if(b.type().equals("mine")&&SurfaceQuarry.blocked(t)&&HallReserve.count(l,e,hall,c,s->s.is(net.minecraft.tags.ItemTags.PICKAXES))==0
+   if(b.type().equals("mine")&&quarryFallback(l,e,t)&&HallReserve.count(l,e,hall,c,s->s.is(net.minecraft.tags.ItemTags.PICKAXES))==0
     &&e.settlement().residents().stream().filter(r->b.equals(e.settlement().workplace(r.id()))).noneMatch(r->NaturalSupplyGoal.quarryActive(l,r.id()))
     &&result.stream().noneMatch(w->w.matches(new ItemStack(Items.STONE_PICKAXE))))result.add(new Workshops.Want(Ingredient.of(Items.STONE_PICKAXE,Items.WOODEN_PICKAXE),1,hall.id()));
    // AD-122: lights due in the drive and none in hand nor in the hall: a lantern (or torches) is wanted.
