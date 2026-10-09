@@ -202,11 +202,20 @@ public final class ResidentEntity extends PathfinderMob {
                 nodeEvaluator = new net.minecraft.world.level.pathfinder.WalkNodeEvaluator() {
                     // Long expeditions can alias vanilla's packed int key, particularly at negative coordinates.
                     private final it.unimi.dsi.fastutil.longs.Long2ObjectMap<net.minecraft.world.level.pathfinder.Node> coordinateNodes = new it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap<>();
+                    // A synchronous search may reach the same cell from several neighbours.
+                    // Body size and terrain stay fixed during that search; the next search checks them afresh.
+                    private final it.unimi.dsi.fastutil.longs.Long2ByteMap waterClearance = new it.unimi.dsi.fastutil.longs.Long2ByteOpenHashMap();
+                    private boolean clearWater(net.minecraft.core.BlockPos p){
+                        long key=p.asLong();byte known=waterClearance.get(key);
+                        if(known!=0)return known==1;
+                        boolean clear=ShoreEscapeGoal.clearWaterNode(ResidentEntity.this,p);
+                        waterClearance.put(key,(byte)(clear?1:2));return clear;
+                    }
                     @Override protected net.minecraft.world.level.pathfinder.Node getNode(int x,int y,int z){
                         return coordinateNodes.computeIfAbsent(net.minecraft.core.BlockPos.asLong(x,y,z),key -> new net.minecraft.world.level.pathfinder.Node(x,y,z));
                     }
-                    @Override public void prepare(net.minecraft.world.level.PathNavigationRegion region,net.minecraft.world.entity.Mob mob){coordinateNodes.clear();super.prepare(region,mob);}
-                    @Override public void done(){super.done();coordinateNodes.clear();}
+                    @Override public void prepare(net.minecraft.world.level.PathNavigationRegion region,net.minecraft.world.entity.Mob mob){coordinateNodes.clear();waterClearance.clear();super.prepare(region,mob);}
+                    @Override public void done(){super.done();coordinateNodes.clear();waterClearance.clear();}
                     @Override public int getNeighbors(net.minecraft.world.level.pathfinder.Node[] neighbors,net.minecraft.world.level.pathfinder.Node from){
                         int count=super.getNeighbors(neighbors,from);int kept=0;
                         // The vanilla step-up recursion can still emit a two-block descent under an overhang.
@@ -214,7 +223,7 @@ public final class ResidentEntity extends PathfinderMob {
                         // ledge just left by controlled descent. Recovery memory must
                         // guide the expedition planner as well as wall climbing.
                         // Exclude unsafe floating headroom during search so a longer safe detour can still be found.
-                        for(int i=0;i<count;i++)if(ResidentStepClearance.cropLanding(level,from,neighbors[i])&&(!reversibleRoute||Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos()))&&ShoreEscapeGoal.clearWaterNode(ResidentEntity.this,neighbors[i].asBlockPos())))neighbors[kept++]=neighbors[i];return kept;
+                        for(int i=0;i<count;i++)if(ResidentStepClearance.cropLanding(level,from,neighbors[i])&&(!reversibleRoute||Math.abs(neighbors[i].y-from.y)<=1&&(recoveryTransit||!RecoveryLedges.deadEnd(ResidentEntity.this,neighbors[i].asBlockPos()))&&clearWater(neighbors[i].asBlockPos())))neighbors[kept++]=neighbors[i];return kept;
                     }
                     @Override public net.minecraft.world.level.pathfinder.BlockPathTypes getBlockPathType(net.minecraft.world.level.BlockGetter blocks,int x,int y,int z,net.minecraft.world.entity.Mob mob){
                         var state=blocks.getBlockState(new net.minecraft.core.BlockPos(x,y,z));
