@@ -39,6 +39,16 @@ public final class HarvestAccess {
    &&l.getBlockState(feet.above()).getCollisionShape(l,feet.above()).isEmpty()
    &&l.getBlockState(feet.below()).isFaceSturdy(l,feet.below(),Direction.UP);
  }
+ /** A necessary local condition for direct extraction and short quarry faces.
+  * Unknown terrain stays eligible: ordinary survey loading still decides it.
+  * This only rejects fully inspected volumes with no dry supported platform. */
+ public static boolean possiblePlatform(Level l,BlockPos target){
+  for(var offset:PLATFORMS){
+   var feet=target.offset(offset);if(!l.hasChunkAt(feet))return true;
+   if(standing(l,feet,target))return true;
+  }
+  return false;
+ }
  public static boolean reversible(Path path){
   if(path==null||!path.canReach())return false;
   for(int i=1;i<path.getNodeCount();i++){

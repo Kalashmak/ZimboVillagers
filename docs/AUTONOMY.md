@@ -347,3 +347,8 @@ Night returns use that policy for nearby and distant beds. The 320-block home li
 
 Плавка закрепляется за работником только после фактического подхода к складу или печи и проверки видимости. Далёкий житель может искать путь к работе, но не закрывает новый заказ для коллеги, который уже находится рядом. Существующий груз, квитанции и правила подмены сохраняются. Проверены настоящий застрявший мэр, ближайший строитель, завершение исходного заказа и отказ захвата через стену: 165 модульных и 11 игровых тестов прошли.
 When the last empty field plot becomes grass or dirt after a seed has been withdrawn, the farmer physically returns that seed to the farm chest before choosing another job. The normal tilling and planting work then prepares the plot again. A full chest retains the seed in the worker's custody; a completed return receipt prevents an old work checkpoint from returning or claiming the same seed twice. A movement test covers the complete return, tilling and planting trip through the farmhouse door.
+
+
+### Local geometry before leasing a mineral route
+
+A mineral survey checks whether the loaded neighbourhood contains any dry supported working platform before loading a distant route corridor. Fully enclosed ore with no such platform advances the ordinary survey cursor. An unloaded neighbourhood remains eligible for the existing loading and route checks. Direct extraction and short covered quarry faces retain their original visibility, reversible movement, paid tools, safety and labor requirements.
