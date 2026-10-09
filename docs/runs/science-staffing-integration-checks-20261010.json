@@ -1,0 +1,53 @@
+{
+  "parallel_commit": "73a150998bf9520cf3e5668ca7144619971ca02f",
+  "owned_files": {
+    "src/main/java/org/villageastra/world/Population.java": "17f4b8af43a4e7da9d993b4695c2cae18bf8c5b746ccb2d58c793b92ded9dc16",
+    "src/main/java/org/villageastra/gametest/AutonomousScienceStaffingGameTests.java": "e30e0b30d7bdaf463cc75f6c20359e90643a8b3edaf411e08f53c36c489605cc",
+    "src/main/java/org/villageastra/gametest/AutonomyPlanningGameTests.java": "5788b5b62711f6af34f524b1b96a2f89630824251bfe10c1db60371e039fcb0c",
+    "src/main/java/org/villageastra/gametest/ContinuedSchoolGameTests.java": "b86f954f3644b9c2e58e3363f73fdf4a602cd731c73c9a53af7fd210f9d1b2db"
+  },
+  "checks": [
+    {
+      "initial_log": "docs/runs/science-staffing-integrated-private-20261010.log",
+      "initial_sha256": "4a71a3ff564c5cb6be43d353d2b17c483f06382287203c9d23a61106b1c9998f",
+      "initial_passed": 28,
+      "initial_required": 29,
+      "failed_original_fixture": "employedadultwalksbackfinishesandkeepsitstrade",
+      "readiness_log": "docs/runs/science-staffing-readiness-private-20261010.log",
+      "readiness_sha256": "94a6af55c69ad5377a70eb668d9c56cd372fb20a7a6a6976334a4c20e6848dc9",
+      "readiness_passed": 3,
+      "covered_native": 29,
+      "positive_native": 28,
+      "known_custody_defect_diagnostic": 1,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "initial_log": "docs/runs/science-staffing-integrated-independent-20261010.log",
+      "initial_sha256": "4f7aac78f2cf57fac31be2317c44b2e4a503a81815f9cdc34153987e4c1d7a78",
+      "initial_passed": 28,
+      "initial_required": 29,
+      "failed_original_fixture": "unfinishedadultusesoneseatandyieldstohealth",
+      "readiness_log": "docs/runs/science-staffing-readiness-independent-20261010.log",
+      "readiness_sha256": "18597245f729956c11f59eb2df2045d5a0aa6543e912ffd1e23e1840bce9071f",
+      "readiness_passed": 3,
+      "covered_native": 29,
+      "positive_native": 28,
+      "known_custody_defect_diagnostic": 1,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "release_binary_updated": false,
+  "limits": "Paid laboratory staffing uses existing ScienceBalance seats for the kept level; actual working-place capacity remains checked independently. Costs, work duration, education, priorities and eligibility unchanged. Original integration failures and unchanged-production foreign fixture control retained. One passing diagnostic intentionally reproduces the separate pending-custody science defect; it is not positive acceptance. Main Source39 remains frozen27f44251, without this change."
+}

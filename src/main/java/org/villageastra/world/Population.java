@@ -295,7 +295,7 @@ public final class Population {
  /** AD-130: the workers a workplace takes on its own: a farm of a layout-6 village by the level it is kept at (FarmField.farmers:
   *  1/1/1/2/3/0), any other one. A village that keeps the AD-104 field table has no barn and no level-VI machine, so its farm keeps its
   *  one farmer at every level ("old fields keep working", AD-130). */
- public static int slots(Settlement s,Settlement.Building b){if(WarehouseStore.is(b)&&b.level()>=6&&CartWolves.relieved(s.id()))return 0;return b.type().equals("farm")?FarmField.legacy(s)?1:FarmField.farmers(b.level()):Staff.slots(work(b.type()),b.level());}
+ public static int slots(Settlement s,Settlement.Building b){if(work(b.type()).equals("laboratory"))return ScienceBalance.seats(b.level());if(WarehouseStore.is(b)&&b.level()>=6&&CartWolves.relieved(s.id()))return 0;return b.type().equals("farm")?FarmField.legacy(s)?1:FarmField.farmers(b.level()):Staff.slots(work(b.type()),b.level());}
  /** Every worker a workplace posts at its kept level: its own trade's and the other trades' of its Staff row (the restaurant's couriers). */
  public static int posts(Settlement s,Settlement.Building b){int n=slots(s,b);for(var trade:Staff.others(work(b.type())))n+=Staff.slots(work(b.type()),trade,b.level());return n;}
  /** The workplace a building type is (an annex as the trade it stands for, an old name as the current one: bakery - restaurant). */

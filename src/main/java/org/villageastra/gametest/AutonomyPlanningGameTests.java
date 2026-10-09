@@ -27,7 +27,10 @@ public final class AutonomyPlanningGameTests {
  @GameTest(template="empty",batch="autonomy_planning",timeoutTicks=200) public static void starterBedsUseTheExistingPaidStrawRecipe(GameTestHelper h){
   var e=town(h);var l=h.getLevel();var s=e.settlement();try{
    h.assertTrue(Workshops.makeable(l,e,"minecraft:white_bed"),"Starting farm and hall can supply bedding without a sheep yard");
-   h.assertTrue("home".equals(MayorPlanner.wanted(l,e)),"The existing straw recipe allows the first house");
+   h.assertTrue("home".equals(MayorPlanner.need(s)),"The initial housing need remains the first house");
+   // This small recipe fixture registers a farm but lays no physical field.
+   // World-aware planning must still solve that food shortage before more housing.
+   h.assertTrue(MayorPlanner.foodShortage(l,e)&&"farm".equals(MayorPlanner.wanted(l,e)),"An unlaid starter field is a real food shortage, not permission to skip food for housing");
    var chest=LogisticsRoutes.chest(l,e,Workshops.hall(e));var wants=List.of(new Workshops.Want(net.minecraft.world.item.crafting.Ingredient.of(net.minecraft.world.item.Items.WHITE_BED),1,Workshops.hall(e).id()));
    h.assertTrue(Workshops.plan(l,Workshops.spec("town_hall"),chest,wants)==null,"An empty hall cannot create a free bed");
    chest.setItem(0,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.WHEAT,12));chest.setItem(1,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.OAK_PLANKS,6));

@@ -492,3 +492,10 @@ Both integrated copies have 40 passing native checks and 166 fresh unit tests. T
 ### Continuing village: verified source 39
 
 The continuing natural village resumed its saved state at clock 13,124,751 after a normal complete save. All 1,968 runtime files matched the tested build, including parcel sensing, cold-furnace relief and the earlier bread/annex fixes. At the first observation it still had 11 living residents, civilization I and 18 of 115 researches, with 404 of 489 restaurant materials supplied. Maximum development remains unverified. No resources, population progress or health were granted; the prior two deaths remain recorded.
+
+
+### Automatic laboratory staffing
+
+The labor office now fills the existing scientist seats when a laboratory gains levels. A real paid level-II upgrade exposed the old limit: two usable places but only one assigned scientist despite two available educated adults. Staffing now uses the same established seat ladder as scientific work; the working building still limits actual production independently. Education, paid research, work duration and staffing priorities are unchanged.
+
+Both integrated copies cover 29 native scenarios and passed 166 fresh unit tests. This includes 28 positive checks and one diagnostic reproducing a separate known science-timer defect during cargo return; that defect is not fixed by this staffing change. Each initial integrated suite had one older school-fixture failure. The three school cases passed after waiting for ticking classroom/corridor chunks and confirming canonical entity admission, with course credit, physical walking, profession and health assertions retained. An older autonomy fixture now checks its actual unplanted field's food priority while retaining the initial housing-need assertion and all resource assertions; the unchanged-production negative control reproduced its original failure. This checkpoint has not yet been loaded into the continuing natural village. Full autonomous development remains unverified.
