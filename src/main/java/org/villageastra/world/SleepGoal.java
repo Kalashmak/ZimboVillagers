@@ -81,9 +81,19 @@ public final class SleepGoal extends Goal {
     repath=20;
     // Even a nearby bed can be above a deep natural hollow. A partial ordinary
     // route never enables the verified deep-cave recovery used on return trips.
-    nav.moveTo(ResourceReturnRoute.plan(resident,bed),.7);
+    if(!usableAirborneReturn(resident,bed))nav.moveTo(ResourceReturnRoute.plan(resident,bed),.7);
    }
   }
+ }
+ /** A dry jump cannot obtain a fresh ground route. Retain only an advancing verified return
+  * to this destination whose remaining dry landings are still supported and clear.
+  * Grounded decisions always plan afresh; water and stale/partial routes never use this guard. */
+ static boolean usableAirborneReturn(ResidentEntity resident,BlockPos target){
+  if(resident.onGround()||resident.isInWaterOrBubble()||resident.isPassenger()||resident.isSleeping())return false;
+  var nav=resident.getNavigation();var route=nav.getPath();
+  if(nav.isDone()||!(route instanceof ResourceReturnRoute.ReturnPath)||!route.getTarget().equals(target)||!HarvestAccess.reversible(route))return false;
+  for(int i=route.getNextNodeIndex();i<route.getNodeCount();i++)if(!ShoreEscapeGoal.dryBank(resident,route.getNodePos(i)))return false;
+  return true;
  }
  @Override public void stop(){
   if(resident.isSleeping())resident.stopSleeping();

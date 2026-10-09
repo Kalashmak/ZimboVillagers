@@ -21,6 +21,6 @@ public final class PatientGoal extends Goal {
  @Override public boolean canUse(){var w=ward();return w!=null&&(recoverAtHome||resident.distanceToSqr(w.getX()+.5,w.getY(),w.getZ()+.5)>4*4);}
  @Override public boolean canContinueToUse(){var w=ward();return w!=null&&(recoverAtHome||resident.distanceToSqr(w.getX()+.5,w.getY(),w.getZ()+.5)>2*2);}
  @Override public void tick(){var w=ward();if(w!=null&&resident.tickCount%20<2){if(recoverAtHome&&resident.distanceToSqr(w.getX()+.5,w.getY(),w.getZ()+.5)<=4*4){resident.getNavigation().stop();resident.workStatus("resting");}
-   else {resident.getNavigation().moveTo(ResourceReturnRoute.plan(resident,w),.6);resident.workStatus(recoverAtHome?"going_to_bed":"patient_to_hospital");}}}
+   else {if(!SleepGoal.usableAirborneReturn(resident,w))resident.getNavigation().moveTo(ResourceReturnRoute.plan(resident,w),.6);resident.workStatus(recoverAtHome?"going_to_bed":"patient_to_hospital");}}}
  @Override public void stop(){resident.getNavigation().stop();}
 }
