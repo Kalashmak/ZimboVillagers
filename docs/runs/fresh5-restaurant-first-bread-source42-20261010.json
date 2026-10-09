@@ -1,0 +1,161 @@
+{
+  "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "job": "8414ab54-1d91-4004-ad7f-f1198ec6f114",
+  "restaurant": "77d7837b-6ce1-3cd3-b02c-dde876a5f90a",
+  "captured_utc": "2026-10-09T23:25:05.151905+00:00",
+  "receipts": {
+    "input/0": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "villageastra:flour",
+        "Count": 4
+      },
+      "kind": "take",
+      "id": [
+        1753964886,
+        473051751,
+        -1601917290,
+        1912168234
+      ],
+      "slot": 2,
+      "after": {
+        "id": "minecraft:air",
+        "Count": 0
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/1": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 16
+      },
+      "kind": "take",
+      "id": [
+        1340167668,
+        1584017530,
+        -1427279471,
+        -876412891
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 15
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/2": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 15
+      },
+      "kind": "take",
+      "id": [
+        -1559898921,
+        1644903907,
+        -2099103898,
+        1151416234
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 14
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/3": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 14
+      },
+      "kind": "take",
+      "id": [
+        -2005414261,
+        1001799268,
+        -1832548881,
+        -343041697
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 13
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "input/4": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:stick",
+        "Count": 13
+      },
+      "kind": "take",
+      "id": [
+        -1105579911,
+        -1987035652,
+        -1763802659,
+        140694764
+      ],
+      "slot": 0,
+      "after": {
+        "id": "minecraft:stick",
+        "Count": 12
+      },
+      "dimension": "minecraft:overworld"
+    },
+    "output/0": {
+      "schema": 1,
+      "committed": 1,
+      "pos": -691043068182459,
+      "before": {
+        "id": "minecraft:bread",
+        "Count": 13
+      },
+      "kind": "inventory",
+      "id": [
+        -862772739,
+        1956396276,
+        -2053716580,
+        2089456098
+      ],
+      "slot": 1,
+      "after": {
+        "id": "minecraft:bread",
+        "Count": 15
+      },
+      "dimension": "minecraft:overworld"
+    }
+  },
+  "paid_flour": 4,
+  "paid_sticks": 4,
+  "deposited_bread": 2,
+  "kitchen_address": [
+    -2515,
+    69,
+    -2472
+  ],
+  "private_directory": "build/checkpoints/fresh5-restaurant-first-bread-source42",
+  "sha256": {
+    "input-0.bin": "39b524ce3bc9712af923232cb4d5e87436fa0af629a11741d03a8c21f496388b",
+    "input-1.bin": "fc2144ebfd4be7710cd6af0efdc79bd6740b9adc8e0904d8e83b0db5f900c9da",
+    "input-2.bin": "aa2070d10055ef46f2350f07f3d4f25748f77a2a9a4038957df6e710c6d9c3b8",
+    "input-3.bin": "c4c3bca170667d1dbfa53dae1573ba3a7d5abe0345c4e48d622b8ea833398734",
+    "input-4.bin": "335f7d2b80fb173642778054864f1cb6d6871b922ec124235c6907c0ad489591",
+    "output-0.bin": "bde12ce7e9c397d59308f30595603be4c107d1224f6ecaf91010dd2a1cc320de"
+  },
+  "world_modified": false,
+  "maximum_verified": false,
+  "limitations": "Six immutable committed journal records prove paid kitchen inputs and exact bread output. The live workshop has already advanced to its next idle needs record; its earlier completed labor320/fuel400 snapshot was observed read-only but not preserved here. This proves one actual batch, not sustained food sufficiency or maximum village development."
+}

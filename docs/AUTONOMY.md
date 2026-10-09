@@ -558,3 +558,8 @@ The same natural village has now paid all489 restaurant materials, including the
 ### Restaurant finished; natural schooling completed
 
 The village finished all538 construction operations. Its saved restaurant matches468 permanent blocks and499 stable properties, has no remaining construction scaffolds, and is registered exactly once. A baker is assigned. The new adult naturally completed72000 schooling ticks and became educated. The mayor has independently started the next home project. Meal production and further development are still being observed;115 researches and civilizationVI remain unverified.
+
+
+### First paid restaurant meal
+
+The new restaurant independently baked two bread. Six committed receipts confirm four flour and four sticks consumed from its own chest, followed by an exact bread increase from13 to15. The town hall is also producing flour from wheat before a mill becomes available. The completed kitchen-work record was observed but not retained before the next job replaced it; original input and output receipts are preserved. This confirms actual meal production, while sustained food supply and maximum village development remain under observation.
