@@ -8,6 +8,9 @@ import org.villageastra.server.SettlementData;
 /** An untouched old farm order needs empty storage, not ninety grains before it can grow food. */
 public final class FarmStockProject {
  private FarmStockProject(){}
+ private static long RECEIPT_CHECKS;
+ /** Receipt existence checks made by the legacy farm migration, for diagnostics. */
+ public static long receiptChecks(){return RECEIPT_CHECKS;}
  public static boolean requote(ServerLevel l,SettlementData.Entry e){
   if(e.settlement().governance().playerMayor()!=null||!HallUpgradeGoal.pending(l,e.settlement().id()))return false;
   // Ordinary planner passes need only the small current header. Once migrated,
@@ -16,8 +19,11 @@ public final class FarmStockProject {
   if(!BuildingOrders.isBuilding(header)||!header.getString("design").equals("farm")||header.getInt("farmStorageRevision")>=286||header.getBoolean("funded")||header.getInt("index")!=0||header.hasUUID("building")||header.getBoolean("repair")||header.getBoolean("relocate")||header.getBoolean("upgrade"))return false;
   var state=HallUpgradeGoal.inspect(l,e.settlement().id());
   if(!BuildingOrders.isBuilding(state)||!state.getString("design").equals("farm")||state.getBoolean("funded")||state.getInt("index")!=0||state.hasUUID("building")||state.getBoolean("repair")||state.getBoolean("relocate")||state.getBoolean("upgrade"))return false;
+  // Current farms quote barrels already. With no positive hay price the old
+  // migration cannot apply, so do not search every original block receipt.
+  if(state.getCompound("cost").getInt("minecraft:hay_block")<=0)return false;
   var work=state.getUUID("id");var ops=state.getList("ops",Tag.TAG_COMPOUND);int changed=0;
-  for(int i=0;i<ops.size();i++){var op=ops.getCompound(i);if(op.getBoolean("done")||WorldJournal.exists(l,Settlement.childId(work,"block/"+i)))return false;if(op.getCompound("after").getString("Name").equals("minecraft:hay_block")){if(!op.getString("item").equals("minecraft:hay_block"))return false;changed++;}}
+  for(int i=0;i<ops.size();i++){var op=ops.getCompound(i);if(op.getBoolean("done"))return false;RECEIPT_CHECKS++;if(WorldJournal.exists(l,Settlement.childId(work,"block/"+i)))return false;if(op.getCompound("after").getString("Name").equals("minecraft:hay_block")){if(!op.getString("item").equals("minecraft:hay_block"))return false;changed++;}}
   if(changed==0||state.getCompound("cost").getInt("minecraft:hay_block")!=changed)return false;
   var replacement=state.copy();for(var raw:replacement.getList("ops",Tag.TAG_COMPOUND)){var op=(CompoundTag)raw;if(op.getCompound("after").getString("Name").equals("minecraft:hay_block")){op.put("after",NbtUtils.writeBlockState(Blocks.BARREL.defaultBlockState().setValue(net.minecraft.world.level.block.BarrelBlock.FACING,net.minecraft.core.Direction.UP)));op.putString("item","minecraft:barrel");}}
   var cost=replacement.getCompound("cost");cost.remove("minecraft:hay_block");cost.putInt("minecraft:barrel",cost.getInt("minecraft:barrel")+changed);replacement.putInt("farmStorageRevision",286);

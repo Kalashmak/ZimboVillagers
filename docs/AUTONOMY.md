@@ -431,3 +431,10 @@ The continuing natural village loaded this repair-view follow-up from its curren
 
 
 The continuing natural world completed this house after the repair: the builder withdrew exactly one actual replacement bed and placed its missing foot with a new committed operation. All 474 original operations and their paid history remain retained; the completed queue contains 475 operations. Saved-region verification confirms 380 permanent blocks, 352 stable properties, no remaining scaffolds, matching cleared cells and one registered home. The mayor then ordered the next farm. Research remains 18 of 115 and civilization I; this confirms the completed house, not maximum village progression.
+
+
+### Skip irrelevant farm migrations
+
+The mayor no longer searches all block-operation receipts of a modern farm for a legacy hay-storage migration when its bill contains no positive hay-block requirement. Actual old hay projects still check committed placements before any migration; paid cargo, withdrawal counters and waiting projects remain unchanged. The native control recorded 1,000 receipt searches across 100 modern-farm passes; the corrected path records zero and leaves the project record unwritten. Both source copies pass 13 related native checks, with 166 unit tests fresh in the trial and independent final. This removes an observed repeated filesystem query; it is not a measured percentage increase in overall village speed.
+
+The continuing natural village has not yet loaded this change or reached maximum progression.

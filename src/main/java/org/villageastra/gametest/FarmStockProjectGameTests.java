@@ -12,6 +12,24 @@ import org.villageastra.persistence.*;
 import org.villageastra.world.*;
 @GameTestHolder(VillageAstra.ID) @PrefixGameTestTemplate(false)
 public final class FarmStockProjectGameTests {
+ @GameTest(template="empty",batch="farm_stock_fast_reject",timeoutTicks=200)
+ public static void modernFarmDoesNotSearchLegacyReceipts(GameTestHelper h){var t=ResearchV2Town.town(h,null);try{
+  var modern=legacy(t);var cost=modern.getCompound("cost");int count=cost.getInt("minecraft:hay_block");cost.remove("minecraft:hay_block");cost.putInt("minecraft:barrel",count);
+  for(var raw:modern.getList("ops",Tag.TAG_COMPOUND)){var op=(CompoundTag)raw;op.putString("item","minecraft:barrel");op.put("after",NbtUtils.writeBlockState(Blocks.BARREL.defaultBlockState()));}
+  HallUpgradeGoal.store(t.l,t.s.id(),modern);var file=t.l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-upgrades/"+t.s.id()+".bin");long revision=AtomicRecord.revision(file),before=FarmStockProject.receiptChecks();
+  for(int i=0;i<100;i++)h.assertTrue(!FarmStockProject.requote(t.l,t.e),"Modern farm has no hay quote to migrate");
+  h.assertTrue(HallUpgradeGoal.inspect(t.l,t.s.id()).equals(modern)&&AtomicRecord.revision(file)==revision,"Skipped migration never changes project history or writes its record");
+  h.assertTrue(FarmStockProject.receiptChecks()==before,"100 passes for a modern farm need zero legacy receipt checks, observed="+(FarmStockProject.receiptChecks()-before));
+ }finally{HallUpgradeGoal.drop(t.l,t.s.id());ResearchV2Town.done(t);}h.succeed();}
+ @GameTest(template="empty",batch="farm_stock_quote",timeoutTicks=200)
+ public static void committedLegacyPlacementAndInvalidHayBillStayUnchanged(GameTestHelper h){var t=ResearchV2Town.town(h,null);try{
+  var original=legacy(t);var invalid=original.copy();invalid.getCompound("cost").remove("minecraft:hay_block");HallUpgradeGoal.store(t.l,t.s.id(),invalid);long before=FarmStockProject.receiptChecks();
+  h.assertTrue(!FarmStockProject.requote(t.l,t.e)&&HallUpgradeGoal.inspect(t.l,t.s.id()).equals(invalid)&&FarmStockProject.receiptChecks()==before,"Unpriced hay is not migrated, modified or searched as an eligible bill");
+  var op=original.getList("ops",Tag.TAG_COMPOUND).getCompound(0);var step=HallConstructionPlan.step(op);
+  h.assertTrue(WorldJournal.place(t.l,Settlement.childId(original.getUUID("id"),"block/0"),step.pos(),step.before(),step.after()),"Fixture retains a real committed original placement receipt");
+  HallUpgradeGoal.store(t.l,t.s.id(),original);h.assertTrue(!FarmStockProject.requote(t.l,t.e)&&HallUpgradeGoal.inspect(t.l,t.s.id()).equals(original),"Positive legacy hay bill still checks receipts and preserves a committed placement with lagging index");
+  h.assertTrue(FarmStockProject.receiptChecks()==before+1&&t.l.getBlockState(step.pos()).equals(step.after()),"Legacy receipt guard remains active and its placed hay remains untouched");
+ }finally{HallUpgradeGoal.drop(t.l,t.s.id());ResearchV2Town.done(t);}h.succeed();}
  private static CompoundTag legacy(ResearchV2Town.Town t){
   var id=UUID.randomUUID();var state=new CompoundTag();state.putUUID("id",id);state.putUUID("project",id);state.putString("kind","building");state.putString("design","farm");state.putString("wood","oak");var ops=new ListTag();int count=0;for(var cell:BuildingBlueprints.layout("farm",t.e.center().offset(35,0,35)).entrySet())if(cell.getValue().is(Blocks.BARREL)){var op=new CompoundTag();op.putLong("pos",cell.getKey().asLong());op.put("before",NbtUtils.writeBlockState(t.l.getBlockState(cell.getKey())));op.put("after",NbtUtils.writeBlockState(Blocks.HAY_BLOCK.defaultBlockState()));op.putString("item","minecraft:hay_block");ops.add(op);count++;}if(count!=10)throw new GameTestAssertException("Expected ten empty farm storage cells, found "+count);state.put("ops",ops);var cost=new CompoundTag();cost.putInt("minecraft:hay_block",count);state.put("cost",cost);state.put("cargo",new ListTag());return state;
  }
