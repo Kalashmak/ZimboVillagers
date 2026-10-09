@@ -20,13 +20,21 @@ public final class MinePlugs {
  public static void reload(ServerLevel l){CACHE.remove(l);}
  private static String key(BlockPos p){return "p"+p.asLong();}
  private static boolean fill(CompoundTag r){
+  return fill(r,false);
+ }
+ private static boolean fill(CompoundTag r,boolean dryFloor){
   var before=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),r.getCompound("before"));
   var after=NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),r.getCompound("after"));
-  return r.getInt("schema")==1&&r.getBoolean("committed")&&r.getString("kind").equals("block")&&!r.contains("loot")&&before.is(Blocks.WATER)&&MineSealing.material(new net.minecraft.world.item.ItemStack(after.getBlock()));
+  return r.getInt("schema")==1&&r.getBoolean("committed")&&r.getString("kind").equals("block")&&!r.contains("loot")
+    &&(before.is(Blocks.WATER)||dryFloor&&before.isAir())&&MineSealing.material(new net.minecraft.world.item.ItemStack(after.getBlock()));
  }
  /** Before placement: an interrupted intent alone never grants permission to mine. */
  public static void plan(ServerLevel l,Settlement.Building mine,BlockPos p,UUID receipt){
-  var proof=new CompoundTag();proof.putUUID("mine",mine.id());proof.putUUID("receipt",receipt);data(l).put(key(p),proof);save(l);
+  plan(l,mine,p,receipt,false);
+ }
+ /** Only an explicit dry-foundation job may own an air replacement; legacy import stays water-only. */
+ static void plan(ServerLevel l,Settlement.Building mine,BlockPos p,UUID receipt,boolean dryFloor){
+  var proof=new CompoundTag();proof.putUUID("mine",mine.id());proof.putUUID("receipt",receipt);if(dryFloor)proof.putBoolean("dryFloor",true);data(l).put(key(p),proof);save(l);
  }
  /** Import old, committed water fills in a claimed drive and its immediate boundary, outside blueprint structures. */
  private static void legacy(ServerLevel l,Settlement.Building mine){
@@ -47,7 +55,7 @@ public final class MinePlugs {
  }
  public static boolean owns(ServerLevel l,Settlement.Building mine,BlockPos p){
   legacy(l,mine);var proof=data(l).getCompound(key(p));if(!proof.hasUUID("mine")||!mine.id().equals(proof.getUUID("mine"))||!proof.hasUUID("receipt")||OwnershipEvents.protectedBlock(l,p,b->!b.id().equals(mine.id())))return false;
-  var r=WorldJournal.inspectCommitted(l,proof.getUUID("receipt"));if(r==null||!fill(r)||r.getLong("pos")!=p.asLong())return false;
+  var r=WorldJournal.inspectCommitted(l,proof.getUUID("receipt"));if(r==null||!fill(r,proof.getBoolean("dryFloor"))||r.getLong("pos")!=p.asLong())return false;
   return l.getBlockState(p).equals(NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),r.getCompound("after")));
  }
  /** Keep a tombstone so legacy import cannot resurrect a mined plug. */

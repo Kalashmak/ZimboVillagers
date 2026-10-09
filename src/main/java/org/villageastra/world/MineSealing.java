@@ -13,7 +13,7 @@ import org.villageastra.domain.MineDrive;
 import org.villageastra.persistence.WorldJournal;
 import org.villageastra.server.*;
 
-/** Small paid water plugs beside a dry stair face, never excavation into water or lava. */
+/** Paid water plugs and dry gallery foundations, placed before unsupported excavation. */
 public final class MineSealing {
  private MineSealing(){}
  public static boolean active(CompoundTag t){return t.getString("stage").startsWith("seal_");}
@@ -31,14 +31,31 @@ public final class MineSealing {
   if(MineWork.gallery(t))return false;var p=candidate(l,mine,face);if(p==null)return false;
   return start(t,face,p);
  }
- /** Only water immediately below a dry, recognized gallery face can be repaired. */
+ /** An empty foundation is repairable only from the adjacent, already supported gallery. */
+ private static BlockPos dryFoundation(ServerLevel l,Settlement.Building mine,BlockPos face,BlockPos access){
+  var at=face.below();
+  if(access.getY()!=face.getY()||access.distManhattan(face)!=1||!l.hasChunkAt(face)||!l.hasChunkAt(at)||!l.hasChunkAt(access)
+    ||!MineWork.diggable(l.getBlockState(face))||l.getBlockEntity(face)!=null||!l.getBlockState(at).isAir()
+    ||l.getBlockEntity(at)!=null||OwnershipEvents.protectedBlock(l,face,b->!b.id().equals(mine.id()))
+    ||OwnershipEvents.protectedBlock(l,at,b->!b.id().equals(mine.id()))||!MineWork.supported(l,access)
+    ||!l.getBlockState(access).getCollisionShape(l,access).isEmpty()||!l.getBlockState(access.above()).getCollisionShape(l,access.above()).isEmpty()
+    ||!l.getFluidState(access).isEmpty()||!l.getFluidState(access.above()).isEmpty())return null;
+  for(var p:List.of(face,at))for(var d:Direction.values())if(!l.hasChunkAt(p.relative(d))||!l.getFluidState(p.relative(d)).isEmpty())return null;
+  return at;
+ }
+ private static BlockPos galleryAccess(SettlementData.Entry e,Settlement.Building mine,CompoundTag t,MineDrive.Cell cell){
+  return BuildingPlacement.at(e,mine,cell.x()+(t.getInt("side")==MineDrive.EAST?-1:1),-t.getInt("floorStep")-t.getInt("descent"),cell.z());
+ }
+ /** Water below dry stone, or dry air below it with a safe existing work platform. */
  public static BlockPos galleryFloorFace(ServerLevel l,SettlementData.Entry e,Settlement.Building mine,CompoundTag t,MineDrive.Cell cell){
   var face=BuildingPlacement.at(e,mine,cell.x(),-t.getInt("floorStep")-t.getInt("descent"),cell.z());
   if(!l.hasChunkAt(face)||!l.getFluidState(face).isEmpty()||OwnershipEvents.protectedBlock(l,face,b->!b.id().equals(mine.id())))return null;
-  var water=candidate(l,mine,face);return face.below().equals(water)?face:null;
+  var water=candidate(l,mine,face);return face.below().equals(water)||dryFoundation(l,mine,face,galleryAccess(e,mine,t,cell))!=null?face:null;
  }
  public static boolean beginFloor(ServerLevel l,SettlementData.Entry e,Settlement.Building mine,CompoundTag t,MineDrive.Cell cell){
-  var face=galleryFloorFace(l,e,mine,t,cell);return face!=null&&start(t,face,face.below());
+  var face=galleryFloorFace(l,e,mine,t,cell);if(face==null)return false;
+  boolean dry=l.getBlockState(face.below()).isAir();start(t,face,face.below());
+  if(dry){t.putBoolean("sealDryFloor",true);t.putLong("sealFloorAccess",galleryAccess(e,mine,t,cell).asLong());}return true;
  }
  private static boolean start(CompoundTag t,BlockPos face,BlockPos p){
   clear(t);t.putLong("sealFace",face.asLong());t.putLong("sealAt",p.asLong());t.putString("stage",held(t).isEmpty()?"seal_fetch":"seal_place");t.putUUID("operation",UUID.randomUUID());return true;
@@ -52,19 +69,23 @@ public final class MineSealing {
    t.put("cargo",ResourceWorkGoal.without(t.getList("cargo",Tag.TAG_COMPOUND),item,1));t.putBoolean("sealPlaced",true);
   }
  }
- public static void clear(CompoundTag t){for(var k:List.of("sealFace","sealAt","sealTaken","sealPlaced","sealItem","sealReady"))t.remove(k);}
+ public static void clear(CompoundTag t){for(var k:List.of("sealFace","sealAt","sealTaken","sealPlaced","sealItem","sealReady","sealDryFloor","sealFloorAccess"))t.remove(k);}
  private static void finish(CompoundTag t,Runnable save){clear(t);t.putString("stage","choose");t.putUUID("operation",UUID.randomUUID());save.run();}
  public static void tick(ServerLevel l,Settlement.Building mine,CompoundTag t,ResidentEntity worker,BlockPos stock,BlockPos stockStand,BlockPos access,Predicate<BlockPos> near,Runnable save,Consumer<String> status,long now){
   var previous=t.copy();reconcile(l,t);if(!previous.equals(t))save.run();if(t.getBoolean("sealPlaced")){finish(t,save);return;}
   var id=t.getUUID("operation");var face=BlockPos.of(t.getLong("sealFace"));var at=BlockPos.of(t.getLong("sealAt"));
+  var dryAccess=t.getBoolean("sealDryFloor")&&t.contains("sealFloorAccess",Tag.TAG_LONG)?BlockPos.of(t.getLong("sealFloorAccess")):null;
+  if(t.getBoolean("sealDryFloor")&&(dryAccess==null||!access.equals(dryAccess)||dryAccess.getY()!=face.getY()||dryAccess.distManhattan(face)!=1)){finish(t,save);return;}
   // Going back for paid material can unload the face. Missing chunk data is
   // not a changed foundation and must not cancel this durable operation.
   var known=new ArrayList<BlockPos>();known.add(face);for(var direction:Direction.values())known.add(face.relative(direction));
+  if(dryAccess!=null){for(var direction:Direction.values())known.add(at.relative(direction));known.add(dryAccess);known.add(dryAccess.above());known.add(dryAccess.below());}
   if(known.stream().anyMatch(p->!l.hasChunkAt(p))){
    var e=SettlementData.get(l.getServer()).entry(worker.settlementId());double reach=(double)NaturalSupplyGoal.ROUTE_RANGE*NaturalSupplyGoal.ROUTE_RANGE;
    if(e==null||face.distSqr(e.center())>reach||worker.blockPosition().distSqr(e.center())>reach||TouchLoad.ensureAll(l,known)!=TouchLoad.Touch.OK){status.accept("unloaded");return;}
   }
-  if(!at.equals(candidate(l,mine,face))){finish(t,save);return;}
+  var actual=dryAccess!=null?dryFoundation(l,mine,face,dryAccess):candidate(l,mine,face);
+  if(!at.equals(actual)){finish(t,save);return;}
   if(t.getString("stage").equals("seal_fetch")){
    if(!near.test(stockStand))return;
    if(held(t).isEmpty()&&l.getBlockEntity(stock) instanceof Container c)for(int slot=0;slot<c.getContainerSize();slot++){
@@ -80,7 +101,7 @@ public final class MineSealing {
   if(!t.contains("sealReady")){t.putLong("sealReady",now+40);save.run();}if(now<t.getLong("sealReady")){status.accept("working");return;}
   t.putString("sealItem",net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(material.getItem()).toString());save.run();
   var block=((BlockItem)material.getItem()).getBlock().defaultBlockState();
-  MinePlugs.plan(l,mine,at,Settlement.childId(id,"seal_place"));
+  MinePlugs.plan(l,mine,at,Settlement.childId(id,"seal_place"),t.getBoolean("sealDryFloor"));
   if(WorldJournal.place(l,Settlement.childId(id,"seal_place"),at,l.getBlockState(at),block)){reconcile(l,t);save.run();finish(t,save);}else status.accept("fluid_boundary");
  }
 }

@@ -533,3 +533,8 @@ If scientists fill a laboratory while its porter is carrying paid scientific wor
 ### Continuing village: source41 and a new child
 
 The same natural world resumed after a normal complete save; all1975 runtime files matched the tested build. Scientific parcel recovery and shared resource-state checks are now loaded. Before saving, the restaurant had466/489 materials, and the population had grown naturally to12 living residents. The new child had8420/72000 recorded school-attendance ticks; education remains incomplete. The village still has civilization I and18/115 researches. Earlier deaths remain recorded, and maximum autonomous development is unverified.
+
+
+### Paid support under dry mine faces
+
+Miners can now repair a missing dry foundation beneath a solid gallery face before continuing excavation. They use actual stock and retain the normal work time; an existing safe work platform is required. Recovery preserves paid cargo, and unsafe or changed ground stops placement. Both copies passed28 native checks and166 fresh unit tests. The continuing natural village still has two lanterns left to supply for its restaurant; this patch has not yet been loaded there, and maximum autonomous development remains unverified.

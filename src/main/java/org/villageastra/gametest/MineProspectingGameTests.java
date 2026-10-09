@@ -160,7 +160,85 @@ public final class MineProspectingGameTests {
  private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial,boolean gap){
   extension(h,sections,waterFloor,partial,gap,false);
  }
+ @GameTest(template="empty",batch="mine_dry_floor_support",timeoutTicks=2400)
+ public static void dryPartialGalleryReceivesPaidSupportBeforeItsMinerReachesRealOre(GameTestHelper h){extension(h,1,true,true,false,false,true);}
+ private record DryFoundation(Town fixture,BlockPos face,BlockPos foundation,BlockPos access,MineDrive.Cell cell,List<net.minecraft.world.level.ChunkPos> chunks){}
+ private static DryFoundation dryFoundation(GameTestHelper h){
+  var f=town(h,true);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
+  var chunks=PhysicalFixtureChunks.force(t.l,BuildingPlacement.origin(t.e,t.shop),27,33,z-2,z+2);
+  var cell=new MineDrive.Cell(30,y+4,z);var face=BuildingPlacement.at(t.e,t.shop,30,y,z);var access=face.west();
+  for(var p:BlockPos.betweenClosed(face.offset(-2,-2,-2),face.offset(2,5,2)))t.l.setBlock(p,Blocks.STONE.defaultBlockState(),2);
+  t.l.setBlock(face.below(),Blocks.AIR.defaultBlockState(),2);t.l.setBlock(access,Blocks.AIR.defaultBlockState(),2);t.l.setBlock(access.above(),Blocks.AIR.defaultBlockState(),2);
+  state.putInt("side",MineDrive.EAST);state.putInt("run",25);state.putInt("cell",0);state.putString("mineStage","EAST");state.putUUID("worker",f.npc.getUUID());state.putIntArray("access",new int[]{29,y,z});
+  return new DryFoundation(f,face,face.below(),access,cell,chunks);
+ }
+ private static void doneDry(DryFoundation d){var f=d.fixture;f.npc.discard();PhysicalFixtureChunks.release(f.town.l,d.chunks);ResearchV2Town.done(f.town);}
+ @GameTest(template="empty",batch="mine_dry_floor_guards",timeoutTicks=200)
+ public static void dryFoundationRequiresItsOriginalSafeGalleryPlatform(GameTestHelper h){
+  var d=dryFoundation(h);var f=d.fixture;var t=f.town;var state=f.state;
+  java.util.function.Supplier<BlockPos> eligible=()->MineSealing.galleryFloorFace(t.l,t.e,t.shop,state,d.cell);
+  try{
+   h.assertTrue(d.face.equals(eligible.get()),"Dry solid face above air is repairable from a clear supported adjacent gallery");
+   for(var danger:List.of(Blocks.WATER,Blocks.LAVA)){
+    t.l.setBlock(d.foundation.north(),danger.defaultBlockState(),2);h.assertTrue(eligible.get()==null,"A dry support cannot expose neighboring water or lava");t.l.setBlock(d.foundation.north(),Blocks.STONE.defaultBlockState(),2);
+   }
+   t.l.setBlock(d.access.below(),Blocks.AIR.defaultBlockState(),2);h.assertTrue(eligible.get()==null,"No support may be placed from another unsupported tile");t.l.setBlock(d.access.below(),Blocks.STONE.defaultBlockState(),2);
+   t.l.setBlock(d.access.above(),Blocks.STONE.defaultBlockState(),2);h.assertTrue(eligible.get()==null,"Blocked headroom is not a working platform");t.l.setBlock(d.access.above(),Blocks.AIR.defaultBlockState(),2);
+   t.l.setBlock(d.face,Blocks.AIR.defaultBlockState(),2);h.assertTrue(eligible.get()==null,"This repair cannot bridge indefinitely across an entirely open cave");t.l.setBlock(d.face,Blocks.STONE.defaultBlockState(),2);
+   t.l.setBlock(d.foundation,Blocks.CHEST.defaultBlockState(),2);h.assertTrue(eligible.get()==null,"An occupied foundation/container cannot be overwritten");t.l.setBlock(d.foundation,Blocks.AIR.defaultBlockState(),2);
+   var other=new Settlement(UUID.randomUUID());other.addBuilding(new Settlement.Building(UUID.randomUUID(),"home",0,0,0));var data=SettlementData.get(t.l.getServer());data.add(new SettlementData.Entry(other,t.e.dimension(),d.foundation));
+   try{h.assertTrue(eligible.get()==null,"Another building's protected foundation remains untouched");}finally{data.remove(other.id());}
+   h.assertTrue(d.face.equals(eligible.get())&&t.l.getBlockState(d.foundation).isAir(),"Read-only eligibility restores when actual safety returns, without placing a free block");
+  }finally{doneDry(d);}h.succeed();
+ }
+ @GameTest(template="empty",batch="mine_dry_floor_custody",timeoutTicks=200)
+ public static void paidDryFoundationSurvivesFreshReadsAndJournalAheadCustody(GameTestHelper h){
+  var d=dryFoundation(h);var f=d.fixture;var t=f.town;var state=f.state;var stock=LogisticsRoutes.position(t.e,t.hall());var chest=LogisticsRoutes.chest(t.l,t.e,t.hall());chest.clearContent();
+  try{
+   h.assertTrue(MineSealing.beginFloor(t.l,t.e,t.shop,state,d.cell)&&state.getString("stage").equals("seal_fetch"),"No carried material starts an ordinary paid fetch");
+   var id=state.getUUID("operation");var beforeTake=state.copy();var beforePlace=new java.util.concurrent.atomic.AtomicReference<CompoundTag>();
+   Runnable save=()->{MineWork.write(t.l,t.shop,state);if(state.contains("sealItem")&&!state.getBoolean("sealPlaced"))beforePlace.set(state.copy());};save.run();
+   java.util.function.LongConsumer tick=now->MineSealing.tick(t.l,t.shop,state,f.npc,stock,stock.east(),d.access,p->f.npc.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(p))<1,save,x->{},now);
+   f.npc.moveTo(stock.getX()+1.5,stock.getY(),stock.getZ()+.5);tick.accept(0);
+   h.assertTrue(chest.isEmpty()&&state.getList("cargo",Tag.TAG_COMPOUND).isEmpty()&&t.l.getBlockState(d.foundation).isAir(),"An empty stock never creates a foundation");
+   chest.setItem(0,new ItemStack(Items.COBBLESTONE));tick.accept(1);
+   h.assertTrue(chest.countItem(Items.COBBLESTONE)==0&&ForestFixture.count(state.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"Exactly one real stone is withdrawn");
+   MineSealing.reconcile(t.l,beforeTake);MineSealing.reconcile(t.l,beforeTake);
+   h.assertTrue(ForestFixture.count(beforeTake.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"Journal-ahead withdrawal recovers once");
+   MineWork.write(t.l,t.shop,beforeTake);h.assertTrue(ForestFixture.count(JobCargo.snapshot(f.npc,true).items(),Items.COBBLESTONE)==1,"Pre-placement death custody retains only the paid stone");save.run();
+   var fresh=MineWork.read(t.l,t.shop);h.assertTrue(fresh.getUUID("operation").equals(id)&&fresh.getBoolean("sealDryFloor")&&fresh.getLong("sealFloorAccess")==d.access.asLong(),"A fresh signed reader retains the exact dry foundation and access identity");
+   f.npc.moveTo(d.access.getX()+.5,d.access.getY(),d.access.getZ()+.5);f.npc.setOnGround(true);tick.accept(2);tick.accept(41);
+   h.assertTrue(t.l.getBlockState(d.foundation).isAir(),"The full forty work ticks remain necessary");tick.accept(42);
+   h.assertTrue(t.l.getBlockState(d.foundation).is(Blocks.COBBLESTONE)&&t.l.getBlockState(d.face).is(Blocks.STONE)&&chest.countItem(Items.COBBLESTONE)==0,"One stone supports the face before excavation without a second debit");
+   var receipt=org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,Settlement.childId(id,"seal_place"));h.assertTrue(receipt!=null&&receipt.getCompound("before").getString("Name").equals("minecraft:air"),"Actual AIR replacement owns its committed receipt");
+   MinePlugs.reload(t.l);h.assertTrue(MinePlugs.owns(t.l,t.shop,d.foundation)&&MineWork.diggable(t.l,t.e,t.shop,d.foundation,state),"The saved explicit foundation remains recognizable during later mine upgrades");
+   var crash=beforePlace.get();h.assertTrue(crash!=null,"Captured the real pre-placement write");MineWork.write(t.l,t.shop,crash);
+   h.assertTrue(ForestFixture.count(JobCargo.snapshot(f.npc,true).items(),Items.COBBLESTONE)==0,"Post-placement death custody never duplicates the spent stone");MineSealing.reconcile(t.l,crash);MineSealing.reconcile(t.l,crash);
+   h.assertTrue(ForestFixture.count(crash.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==0,"Repeated placement recovery consumes exactly once");
+   var ordinary=d.foundation.south();t.l.setBlock(ordinary,Blocks.AIR.defaultBlockState(),2);var unrelated=UUID.randomUUID();MinePlugs.plan(t.l,t.shop,ordinary,unrelated);
+   h.assertTrue(org.villageastra.persistence.WorldJournal.place(t.l,unrelated,ordinary,Blocks.AIR.defaultBlockState(),Blocks.COBBLESTONE.defaultBlockState())&&!MinePlugs.owns(t.l,t.shop,ordinary),"A generic plan does not authorize ownership of arbitrary air replacement");
+  }finally{doneDry(d);}h.succeed();
+ }
+ @GameTest(template="empty",batch="mine_dry_floor_guards",timeoutTicks=200)
+ public static void aChangedWorkingPlatformCancelsPlacementWithoutLosingPaidStone(GameTestHelper h){
+  var d=dryFoundation(h);var f=d.fixture;var t=f.town;var state=f.state;var stock=LogisticsRoutes.position(t.e,t.hall());var chest=LogisticsRoutes.chest(t.l,t.e,t.hall());chest.clearContent();chest.setItem(0,new ItemStack(Items.COBBLESTONE));
+  try{
+   h.assertTrue(MineSealing.beginFloor(t.l,t.e,t.shop,state,d.cell),"The initial dry foundation is safe");var id=state.getUUID("operation");
+   var invalid=state.copy();invalid.remove("sealFloorAccess");MineSealing.tick(t.l,t.shop,invalid,f.npc,stock,stock.east(),d.access,p->true,()->{},x->{},0);
+   h.assertTrue(invalid.getString("stage").equals("choose")&&chest.countItem(Items.COBBLESTONE)==1&&!org.villageastra.persistence.WorldJournal.exists(t.l,Settlement.childId(id,"seal_take")),"Missing durable access is refused before loading a guessed cell or withdrawing material");
+   f.npc.moveTo(stock.getX()+1.5,stock.getY(),stock.getZ()+.5);
+   MineSealing.tick(t.l,t.shop,state,f.npc,stock,stock.east(),d.access,p->p.equals(stock.east()),()->MineWork.write(t.l,t.shop,state),x->{},0);
+   h.assertTrue(chest.countItem(Items.COBBLESTONE)==0&&ForestFixture.count(state.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"One real stone was paid before the world changed");
+   t.l.setBlock(d.access.below(),Blocks.AIR.defaultBlockState(),2);
+   MineSealing.tick(t.l,t.shop,state,f.npc,stock,stock.east(),d.access,p->true,()->MineWork.write(t.l,t.shop,state),x->{},100);
+   h.assertTrue(state.getString("stage").equals("choose")&&ForestFixture.count(state.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==1,"A now unsafe platform cancels the job with its paid cargo retained");
+   h.assertTrue(t.l.getBlockState(d.foundation).isAir()&&!org.villageastra.persistence.WorldJournal.exists(t.l,Settlement.childId(id,"seal_place")),"Cancellation has no placement intent or invented foundation");
+  }finally{doneDry(d);}h.succeed();
+ }
  private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial,boolean gap,boolean faceCheck){
+  extension(h,sections,waterFloor,partial,gap,faceCheck,false);
+ }
+ private static void extension(GameTestHelper h,int sections,boolean waterFloor,boolean partial,boolean gap,boolean faceCheck,boolean dryFloor){
   var f=town(h,true,gap?2097152:0);var t=f.town;var state=f.state;int floor=state.getInt("floorStep"),y=-floor-state.getInt("descent"),z=7+floor;
   int initial=CoreEffects.mine().galleryLength()*sections+(partial?1:0);
   var base=BuildingPlacement.origin(t.e,t.shop);var forced=PhysicalFixtureChunks.force(t.l,base,0,initial+31,0,z+3);
@@ -172,7 +250,7 @@ public final class MineProspectingGameTests {
   var ore=BuildingPlacement.at(t.e,t.shop,6+initial,y+1,z);t.l.setBlock(ore,Blocks.IRON_ORE.defaultBlockState(),2);
   var plug=BuildingPlacement.at(t.e,t.shop,5+initial,y-1,z);var sealSeen=new UUID[1];
   if(waterFloor){
-   t.l.setBlock(plug,Blocks.WATER.defaultBlockState(),2);
+   t.l.setBlock(plug,(dryFloor?Blocks.AIR:Blocks.WATER).defaultBlockState(),2);
    var hallBuilding=Workshops.hall(t.e);var hallStock=LogisticsRoutes.chest(t.l,t.e,hallBuilding);var material=new ItemStack(Items.COBBLESTONE);hallStock.setItem(2,material);
    var paid=org.villageastra.persistence.WorldJournal.takeAmount(t.l,UUID.randomUUID(),LogisticsRoutes.position(t.e,hallBuilding),2,material,1);h.assertTrue(paid.getCount()==1&&hallStock.getItem(2).isEmpty(),"Foundation material is really withdrawn before this trip");
    var carried=new ListTag();carried.add(paid.save(new CompoundTag()));state.put("cargo",carried);
@@ -196,14 +274,14 @@ public final class MineProspectingGameTests {
    var work=MineWork.read(t.l,t.shop);
    if(waterFloor){
     if(MineSealing.active(work))sealSeen[0]=work.getUUID("operation");
-    if(t.l.getBlockState(plug).is(Blocks.WATER))h.assertTrue(t.l.getBlockState(plug.above()).is(Blocks.STONE),"The unsupported next column remains unexcavated until its water is plugged");
+    if(t.l.getBlockState(plug).is(dryFloor?Blocks.AIR:Blocks.WATER))h.assertTrue(t.l.getBlockState(plug.above()).is(Blocks.STONE),"The unsupported next column remains unexcavated until its water is plugged");
    }
    int iron=ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.RAW_IRON);
    if(iron==0)return;
    if(gap)h.assertTrue(unloadedSeen[0]&&f.npc.distanceToSqr(net.minecraft.world.phys.Vec3.atBottomCenterOf(start))>10000,"A genuinely unloaded selected face is reached by physical travel");
    if(waterFloor){
     h.assertTrue(sealSeen[0]!=null&&t.l.getBlockState(plug).is(Blocks.COBBLESTONE),"A real paid plug supports the new column");
-    var receipt=org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,Settlement.childId(sealSeen[0],"seal_place"));h.assertTrue(receipt!=null&&receipt.getCompound("before").getString("Name").equals("minecraft:water"),"Water replacement has a committed placement receipt");
+    var receipt=org.villageastra.persistence.WorldJournal.inspectCommitted(t.l,Settlement.childId(sealSeen[0],"seal_place"));h.assertTrue(receipt!=null&&receipt.getCompound("before").getString("Name").equals(dryFloor?"minecraft:air":"minecraft:water"),"Water replacement has a committed placement receipt");
     h.assertTrue(ForestFixture.count(work.getList("cargo",Tag.TAG_COMPOUND),Items.COBBLESTONE)==8,"One carried stone was spent before eight actual stone drops; none invented or doubled");
     h.assertTrue(!f.npc.isInWaterOrBubble()&&f.npc.getHealth()==f.npc.getMaxHealth(),"The miner stays dry and healthy");
    }
