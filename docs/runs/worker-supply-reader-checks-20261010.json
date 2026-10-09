@@ -1,0 +1,40 @@
+{
+  "ad": "AD473",
+  "owned_files": {
+    "src/main/java/org/villageastra/world/WorkerSupplies.java": "ff2fb2525e4d54d22761c940c583a452072ad4502329ca124913151f9f61bed9"
+  },
+  "before_file": "docs/runs/worker-supply-reader-before-20261010.java.txt",
+  "before_sha256": "6508a1572a119db6f826ac66297c1055aa277ebabd3c07638dfb1b131fd5f2e4",
+  "audited_files": 1522,
+  "profile": "docs/runs/fresh5-source39-profile-20261010.json",
+  "behavior": "Reuse the existing copied per-real-tick tool/work reader; all predicates, stock, reservations, receipts and writes remain unchanged",
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "checks": [
+    {
+      "log": "docs/runs/worker-supply-reader-private-20261010.log",
+      "sha256": "f0be1e927dc6f890e54028cf0f04fecd254d9114cc578d64e68b4dc28483c898",
+      "native_passed": 3,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "docs/runs/worker-supply-reader-independent-20261010.log",
+      "sha256": "7ded99169771025875b34a4b3d64532f1ce8f24d425f1412df2c34a4cbbe36a8",
+      "native_passed": 3,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "new_cache": false,
+  "new_behavioral_tests": false,
+  "limits": "Single reader reuse confirmed by existing real worker/tool scenarios and fresh unit tests. Profile sample counts are not controlled before/after timing or proof of an overall speed percentage. Main Source39 remains unchanged; full development unverified."
+}

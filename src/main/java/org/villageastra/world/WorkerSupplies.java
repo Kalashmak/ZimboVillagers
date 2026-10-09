@@ -1,17 +1,15 @@
 package org.villageastra.world;
 import java.util.*;
-import java.nio.file.Files;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.item.*;
 import net.minecraft.world.item.crafting.Ingredient;
 import org.villageastra.domain.*;
-import org.villageastra.persistence.NbtRecord;
 import org.villageastra.server.SettlementData;
 /** Tools are village demand too; workers use the shared hall tool chest and can carry their own output. */
 public final class WorkerSupplies {
  private WorkerSupplies(){}
- private static CompoundTag resource(ServerLevel l,Settlement.Building b){var file=MineWork.path(l,b.id());return Files.exists(file)?NbtRecord.read(file):new CompoundTag();}
+ private static CompoundTag resource(ServerLevel l,Settlement.Building b){return ToolSupplyReserve.inspectWork(l,b.id());}
  public static boolean eligible(Resident r,Settlement.Building b){return r!=null&&r.alive()&&r.life()==Resident.Life.ADULT&&b!=null&&(Set.of("farm","forester","mine").contains(b.type())||Workshops.spec(b.type())!=null);}
  /** A tool held by a paused delivery still belongs to that job; a quarry needs its own paid loan. */
  private static boolean quarryFallback(ServerLevel l,SettlementData.Entry e,CompoundTag work){
