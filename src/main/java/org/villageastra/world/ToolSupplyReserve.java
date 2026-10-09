@@ -1,5 +1,8 @@
 package org.villageastra.world;
 
+import java.nio.file.*;
+import java.util.*;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.tags.ItemTags;
 import net.minecraft.world.Container;
@@ -11,13 +14,33 @@ import org.villageastra.server.SettlementData;
 /** A tiny maintenance buffer prevents unpaid construction from monopolising tool inputs. */
 public final class ToolSupplyReserve {
  private ToolSupplyReserve() {}
+ private static long WORK_READS;
+ /** Actual work-record read attempts, for development diagnostics. */
+ public static synchronized long workReads(){return WORK_READS;}
+ private record WorkStamp(int tick,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record WorkRead(WorkStamp stamp,CompoundTag tag){}
+ private static final Map<net.minecraft.server.MinecraftServer,Map<Path,WorkRead>> WORK_CACHE=new WeakHashMap<>();
+ /** Share copied work records within one real server tick; stock and residents remain live queries. */
+ public static synchronized CompoundTag inspectWork(ServerLevel l,UUID building){
+  var p=MineWork.path(l,building).toAbsolutePath().normalize();
+  if(!Files.exists(p)){var cache=WORK_CACHE.get(l.getServer());if(cache!=null)cache.remove(p);return new CompoundTag();}
+  try{
+   var a=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);
+   var stamp=new WorkStamp(l.getServer().getTickCount(),org.villageastra.persistence.AtomicRecord.revision(p),a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());
+   var cache=WORK_CACHE.computeIfAbsent(l.getServer(),server->new LinkedHashMap<Path,WorkRead>(16,.75F,true){
+    @Override protected boolean removeEldestEntry(Map.Entry<Path,WorkRead> entry){return size()>256;}
+   });
+   var old=cache.get(p);if(old!=null&&old.stamp().equals(stamp))return old.tag().copy();
+   WORK_READS++;var tag=NbtRecord.read(p);cache.put(p,new WorkRead(stamp,tag));return tag.copy();
+  }catch(java.io.IOException ex){throw new IllegalStateException("Cannot read "+p,ex);}
+ }
  public static boolean needed(ServerLevel l,SettlementData.Entry e){
   var hall=Workshops.hall(e);var stock=hall==null?null:LogisticsRoutes.chest(l,e,hall);
   for(var r:e.settlement().residents()){
    if(!r.alive()||r.life()!=Resident.Life.ADULT||r.profession()==null)continue;
    var tag=switch(r.profession()){case FORESTER->ItemTags.AXES;case MINER->ItemTags.PICKAXES;case FARMER->ItemTags.HOES;default->null;};
    if(tag==null)continue;var b=e.settlement().workplace(r.id());if(b==null)continue;
-   var file=MineWork.path(l,b.id());var work=java.nio.file.Files.exists(file)?NbtRecord.read(file):new net.minecraft.nbt.CompoundTag();
+   var work=inspectWork(l,b.id());
    var required=work.contains("requiredToolState")?net.minecraft.nbt.NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),work.getCompound("requiredToolState")):null;
    java.util.function.Predicate<ItemStack> fits=s->usable(s,tag)&&(required==null||s.isCorrectToolForDrops(required));
    var held=ItemStack.of(work.getCompound("tool"));if(fits.test(held))continue;
@@ -37,7 +60,7 @@ public final class ToolSupplyReserve {
    if(!r.alive()||r.life()!=Resident.Life.ADULT||r.profession()==null)continue;
    var tag=switch(r.profession()){case FORESTER->ItemTags.AXES;case MINER->ItemTags.PICKAXES;case FARMER->ItemTags.HOES;default->null;};
    if(tag==null||!candidate.is(tag))continue;var b=e.settlement().workplace(r.id());if(b==null)continue;
-   var file=MineWork.path(l,b.id());var work=java.nio.file.Files.exists(file)?NbtRecord.read(file):new net.minecraft.nbt.CompoundTag();
+   var work=inspectWork(l,b.id());
    var required=work.contains("requiredToolState")?net.minecraft.nbt.NbtUtils.readBlockState(net.minecraft.core.registries.BuiltInRegistries.BLOCK.asLookup(),work.getCompound("requiredToolState")):null;
    java.util.function.Predicate<ItemStack> fits=s->usable(s,tag)&&(required==null||s.isCorrectToolForDrops(required));
    if(!fits.test(candidate)||fits.test(ItemStack.of(work.getCompound("tool")))||has(LogisticsRoutes.chest(l,e,b),fits))continue;

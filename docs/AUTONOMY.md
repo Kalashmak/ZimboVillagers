@@ -405,3 +405,10 @@ The quarry regression now keeps the production recovery pair, because pit recove
 A sector survey can reject a candidate whose existing bounded layout draws cannot fit all lots, then continue its original 81 candidate attempts. Previously that rejection threw an exception and could crash native chunk generation. The regression reproduces the exact failing seed, sector and layout identity. Existing allocated layouts, identities, generation envelopes and upgrade reserves remain unchanged. The complete 24-test resource, transport and generation selection passes in both copies, alongside 166 unit tests; earlier failures remain retained. Maximum natural progression still requires observation in the continuing world.
 
 The continuing natural village loaded this build after a normal save and resume, with all 1,936 runtime files matching the verified build. Loading is confirmed; maximum village progression remains unverified.
+
+
+### Tool sensing for funding and research
+
+Repeated tool checks share a verified work-record copy within one actual server tick. Atomic-write revisions and file metadata invalidate the record immediately; the next tick rereads it. Stock contents and resident assignments are still queried afresh, so adding or removing a real spare tool changes availability immediately. Repair quantities, tool tiers, research reserves, funding and labor are unchanged. A native regression reduces 100 unchanged funding views from 100 reads to one and covers caller copies, same-time same-size wear changes, deletion, recreation, separate workplaces and checksum rejection. Both copies pass 19 related native checks and 166 unit tests; the main final unit task was up-to-date, and the independent final ran fresh.
+
+This tool-sensing change is not yet loaded into the continuing natural world; maximum progression remains unverified.
