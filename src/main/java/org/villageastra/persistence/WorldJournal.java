@@ -83,9 +83,23 @@ public final class WorldJournal {
     }
     public static boolean place(ServerLevel level,UUID id,BlockPos pos,BlockState before,BlockState after) {
         CompoundTag intent=base(level,id,pos,"block");intent.put("before",NbtUtils.writeBlockState(before));intent.put("after",NbtUtils.writeBlockState(after));
-        if(before.is(net.minecraft.world.level.block.Blocks.OAK_WALL_SIGN))try{
-            if(Files.exists(path(level,id))){var recorded=read(path(level,id));if(recorded.hasUUID("signBuilding"))intent.putUUID("signBuilding",recorded.getUUID("signBuilding"));}
-            else{var sign=org.villageastra.world.BuildingSigns.target(level,pos);if(sign!=null)intent.putUUID("signBuilding",sign.building().id());}
+        if(before.getBlock() instanceof net.minecraft.world.level.block.WallSignBlock)try{
+            if(Files.exists(path(level,id))){
+                var recorded=read(path(level,id));
+                if(recorded.hasUUID("signBuilding"))intent.putUUID("signBuilding",recorded.getUUID("signBuilding"));
+                else if(!recorded.getBoolean("committed")&&level.hasChunkAt(pos)&&level.getBlockState(pos).equals(before)
+                        &&!ChunkReceipts.of(level.getChunkAt(pos)).contains(id)){
+                    // Old timber plaques could leave an exact, unapplied intent
+                    // without the building authorization. Bind only that same
+                    // intent, before any block mutation or chunk receipt exists.
+                    var original=recorded.copy();original.remove("committed");
+                    var sign=org.villageastra.world.BuildingSigns.target(level,pos);
+                    if(original.equals(intent)&&sign!=null){
+                        recorded.putUUID("signBuilding",sign.building().id());write(path(level,id),recorded);
+                        intent.putUUID("signBuilding",sign.building().id());
+                    }
+                }
+            }else{var sign=org.villageastra.world.BuildingSigns.target(level,pos);if(sign!=null)intent.putUUID("signBuilding",sign.building().id());}
         }catch(IOException ex){throw new IllegalStateException("Cannot recover sign ownership "+id,ex);}
         return execute(level,id,intent)!=null;
     }
