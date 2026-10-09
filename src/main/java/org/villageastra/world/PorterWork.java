@@ -12,7 +12,26 @@ import org.villageastra.server.SettlementData;
 public final class PorterWork {
  private PorterWork(){}
  public static Path path(ServerLevel l,UUID worker){return l.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("data/astra-porter/"+worker+".bin");}
- public static CompoundTag inspect(ServerLevel l,UUID worker){if(!Files.exists(path(l,worker)))return new CompoundTag();var t=NbtRecord.read(path(l,worker));if(t.getInt("schema")!=1||!t.getUUID("worker").equals(worker)||!t.hasUUID("settlement")||!t.hasUUID("assignment")||!t.hasUUID("id")||!t.hasUUID("source")||!t.hasUUID("destination")||!Set.of("fetch","deliver","complete").contains(t.getString("stage")))throw new IllegalStateException("Invalid porter job");var item=ItemStack.of(t.getCompound("item"));if(item.isEmpty()||item.getCount()>LogisticsRoutes.MAX_LOAD||item.getCount()>item.getMaxStackSize())throw new IllegalStateException("Invalid porter parcel");return t;}
+ private static long INSPECT_READS;
+ public static synchronized long inspectReads(){return INSPECT_READS;}
+ private record ParcelStamp(int tick,long revision,java.nio.file.attribute.FileTime modified,java.nio.file.attribute.FileTime created,long size,Object key){}
+ private record ParcelRead(ParcelStamp stamp,CompoundTag tag){}
+ private static final Map<net.minecraft.server.MinecraftServer,Map<Path,ParcelRead>> PARCEL_READS=new WeakHashMap<>();
+ /** AD469: only validated parcel NBT is shared in this actual server tick; receipts and reservations remain live. */
+ public static synchronized CompoundTag inspect(ServerLevel l,UUID worker){
+  var p=path(l,worker).toAbsolutePath().normalize();
+  if(!Files.exists(p)){var cache=PARCEL_READS.get(l.getServer());if(cache!=null)cache.remove(p);return new CompoundTag();}
+  try{
+   var a=Files.readAttributes(p,java.nio.file.attribute.BasicFileAttributes.class);
+   var stamp=new ParcelStamp(l.getServer().getTickCount(),AtomicRecord.revision(p),a.lastModifiedTime(),a.creationTime(),a.size(),a.fileKey());
+   var cache=PARCEL_READS.computeIfAbsent(l.getServer(),server->new LinkedHashMap<Path,ParcelRead>(16,.75F,true){
+    @Override protected boolean removeEldestEntry(Map.Entry<Path,ParcelRead> entry){return size()>256;}
+   });
+   var seen=cache.get(p);if(seen!=null&&seen.stamp().equals(stamp))return seen.tag().copy();
+   INSPECT_READS++;var t=NbtRecord.read(p);validate(t,worker);cache.put(p,new ParcelRead(stamp,t));return t.copy();
+  }catch(java.io.IOException ex){throw new IllegalStateException("Cannot read "+p,ex);}
+ }
+ private static void validate(CompoundTag t,UUID worker){if(t.getInt("schema")!=1||!t.getUUID("worker").equals(worker)||!t.hasUUID("settlement")||!t.hasUUID("assignment")||!t.hasUUID("id")||!t.hasUUID("source")||!t.hasUUID("destination")||!Set.of("fetch","deliver","complete").contains(t.getString("stage")))throw new IllegalStateException("Invalid porter job");var item=ItemStack.of(t.getCompound("item"));if(item.isEmpty()||item.getCount()>LogisticsRoutes.MAX_LOAD||item.getCount()>item.getMaxStackSize())throw new IllegalStateException("Invalid porter parcel");}
  public static boolean active(CompoundTag t){return !t.isEmpty()&&!t.getString("stage").equals("complete");}
  private static UUID operation(CompoundTag t,String kind){return Settlement.childId(t.getUUID("id"),kind);}
  public static int reserved(ServerLevel l,SettlementData.Entry e,UUID building,Predicate<ItemStack> matches,boolean incoming){int n=0;for(var r:e.settlement().residents()){var t=inspect(l,r.id());if(!active(t)||!t.getUUID(incoming?"destination":"source").equals(building))continue;if(!incoming&&(!t.getString("stage").equals("fetch")||WorldJournal.exists(l,operation(t,"take"))))continue;if(incoming&&WorldJournal.exists(l,operation(t,"put")))continue;var item=ItemStack.of(t.getCompound("item"));if(matches.test(item))n+=item.getCount();}

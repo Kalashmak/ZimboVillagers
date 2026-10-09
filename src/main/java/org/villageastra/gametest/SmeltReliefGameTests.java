@@ -28,9 +28,10 @@ public final class SmeltReliefGameTests {
   for(var cell:BlockPos.betweenClosed(base.offset(-3,-1,-3),base.offset(18,6,12)))l.setBlock(cell,cell.getY()<=120?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),2);
   var s=new Settlement(UUID.randomUUID());var e=new SettlementData.Entry(s,l.dimension().location().toString(),base);var hall=new Settlement.Building(UUID.randomUUID(),"town_hall",0,0,0);s.addBuilding(hall);var home=UUID.randomUUID();s.addHome(new Settlement.Home(home,1,2,true));SettlementData.get(l.getServer()).add(e);
   l.setBlock(Workshops.station(e,hall),VillageAstra.OWNED_CHEST.get().defaultBlockState(),2);var stock=LogisticsRoutes.chest(l,e,hall);stock.setItem(0,new ItemStack(Items.SAND));stock.setItem(1,new ItemStack(Items.COAL));l.setBlock(base.offset(4,1,4),Blocks.FURNACE.defaultBlockState(),2);
+  h.startSequence().thenWaitUntil(()->h.assertTrue(l.isPositionEntityTicking(base.offset(1,1,2))&&l.isPositionEntityTicking(base.offset(13,1,2))&&l.isPositionEntityTicking(base.offset(4,1,4)),"Both bodies and the actual furnace chunks are ticking before fixture admission")).thenExecute(()->{
   var bodies=new ArrayList<ResidentEntity>();
   for(int i=0;i<2;i++){
-   var npc=VillageAstra.RESIDENT.get().create(l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);s.admit(r,home);s.assign(r.id(),Profession.BUILDER,hall.id());npc.bind(s.id(),s.resident(r.id()));npc.moveTo(base.getX()+1.5+i*12,121,base.getZ()+2.5);npc.setOnGround(true);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);l.addFreshEntity(npc);bodies.add(npc);
+   var npc=VillageAstra.RESIDENT.get().create(l);var r=new Resident(npc.getUUID(),Resident.Life.ADULT,true,null,null,-1);s.admit(r,home);s.assign(r.id(),Profession.BUILDER,hall.id());npc.bind(s.id(),s.resident(r.id()));npc.moveTo(base.getX()+1.5+i*12,121,base.getZ()+2.5);npc.setOnGround(true);npc.goalSelector.removeAllGoals(g->true);npc.targetSelector.removeAllGoals(g->true);h.assertTrue(l.addFreshEntity(npc)&&l.getEntity(npc.getUUID())==npc,"Canonical fixture body actually admitted");bodies.add(npc);
   }
   var old=bodies.get(0);var helper=bodies.get(1);var wants=List.of(new Workshops.Want(Ingredient.of(Items.GLASS),1,hall.id()));
   for(int i=0;i<14;i++){
@@ -46,7 +47,7 @@ public final class SmeltReliefGameTests {
    var carried=job.copy();carried.put("carried",new ItemStack(Items.COAL).save(new net.minecraft.nbt.CompoundTag()));h.assertTrue(!NaturalFurnace.availableTo(l,hall,carried,helper.getUUID()),"No transfer while paid fuel remains in hands");
    for(var stage:List.of("smelt_raw","smelt_put_raw","smelt_fuel","smelt_put_fuel","smelt_deliver","equip_place")){var other=job.copy();other.putString("stage",stage);h.assertTrue(!NaturalFurnace.availableTo(l,hall,other,helper.getUUID()),"No transfer at carried or equipment boundary: "+stage);}
    s.resident(helper.getUUID()).fallIll();h.assertTrue(!NaturalFurnace.availableTo(l,hall,job,helper.getUUID()),"A sick replacement cannot take over");s.resident(helper.getUUID()).cure();
-   h.runAfterDelay(260,()->{
+   h.startSequence().thenWaitUntil(()->h.assertTrue(((net.minecraft.world.level.block.entity.FurnaceBlockEntity)l.getBlockEntity(base.offset(4,1,4))).getItem(2).is(Items.GLASS),"Wait for actual vanilla cooking before the receipt guard")).thenExecute(()->{
     var furnace=(net.minecraft.world.level.block.entity.FurnaceBlockEntity)l.getBlockEntity(base.offset(4,1,4));h.assertTrue(furnace.getItem(2).is(Items.GLASS),"Actual vanilla cooking finished before receipt guard");
     var output=org.villageastra.persistence.WorldJournal.takeAmount(l,Settlement.childId(id,"smelt/output"),base.offset(4,1,4),2,furnace.getItem(2).copy(),1);h.assertTrue(output.is(Items.GLASS)&&furnace.getItem(2).isEmpty(),"Old owner really took the output before the checkpoint");
     h.assertTrue(!NaturalFurnace.claim(l,hall,Workshops.inspect(l,hall.id()),helper.getUUID()),"An existing output receipt cannot change owner");
@@ -64,6 +65,7 @@ public final class SmeltReliefGameTests {
    var oldCustody=JobCargo.snapshot(old,true);h.assertTrue(oldCustody.items().isEmpty()&&oldCustody.jobs().isEmpty(),"Former owner cannot replay the successor's paid output into its custody");
    com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_SMELT_RELIEF VERIFIED bodyTicks={} glass=1 sameJob={} oldSick=true",helper.tickCount,id);
    for(var npc:bodies)npc.discard();SettlementData.get(l.getServer()).remove(s.id());for(var cp:chunks)l.setChunkForced(cp.x,cp.z,false);h.succeed();
+  });
   });
  }
 }

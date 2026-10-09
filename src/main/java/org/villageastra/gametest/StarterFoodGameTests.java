@@ -399,9 +399,8 @@ public final class StarterFoodGameTests {
   h.succeed();
  }
  /** Override 11: at a hall chest with no room for the bread the baker lets the job go, so other work of his is not held up; the bread waits for room. */
- @GameTest(template="empty",timeoutTicks=100) public static void handBreadGoalLetsGoAtAFullHallChest(GameTestHelper h){
-  var v=village(h);
-  try{
+ @GameTest(template="empty",timeoutTicks=400) public static void handBreadGoalLetsGoAtAFullHallChest(GameTestHelper h){
+  loadedVillage(h,v->{
    var hall=hungryHall(v,10);var mayor=v.npc(Profession.MAYOR);
    // The job runs on a clock of its own far below the world's, so the goal's turn on the game time never falls within a turn of it.
    long[] clock={-1_000_000L};
@@ -414,8 +413,7 @@ public final class StarterFoodGameTests {
    goal.stop();hall.setItem(slot(hall,Items.COBBLESTONE),ItemStack.EMPTY);
    var statuses=bake(v.l,v.e,clock,mayor.getUUID());
    h.assertTrue(last(statuses).equals("hand_bread_complete")&&hall.countItem(Items.BREAD)==4,"With room again the bread is put away, once: "+hall.countItem(Items.BREAD));
-  }finally{done(v);}
-  h.succeed();
+  });
  }
  @GameTest(template="empty",batch="starter_food_claim",timeoutTicks=400) public static void oneBakerAtATime(GameTestHelper h){
   loadedVillage(h,v->{

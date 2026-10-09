@@ -1,0 +1,53 @@
+{
+  "owned_files": {
+    "src/main/java/org/villageastra/world/PorterWork.java": "54d73f54a8ed063530abb98a2ccf74c0e565fe657eb1562c3a6227ed6c5fa591",
+    "src/main/java/org/villageastra/gametest/PorterWorkReadCacheGameTests.java": "2d7abd386411c6710b5aec0b180df818fc344501c9f98ba5fd8aa6d53c736f0d",
+    "src/main/java/org/villageastra/world/NaturalFurnace.java": "6811e1a22e014ae362897e22a6b992ea48711bce22ca45bfda3d3beb423053a7",
+    "src/main/java/org/villageastra/gametest/SmeltFuelReliefGameTests.java": "1b17bb049ab7c3eb0a2cf200448d946a9d500d8060253b553de6f55d1b8e0510",
+    "src/main/java/org/villageastra/gametest/StarterFoodGameTests.java": "1f67db0204e0c2d0f9de010280a3ff42ae4817eecc3c463e96f27835b4ca2690",
+    "src/main/java/org/villageastra/gametest/SmeltReliefGameTests.java": "33a2f9caf9c13631c06b66f99368fc19446d3167d643ca867e4dcf5524792bd6"
+  },
+  "parallel_commit": "9f2e26456fc61222a87692ea1013014afd41e64e",
+  "checks": [
+    {
+      "log": "docs/runs/porter-smelt-integrated-private-20261009.log",
+      "sha256": "6a940f93bbf0da0e8eb5d1e7b4df0449cb241953c82c3e297fa8f265c091c65e",
+      "initial_native_passed": 38,
+      "initial_native_required": 40,
+      "readiness_log": "docs/runs/porter-smelt-readiness-private-20261010.log",
+      "readiness_sha256": "b51a34d6c5eca4a2007c7f888d3047305b7925de506584d3a0cde02850d5d931",
+      "affected_native_rechecked": 3,
+      "readiness_native_passed": 5,
+      "substring_selected_existing_unstarted_cases": 2,
+      "native_passed": 40,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    },
+    {
+      "log": "docs/runs/porter-smelt-integrated-independent-20261009.log",
+      "sha256": "080e7e2c2d31077faa5765e0911d1d87896350a1152d4f59238261c1b6b688ce",
+      "initial_native_passed": 40,
+      "initial_native_required": 40,
+      "readiness_log": "docs/runs/porter-smelt-readiness-independent-20261010.log",
+      "readiness_sha256": "fd03bbd7538418859553050a8817818c5ece0690fbcf09b6bb4f0deb890285b4",
+      "affected_native_rechecked": 3,
+      "readiness_native_passed": 5,
+      "substring_selected_existing_unstarted_cases": 2,
+      "native_passed": 40,
+      "fresh_unit": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      }
+    }
+  ],
+  "maximum_verified": false,
+  "natural_loaded": false,
+  "release_binary_updated": false,
+  "limits": "Validated porter NBT only is cached for one actual server tick; receipts and all decisions remain live. Sick-owner smelt_fuel relief requires real cold matching furnace, matching remaining input, incomplete compatible output, empty hands, no current fuel/put/output receipt, eligible healthy replacement and unchanged custody/post guards. No material, labor, illness or world clock grants. Initial Root fixture failures and clean expected baseline failure retained; physical fixed helper completed same four paid bricks and receipt guard retained old-owner paid coal. Main Source38 remains previous frozen runtime."
+}

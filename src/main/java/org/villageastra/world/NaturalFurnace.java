@@ -20,7 +20,7 @@ public final class NaturalFurnace {
  private static void save(ServerLevel l,Settlement.Building b,CompoundTag t){NbtRecord.write(Workshops.path(l,b.id()),t);}
  private static String missing(ServerLevel l,Settlement.Building b,CompoundTag t,Ingredient ingredient,int count){var list=new ListTag();var in=new CompoundTag();in.putString("ingredient",ingredient.toJson().toString());in.putInt("count",count);list.add(in);t.put("needs",list);save(l,b,t);return "workshop_missing_inputs";}
  private static UUID op(CompoundTag t,String suffix){return Settlement.childId(t.getUUID("id"),suffix);}
- /** An eligible colleague can collect a sick worker's cooking furnace, or begin a
+ /** An eligible colleague can collect or refuel a sick worker's furnace, or begin a
   * stale job whose stranded owner has not taken any goods. Paid custody stays exclusive. */
  public static boolean availableTo(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){return availableTo(l,b,t,worker,SettlementData.get(l.getServer()).clock().ticks());}
  public static boolean availableTo(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker,long now){
@@ -28,8 +28,13 @@ public final class NaturalFurnace {
   boolean untouched=t.getString("stage").equals("smelt_raw")&&t.hasUUID("id")&&now-t.getLong("lastTick")>=2400
     &&t.getInt("withdrawals")==0&&t.getInt("fuels")==0&&t.getInt("output")==0&&t.getLong("labor")==0
     &&t.getList("paid",Tag.TAG_COMPOUND).isEmpty()&&!t.contains("furnace")&&!WorldJournal.exists(l,op(t,"smelt/raw/0"));
-  if(!untouched&&(!t.getString("stage").equals("smelt_wait")||!t.hasUUID("id")||!t.contains("furnace"))
+  boolean refuel=t.getString("stage").equals("smelt_fuel");
+  if(!untouched&&(!Set.of("smelt_wait","smelt_fuel").contains(t.getString("stage"))||!t.hasUUID("id")||!t.contains("furnace"))
     ||!ItemStack.of(t.getCompound("carried")).isEmpty()||WorldJournal.exists(l,op(t,"smelt/output")))return false;
+  // A fuel withdrawal can commit before its carried stack is saved. That fuel
+  // still belongs to the old worker; an empty saved hand alone cannot transfer it.
+  if(refuel&&(WorldJournal.exists(l,op(t,"smelt/fuel/"+t.getInt("fuels")))
+    ||WorldJournal.exists(l,op(t,"smelt/put_fuel/"+t.getInt("fuels")))))return false;
   if(!(l.getEntity(t.getUUID("worker")) instanceof ResidentEntity old)||!old.isAlive()||old.escortPlayer()!=null
     ||CargoCustody.pending(l.getServer(),old.getUUID())||old.settlementId()==null)return false;
   var e=SettlementData.get(l.getServer()).entry(old.settlementId());if(e==null||!e.dimension().equals(l.dimension().location().toString()))return false;
@@ -47,8 +52,14 @@ public final class NaturalFurnace {
    var sight=l.clip(new net.minecraft.world.level.ClipContext(helper.getEyePosition(),pos.getCenter(),net.minecraft.world.level.ClipContext.Block.COLLIDER,net.minecraft.world.level.ClipContext.Fluid.NONE,helper));
    return sight.getType()==net.minecraft.world.phys.HitResult.Type.MISS||sight.getBlockPos().equals(pos);
   }
-  var at=BlockPos.of(t.getLong("furnace"));return l.hasChunkAt(at)&&l.getBlockEntity(at) instanceof FurnaceBlockEntity f
-    &&f.getPersistentData().hasUUID("AstraSmeltJob")&&f.getPersistentData().getUUID("AstraSmeltJob").equals(t.getUUID("id"));
+  var at=BlockPos.of(t.getLong("furnace"));if(!l.hasChunkAt(at)||!(l.getBlockEntity(at) instanceof FurnaceBlockEntity f)
+    ||!f.getPersistentData().hasUUID("AstraSmeltJob")||!f.getPersistentData().getUUID("AstraSmeltJob").equals(t.getUUID("id")))return false;
+  if(!refuel)return true;
+  if(f.getBlockState().getValue(net.minecraft.world.level.block.FurnaceBlock.LIT)||!f.getItem(1).isEmpty()||f.getItem(0).isEmpty())return false;
+  var recipe=l.getRecipeManager().byKey(new net.minecraft.resources.ResourceLocation(t.getString("recipe"))).orElse(null);
+  if(!(recipe instanceof SmeltingRecipe smelt)||!smelt.getIngredients().get(0).test(f.getItem(0)))return false;
+  var expected=ItemStack.of(t.getList("outputs",Tag.TAG_COMPOUND).getCompound(0));var output=f.getItem(2);
+  return !expected.isEmpty()&&(output.isEmpty()||ItemStack.isSameItemSameTags(output,expected)&&output.getCount()<expected.getCount());
  }
  public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker){return claim(l,b,t,worker,SettlementData.get(l.getServer()).clock().ticks());}
  public static boolean claim(ServerLevel l,Settlement.Building b,CompoundTag t,UUID worker,long now){
