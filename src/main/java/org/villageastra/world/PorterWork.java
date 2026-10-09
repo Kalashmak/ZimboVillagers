@@ -21,7 +21,13 @@ public final class PorterWork {
  public static ItemStack cargo(ServerLevel l,CompoundTag t){if(!active(t))return ItemStack.EMPTY;if(WorldJournal.recoverExisting(l,operation(t,"put"))!=null)return ItemStack.EMPTY;return WorldJournal.recoverAmount(l,operation(t,"take"));}
  public static void release(ServerLevel l,UUID worker){var t=inspect(l,worker);if(!t.isEmpty()){t.putString("stage","complete");NbtRecord.write(path(l,worker),t);}}
  private static boolean near(ResidentEntity w,net.minecraft.core.BlockPos p){return w.distanceToSqr(p.getX()+1.5,p.getY(),p.getZ()+.5)<=6.25;}
- private static void approach(ResidentEntity w,net.minecraft.core.BlockPos p){w.getNavigation().moveTo(p.getX()+1.5,p.getY(),p.getZ()+.5,.8);}
+ private static void approach(ResidentEntity w,net.minecraft.core.BlockPos p){
+  var target=p.east();var nav=w.getNavigation();var held=nav.getPath();
+  // Preserve a safe advancing parcel route through stair jumps and brief air time.
+  // An ordinary native route may accept a cliff descent that cannot be walked back.
+  if(!nav.isDone()&&held instanceof ResourceReturnRoute.ReturnPath&&held.canReach()&&held.getTarget().equals(target))return;
+  nav.moveTo(ResourceReturnRoute.plan(w,target),.8);
+ }
  public static boolean eligible(ResidentEntity w){return eligible(w,false);}
  /** Hunger must not strand paid food or prevent clearing grain from a blocked bread pantry. */
  static boolean foodEmergency(ResidentEntity w){
