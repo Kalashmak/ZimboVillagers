@@ -320,12 +320,15 @@ public final class NaturalSupplyGoal extends Goal {
   if(!l.hasChunkAt(previous)||!ResourceExpedition.survey(worker,previous))return false;
   // Stable geometry order makes a yielded cursor meaningful after body movement
   // or reload; absent/changed/unsafe blocks are still checked again as encountered.
+  var mine=e.settlement().workplace(worker.getUUID());if(mine==null)return false;int floor=MineWork.floorY(l,e,mine,BuildingTiers.level(l,e,mine));
   var positions=new ArrayList<BlockPos>();for(var p:BlockPos.betweenClosed(previous.offset(-4,-2,-4),previous.offset(4,2,4)))positions.add(p.immutable());
   positions.sort(Comparator.comparingDouble(p->p.distSqr(previous)));
   for(int index=state.getInt("quarryResumeCursor");index<positions.size();index++){
    if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){state.putInt("quarryResumeCursor",index);surveyPending=true;save();return false;}
-   var p=positions.get(index);if(reserved.contains(p)||!l.hasChunkAt(p)||!l.getBlockState(p).is(material.getBlock())||!SurfaceQuarry.safe(l,p))continue;
+   var p=positions.get(index);if(p.getY()<floor||reserved.contains(p)||!l.hasChunkAt(p)||!l.getBlockState(p).is(material.getBlock())||!SurfaceQuarry.safe(l,p))continue;
    var stand=HarvestAccess.find(worker,p,ROUTE_RANGE);if(stand!=null)return begin(p,stand,l.getBlockState(p),true);
+   if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){state.putInt("quarryResumeCursor",index);surveyPending=true;save();return false;}
+   if(beginRememberedFace(l,e,p,reserved,floor))return true;
   }
   state.putBoolean("quarryResumeChecked",true);state.remove("quarryResumeCursor");save();return false;
  }
@@ -350,10 +353,20 @@ public final class NaturalSupplyGoal extends Goal {
     if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){surveyPending=true;return false;}
     var p=positions.get(knownCell);if(p.getY()<floor||!l.hasChunkAt(p))continue;var before=l.getBlockState(p);if(reserved.contains(p)||!before.is(site.material().getBlock())||!MineOutcrops.wanted(before,wanted)||!SurfaceQuarry.safe(l,p))continue;
     var stand=HarvestAccess.find(worker,p,ROUTE_RANGE);if(stand!=null){knownSite=null;knownCell=0;return begin(p,stand,before,true);}
+    if(System.nanoTime()>=deadline||HarvestRouteCache.stats(worker).plans()-plans>=SURVEY_PLANS){surveyPending=true;return false;}
+    if(beginRememberedFace(l,e,p,reserved,floor)){knownSite=null;knownCell=0;return true;}
    }
    knownMisses.put(site.receipt(),now+1200);knownSite=null;knownCell=0;
   }
   knownRetry=now+100;return false;
+ }
+ /** Reuse the ordinary short paid face for a confirmed deposit; sensing does
+  * not borrow a pick or excavate, and the shaft floor remains the lower limit. */
+ private boolean beginRememberedFace(ServerLevel l,SettlementData.Entry e,BlockPos ore,Set<BlockPos> reserved,int floor){
+  var face=QuarryFace.find(worker,ore,reserved);
+  if(face==null||face.target().getY()<floor||SurfaceQuarry.tool(l,e,l.getBlockState(face.target()))<0)return false;
+  begin(face.target(),face.stand(),l.getBlockState(face.target()),true);
+  state.putLong("oreTarget",ore.asLong());state.putInt("faceDepth",1);save();return true;
  }
  /** Surface plants have their own durable cursor: a deep mineral search must not
   * delay new paper demand until its entire underground survey wraps. Shares the

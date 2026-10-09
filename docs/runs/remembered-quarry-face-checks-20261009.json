@@ -1,0 +1,77 @@
+{
+  "change": "AD445 remembered mineral deposits reuse the existing short paid quarry face",
+  "owned_files_sha256": {
+    "src/main/java/org/villageastra/world/NaturalSupplyGoal.java": "b98a4e53b076435a45b5a50b9f0b03f881c7f73a8b80cff8ee667528eb34e7ed",
+    "src/main/java/org/villageastra/gametest/PartialFaceResumeGameTests.java": "2cbf8b0036a51c70d0e00e69a0aa151873078523d8bc749eee92a5a961357345",
+    "src/main/java/org/villageastra/gametest/RememberedQuarryFaceGameTests.java": "be79d9eec2573a605729c5b43983e11d90e8bf40cc0aa7895ae1a3e35060717f",
+    "docs/AUTONOMY.md": "e303c51317b28b3badb5225b6ae311fb726c2cb4a52af99c048f68611478b838"
+  },
+  "audit_file_count": 1494,
+  "history": [
+    {
+      "log": "docs/runs/remembered-quarry-face-baseline-20261009.log",
+      "sha256": "263e8f48df1fe4d3d478084a090d04a7038d3f7a8be67c9dedea3b4e83856808",
+      "success": false,
+      "summary": [
+        "[13:08:45] [Server thread/INFO] [minecraft/GameTestServer]: ========= 4 GAME TESTS COMPLETE ======================",
+        "[13:08:45] [Server thread/INFO] [minecraft/GameTestServer]: 2 required tests failed :("
+      ]
+    },
+    {
+      "log": "docs/runs/remembered-quarry-face-fixed-trial-20261009.log",
+      "sha256": "bb67d015d0b47c40eceb9ccf07b3bdb1c10aa39a3bb2128a2788a9160de12fae",
+      "success": false,
+      "summary": [
+        "[13:11:39] [Server thread/INFO] [minecraft/GameTestServer]: ========= 13 GAME TESTS COMPLETE ======================",
+        "[13:11:39] [Server thread/INFO] [minecraft/GameTestServer]: 4 required tests failed :("
+      ]
+    },
+    {
+      "log": "docs/runs/remembered-quarry-face-yield-trial-20261009.log",
+      "sha256": "bf49baf5c6d5d7bff18a50beec117e47600ad944548a0684e64931cdaa30c56e",
+      "success": true,
+      "summary": [
+        "[13:14:20] [Server thread/INFO] [minecraft/GameTestServer]: ========= 13 GAME TESTS COMPLETE ======================",
+        "[13:14:20] [Server thread/INFO] [minecraft/GameTestServer]: All 13 required tests passed :)"
+      ]
+    },
+    {
+      "log": "docs/runs/remembered-quarry-face-final-private-20261009.log",
+      "sha256": "a2752c2e6c0b8149f1e909f4cc4b0a84364bcd025b01f9a2ded5fed6b1e8e93d",
+      "success": true,
+      "summary": [
+        "[13:18:33] [Server thread/INFO] [minecraft/GameTestServer]: ========= 31 GAME TESTS COMPLETE ======================",
+        "[13:18:33] [Server thread/INFO] [minecraft/GameTestServer]: All 31 required tests passed :)"
+      ]
+    },
+    {
+      "log": "docs/runs/remembered-quarry-face-final-independent-20261009.log",
+      "sha256": "220dac7b8e7514b7e1d894ced8e7cd140572e65dc69794fefa0c9e9cf415ab42",
+      "success": false,
+      "summary": []
+    },
+    {
+      "log": "docs/runs/remembered-quarry-face-final-independent-working-20261009.log",
+      "sha256": "d2b6be86c1f50fff9265d6b4c4c8ca3b2f5170f56ade8fd4f1ab4b35fb8623aa",
+      "success": true,
+      "summary": [
+        "[13:19:50] [Server thread/INFO] [minecraft/GameTestServer]: ========= 31 GAME TESTS COMPLETE ======================",
+        "[13:19:50] [Server thread/INFO] [minecraft/GameTestServer]: All 31 required tests passed :)"
+      ]
+    }
+  ],
+  "private_junit": 165,
+  "private_junit_run": "yield-trial; unchanged Java inputs, final-private test UP-TO-DATE",
+  "independent_junit": 165,
+  "private_gametests": 31,
+  "independent_gametests": 31,
+  "fixture_corrections": [
+    "Old prepared direct deposit tests now await bounded sensing windows; positive results, tool wear, receipts, labor and flooded refusals remain unchanged.",
+    "An independent invocation in the source-audit directory failed before Gradle because that inventory does not contain the wrapper JAR; the full public working copy was compiled and tested successfully instead."
+  ],
+  "actual_hidden_geometry": "docs/runs/fresh5-remembered-hidden-iron-source20-20261009.json",
+  "actual_source20_new_supply": "docs/runs/fresh5-natural-five-iron-source20-20261009.json",
+  "natural_fix_loaded": false,
+  "full_acceptance": false,
+  "binary_release_updated": false
+}
