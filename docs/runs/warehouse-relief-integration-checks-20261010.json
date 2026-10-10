@@ -1,0 +1,426 @@
+{
+  "decisions": [
+    "AD476",
+    "AD478"
+  ],
+  "frozen_secondary_commit": "43ff26b35f29eace560b7a5f323384fb33414144",
+  "owned_source_sha256": {
+    "src/main/java/org/villageastra/world/CartWolves.java": "c334f9605e015ec9725b1cec09f17409c0266afd78ba215f067570fd28fc96a0",
+    "src/main/java/org/villageastra/world/WarehouseTrips.java": "37616a7a032a42b19f47f36772702684c8253cd142811b65a600867a4a20969e",
+    "src/main/java/org/villageastra/world/VillageDogs.java": "8a27f72612b0f0908ffd4a1400747ebde4abcf9509b288e5b13d63944dcd102b",
+    "src/main/java/org/villageastra/world/VillageWolves.java": "8d62cdf58aa97896c2de497bb8f6e2423e77f733c23dbaab5311d6fa98f6b55c",
+    "src/main/java/org/villageastra/gametest/WarehouseReliefGameTests.java": "50ed77269b00947d590c914571be533683a4a2deba597a3f715900bab52b2ecd",
+    "src/main/java/org/villageastra/gametest/WarehouseUpkeepGameTests.java": "52e9226c26274e4339bf8d0e9e88c2d8605d68461aa972cad60c7da767458e0e",
+    "src/main/java/org/villageastra/world/WolfKennelGoal.java": "0d1b7a1b743c0c07426761e6287bb91026925f87001090ce300a1620d5c041ec",
+    "src/main/java/org/villageastra/gametest/WolfRepathCadenceGameTests.java": "f8bb3e6d54f92df900b8de73ca00c63ace429dea49df799b7890122f0dd6d30b",
+    "src/main/java/org/villageastra/gametest/WarehouseStorageGameTests.java": "27cdeb7b8d3151a2632fa235d91fafe1be715a55bb4d76367c5a033b681c4ae5"
+  },
+  "checks": [
+    {
+      "log": "docs/runs/warehouse-relief-integrated-private-20261010.log",
+      "sha256": "1e9ababe5541226f37463a3578cfdfbc0d567324d6386242e037d113832f70c9",
+      "native_passed": 31,
+      "fresh_units": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_files": 38
+    },
+    {
+      "log": "docs/runs/warehouse-relief-integrated-independent-20261010.log",
+      "sha256": "c7be346e1c939bcbf362d6b691ae06e8efd086655cec5bc7bdb5de4bd68da0cc",
+      "native_passed": 31,
+      "fresh_units": {
+        "tests": 166,
+        "failures": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "xml_files": 38
+    }
+  ],
+  "retained_private_raw_sha256": {
+    "docs/runs/warehouse-relief-admission-closed-world-decoder.py.raw": "9e0c9475ea3742b46363cd742d1ac4cc503940a0190a35f72bbf52b3c8819b58",
+    "docs/runs/warehouse-relief-all-scene-chunk-overlap-audit-20261010.json": "392cdca920f62978cc2a3e4f6b994d7648370adf23e19022ce8df18f2a02e467",
+    "docs/runs/warehouse-relief-baseline-20261010.json": "3ad9c2979fccec33b6fdc002a6e2ff2f23d366d63744ba97e0c7261e69c02cd0",
+    "docs/runs/warehouse-relief-baseline-20261010.log": "c4a3e976781789ed44af41e0ad2b24aef174349ef9d2bc3ec9383b0ecf11bb2f",
+    "docs/runs/warehouse-relief-baseline-CartWolves.java.raw": "7bca44eed609ce78bdf431d0a20461e1ff821c0f5e4b598a1560707bdd7e9c5c",
+    "docs/runs/warehouse-relief-baseline-WarehouseReliefGameTests.java.raw": "b7cd82d702d298063835b1d56a31aadda088b63386820d33a032dec28fb66ddf",
+    "docs/runs/warehouse-relief-baseline-WarehouseStorageGameTests.java.raw": "fca71d23c6ec8906052160775b8027e71ee63158da44c11827d170c84bc7561c",
+    "docs/runs/warehouse-relief-baseline-WarehouseUpkeepGameTests.java.raw": "952090076e1bdb3eb2a17a4540fd290bbd2e4ecc29edd74dd53e47bad5c978b4",
+    "docs/runs/warehouse-relief-baseline-WolfKennelGoal.java.raw": "550ae0920402595cbd7000f6599dc7562b8e9c387b215d0e10c8a1a0c48d2490",
+    "docs/runs/warehouse-relief-before-eligibility-VillageDogs.java.raw": "3e040b8ce0e28434679a21575e5c6042094d761714a60530d8693b624cfa185c",
+    "docs/runs/warehouse-relief-before-eligibility-VillageWolves.java.raw": "d4e62bdcc2b3c48119e9ec887755f9c3d7b288410f9545f5b6ec6d49e9a51d32",
+    "docs/runs/warehouse-relief-before-hitch-CartWolves.java.raw": "f8d52ae8146d5679c41c48c7671a82ee141b8f482879a55021be1216f8915d3e",
+    "docs/runs/warehouse-relief-before-hitch-WarehouseTrips.java.raw": "5973e624717f11094adc4e5ad72964bd8921bf7c5bc28f26f5abc57f7c954ce6",
+    "docs/runs/warehouse-relief-cardinal-first-WarehouseReliefGameTests.java.raw": "d46ae9b57f136a08ad45d81ed50fdb873a66d22cba14f4d1054f2958743870d1",
+    "docs/runs/warehouse-relief-cardinal-focused-20261010.log": "36b36bc59da3686b6bd71cdde81d10fa7922f56e609f46e4ce7d8e806e4d564d",
+    "docs/runs/warehouse-relief-cardinal-hitch-focused-20261010.log": "7b91eb8e72a6f5d8921caef04361b5e7ef23264438012a8ca312c7f225d3a576",
+    "docs/runs/warehouse-relief-cardinal-hitch-WarehouseReliefGameTests.java.raw": "8bdea777bf495d4098530925486631579dabf24a553afdd162982c2e896231aa",
+    "docs/runs/warehouse-relief-cardinal-reach-focused-20261010.log": "43e56bfb6be8936648403044f15e1ee7b7e6fd7bd04bcfc97d33e52b8af0551a",
+    "docs/runs/warehouse-relief-cardinal-reach-WarehouseReliefGameTests.java.raw": "55f150c1417fd73a4182b1fa44d1478f81eef115c222b11c3adad473c34f282b",
+    "docs/runs/warehouse-relief-combined-actual-overlaps-20261010.json": "4c36d76a05883cf8bf19162ba819d95ab5b4901abadba8ce9c0c5e85462e12ae",
+    "docs/runs/warehouse-relief-combined-closed-world-decoder.py.raw": "9c02972cd3e34feecab290feba4162526885ff62a7da17fb5180345e71b2128e",
+    "docs/runs/warehouse-relief-combined-failure-closed-world-20261010.json": "1a6348a1799b5bf12bb1c02a0596063f293af5995b85daadeee68d20b2b2380e",
+    "docs/runs/warehouse-relief-combined-first-WarehouseReliefGameTests.java.raw": "7b72b3b8618b94a8fe61474ea98c3b53f8cbf387aadada8f4fd0a562568959a4",
+    "docs/runs/warehouse-relief-confirmed-admission-failure-closed-world-20261010.json": "e65edbf3fb724ec3a6e7920d353654a995629a00241b372d606a4fe2707d5911",
+    "docs/runs/warehouse-relief-confirmed-admission-focused-20261010.log": "fc54c3d0afee82a167018d58dd45409132bd3cd122da34fd9f60387fcbafca5d",
+    "docs/runs/warehouse-relief-confirmed-admission-WarehouseReliefGameTests.java.raw": "1381d79af05f4bf2ec6ae5d5f89a22e197e2164f37e63c4170f3cf5b23cf83fa",
+    "docs/runs/warehouse-relief-current-eligibility-diagnostic-20261010.log": "421dc5ea8176f19490e89f285ccd976f7c152cf6763e53d4765b1a52759d485a",
+    "docs/runs/warehouse-relief-current-eligibility-WarehouseReliefGameTests.java.raw": "b3c05e3accfe5822966e75938df5ef1d25d7dabd596d5dd5777ff2e92f12fdde",
+    "docs/runs/warehouse-relief-dispatched-first-WarehouseReliefGameTests.java.raw": "5ffc9d5fb2a579372ccba371ecdbd70e9e87bd86fb665a48cf0a28b8b0ee3a7e",
+    "docs/runs/warehouse-relief-dispatched-fixed-focused-20261010.log": "2405946b37a78f9fb92f6d88a3191074fae7fad481807a5554f8850da9ab3c70",
+    "docs/runs/warehouse-relief-dispatched-focused-20261010.log": "7ee4467b32ae71b5b9cb534474ef4eb83a11c31bc11716819a7aec64c9b755fb",
+    "docs/runs/warehouse-relief-dispatched-receipts-closed-world-20261010.json": "91c3b9efc0c7863c01e3aac0d49e99c232762fef23ed74a3d629c6f0b0a29659",
+    "docs/runs/warehouse-relief-exact-return-first-WarehouseReliefGameTests.java.raw": "e7483880342aa289caea674a5d47fdc0fba944dd41f6a0b48ee5e179da7248f8",
+    "docs/runs/warehouse-relief-exact-return-focused-20261010.log": "a27bc3854057378a5b389462d4571fc854224cbc568f75e5d7beb2d77a86ea1f",
+    "docs/runs/warehouse-relief-fetch-not-run-crash-2026-10-10_01.38.56-server.txt.raw": "1e114a9a95d5670df57f09562978cc91eeb63ca3bd87107aa101b90208558d5d",
+    "docs/runs/warehouse-relief-fetch-not-run-WarehouseReliefGameTests.java.raw": "e65d96618a7ddde8c51d281d562037d5e30aa566def937e655b74063cf9f3476",
+    "docs/runs/warehouse-relief-fetch-ready-baseline-WarehouseReliefGameTests.java.raw": "5a9392366869ac67efd2fe25f3bc1cdd05b204dca7cf090e6935e01d088d07de",
+    "docs/runs/warehouse-relief-final-20261010.md": "c4ec18929b34f19ea8763a6c7a6a219b09dc033a1ec98b5edb10730181de5dbc",
+    "docs/runs/warehouse-relief-final-candidate-CartWolves.java.raw": "c334f9605e015ec9725b1cec09f17409c0266afd78ba215f067570fd28fc96a0",
+    "docs/runs/warehouse-relief-final-candidate-VillageDogs.java.raw": "8a27f72612b0f0908ffd4a1400747ebde4abcf9509b288e5b13d63944dcd102b",
+    "docs/runs/warehouse-relief-final-candidate-VillageWolves.java.raw": "8d62cdf58aa97896c2de497bb8f6e2423e77f733c23dbaab5311d6fa98f6b55c",
+    "docs/runs/warehouse-relief-final-candidate-WarehouseTrips.java.raw": "37616a7a032a42b19f47f36772702684c8253cd142811b65a600867a4a20969e",
+    "docs/runs/warehouse-relief-final-candidate-WarehouseUpkeepGameTests.java.raw": "52e9226c26274e4339bf8d0e9e88c2d8605d68461aa972cad60c7da767458e0e",
+    "docs/runs/warehouse-relief-final-candidate-WolfKennelGoal.java.raw": "0d1b7a1b743c0c07426761e6287bb91026925f87001090ce300a1620d5c041ec",
+    "docs/runs/warehouse-relief-final-combined-20261010.log": "e7a46fb8209dc42a8716fe60859d9ed99c7ca033febe1e696734902ed73b1bbc",
+    "docs/runs/warehouse-relief-final-regression-20261010.log": "b0d4efc445f7b78573f87f73974456c987dbab81420ed40e3730a2db1797dbeb",
+    "docs/runs/warehouse-relief-final-strict-20261010.log": "a76dc0f4ba9cb9be98ff32532518936a08febe9473e54ed479ef7478a5a4d28e",
+    "docs/runs/warehouse-relief-final-supported-20261010.log": "1f7b6661d9b07f6a4f6cd8d054e50a55c1ee0bf982872abf99d90cd8c4855767",
+    "docs/runs/warehouse-relief-finalizer.py.raw": "becf5c13270f5cf66a149554bc5a62f00d67b422ed90fdbb7380239e173c5716",
+    "docs/runs/warehouse-relief-first-fixed-fetch-baseline-20261010.log": "cff7172bd5e9c67f7f9631f6c99e1f48008ac3a6f87c85402908b2e403816a73",
+    "docs/runs/warehouse-relief-first-fixed-fetch-ready-baseline-20261010.log": "05e99e8a96cdd6ce62e960cb28f503fdb7a0f5c66320ba235b8ca5389fab7076",
+    "docs/runs/warehouse-relief-first-not-run-WarehouseReliefGameTests.java.raw": "e5480a17e7164660d06b4163d682e874a46adf6cdee458ffb6bcb2c9cd63ba7d",
+    "docs/runs/warehouse-relief-fixed-first-20261010.log": "e7720fd6ac9bcf9b94c7cba5c91989425209033e8f4fce9cc6730a00bb9f0856",
+    "docs/runs/warehouse-relief-fixed-second-20261010.log": "206ab5537acb169857dca3319883a4e0f3ef5ed28f03a9b8271c55e3bf2cefc4",
+    "docs/runs/warehouse-relief-fixed-third-20261010.log": "7fde9a35ddcc7e7f21307f0573dc17abc96617a7d19aaf511633728709650688",
+    "docs/runs/warehouse-relief-hitch-first-WarehouseReliefGameTests.java.raw": "cb8d2b7be54d93e038c2e3232b9a6c31d591cee83f13c49a2bc7627277313d69",
+    "docs/runs/warehouse-relief-hitch-fixed-first-20261010.log": "5214fb92ffd900d49a9c764e7c156814d0893f1f9a4f3cdf1c634843fd27db9a",
+    "docs/runs/warehouse-relief-native-cadence-diagnostic-20261010.log": "870bf44a7190776c30f6cadda1e59a9086ebce3b5a3cb8ceed930018b221e8f2",
+    "docs/runs/warehouse-relief-native-cadence-WarehouseReliefGameTests.java.raw": "6592a392c887f1d07a4d417563dd81da012ab35d7ab5705c17c6377fc21985fc",
+    "docs/runs/warehouse-relief-native-ground-first-WarehouseReliefGameTests.java.raw": "8993170fd562adb256afc16fdc7e8e3c64d42d4a99b375d2e58cbb8994c72336",
+    "docs/runs/warehouse-relief-native-ground-focused-20261010.log": "b2f1fcba31d5f9aedbfb7ae8e178f8aa996a71a230780c00dd9b07d346dcccac",
+    "docs/runs/warehouse-relief-native-route-diagnostic-20261010.log": "09792c7de8e086daf744f834eaaecb6380c0947d1f4883e13d5c345ea50dab28",
+    "docs/runs/warehouse-relief-native-route-diagnostic-WarehouseReliefGameTests.java.raw": "e930740c50ff1aa6e530a207a02ad5209bdd2b60e89d45fdc39162c0393c83e1",
+    "docs/runs/warehouse-relief-native-route-focused-20261010.log": "97c939d45cca49c88a8a0faa94480a84e2b9cfb91c573c23ef95e740dec4d94a",
+    "docs/runs/warehouse-relief-native-route-noai-WarehouseReliefGameTests.java.raw": "ef8714406c425d049dceefb0772abb9567d6c4b5b6132943bc6a4fe12cffbb9f",
+    "docs/runs/warehouse-relief-old-control-removed-WarehouseReliefGameTests.java.raw": "50ed77269b00947d590c914571be533683a4a2deba597a3f715900bab52b2ecd",
+    "docs/runs/warehouse-relief-old-control-removed-WolfRepathCadenceGameTests.java.raw": "f8bb3e6d54f92df900b8de73ca00c63ace429dea49df799b7890122f0dd6d30b",
+    "docs/runs/warehouse-relief-old-page-clean-control-20261010.log": "57c58f446389af58a83a1fdb0cf2cfb7eb5d5185ee00f5ab100eac70dc35f45e",
+    "docs/runs/warehouse-relief-old-page-control-20261010.log": "5f07eb8d41602ea10c23710af06e2537077a7e93dba68fb2e5c0d7263b8a8872",
+    "docs/runs/warehouse-relief-page-diagnostic-combined-20261010.log": "a2d1a393d8f01216790bcbaad2195b0b653909bca3791c78f45012b0bdbbcc39",
+    "docs/runs/warehouse-relief-page-diagnostic-WarehouseStorageGameTests.java.raw": "bc908cda2caccccbaa1c7891f3e530cabfa52a4dddbbb019fb2fcf3917eeb0d5",
+    "docs/runs/warehouse-relief-pre-comment-WarehouseTrips.java.raw": "329d5d636eb15250077cad42e905599631f14ce6435b784df7d29af12da75b01",
+    "docs/runs/warehouse-relief-protected-patch-not-applied-20261010.txt": "8f689c79ec775979c060113dd7334a383a8d6ac8f8ce139e6b4cca79000247ed",
+    "docs/runs/warehouse-relief-reachable-fixed-20261010.log": "2ea90710128c4584eb5f7ea440a044e4284cd2368768cb9f9b1c781d8ae29de8",
+    "docs/runs/warehouse-relief-regression-WarehouseReliefGameTests.java.raw": "a8dcc68ead5af4b7bcb1bda61d4dd84e1769da495bcae8bdc1f489f93b5a2489",
+    "docs/runs/warehouse-relief-repath-baseline-20261010.log": "9c62cd1b6793d7c22bed7b5503be5dfa8f1e39014d6e6a167b58d8de116d6857",
+    "docs/runs/warehouse-relief-repath-baseline-WarehouseReliefGameTests.java.raw": "da5aaca6e8702b021437e7baf80e07bc2dfd8a82602ab6d88510eac488e35c25",
+    "docs/runs/warehouse-relief-repath-baseline-WolfRepathCadenceGameTests.java.raw": "f8bb3e6d54f92df900b8de73ca00c63ace429dea49df799b7890122f0dd6d30b",
+    "docs/runs/warehouse-relief-repath-final-combined-20261010.log": "8144947939b7d086002b5096804dee03f64941e210aff2b497f335a4743a3cf0",
+    "docs/runs/warehouse-relief-repath-first-combined-WarehouseReliefGameTests.java.raw": "da5aaca6e8702b021437e7baf80e07bc2dfd8a82602ab6d88510eac488e35c25",
+    "docs/runs/warehouse-relief-repath-fixed-focused-20261010.log": "76d823b72783e502ec9973142cbff7b98521b535a75f0635d24092dca26bb987",
+    "docs/runs/warehouse-relief-repath-focused-WolfKennelGoal.java.raw": "322fed9fc067305944b8ea241fde049e6f62e8568c0d8ad2dcd67492661d9b50",
+    "docs/runs/warehouse-relief-scene-diagnostic-combined-20261010.log": "3898d3f42c744360043b16ff03a1df2c0c96b9f86372c8f43ece989518063482",
+    "docs/runs/warehouse-relief-second-WarehouseReliefGameTests.java.raw": "f20e569a1ed4e74a87e98aac149312f6d696028e9b13f3da42e888fdea2c1242",
+    "docs/runs/warehouse-relief-strict-first-WarehouseReliefGameTests.java.raw": "0b17043a8b85c8bc087e6ca183fe3e560c340db589dfeda30ceec0e47734c6b0",
+    "docs/runs/warehouse-relief-supported-WarehouseReliefGameTests.java.raw": "c47f859f2ab971f7771ea102b6d181dc96b1e9be3bb1259b92a507287bfd8f7b",
+    "docs/runs/warehouse-relief-third-WarehouseReliefGameTests.java.raw": "a3405eab3c64c5acd94c7706706e19cbdd2162aac927a9598dfe86fe888d4404",
+    "docs/runs/warehouse-relief-unsupported-synthetic-fetch-diagnostic.java.raw": "8f65bb55f5283221c9b54aecb13fdf455296d99bbc5ca149153083a3748cd604",
+    "docs/runs/warehouse-relief-vanilla-GoalSelector-javap-20261010.raw": "2561e5277162d24e24008f94156e1fe7be6195785452972f01da43eda4949119",
+    "docs/runs/warehouse-relief-vanilla-Mob-javap-20261010.raw": "9039fef434161943d7386150fa055c0fb66fe169babc157769731912863b7570",
+    "docs/runs/warehouse-relief-verified-final-combined-20261010.log": "9bba2f001cf17cc5ecc2c2809ff15e13e40cb59bb00845b85152826ec5ee2985",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.client.OfficeGridTest.xml": "1d1e213ecf62dfcdec8d1d768b92ab18bbb13413f83906961bc0533250bdde25",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.client.ResearchTreeModelTest.xml": "3b19edf216790fadb77d83180712438a36411dd7bc6c365ce2f988d6a9e83548",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.client.SchematicModelTest.xml": "85e8e427a64cdca370261e9f838e572ff7bb5ae9aa9d221cf2e762ee83d2cafc",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.CastleLotsTest.xml": "cac03ecae87e2c481ecc441799e7c0ca60cb614d4665e7b2dd4fcc8127e399c8",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.CivilizationTest.xml": "814fcae26d80fb12a35701aa34ddf1989f6c9af4d602523733be3ff659f9fc98",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.ConstructionTest.xml": "76bec5cad0f55bf0be925ec7d6ab1e8cca8b5dd64e8cec2918fe7c003adb92e2",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.CoreRecipesTest.xml": "eec0069aa1d98fb70d734b4f16714cd5e9aa5cbfe6c3fd36af0c286a72a0b53a",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.DiningMathTest.xml": "ef357caa04652accec0ca9804754a6eaf85fc429d8ba297264c32985fcd8e167",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.ElectionRollTest.xml": "af514c856bf4c98ee83a60decbb88911c8e077218a63cd8a00759eae48267f0e",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FarChartTest.xml": "5375169323e790b84e4d532f1b2b19f4bbbb52f4ee153dd0ee39f26cf183faee",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FarmFieldTableTest.xml": "fd2351cc9a1f923781869c07174c3dc3f638a76af35cc528d118afcf30741145",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FarmLotTest.xml": "24de1edca79e5ccd3ae832128528660e21a97d1986ed74ae886c45b22bdeaa76",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FarmYieldTest.xml": "c474347c1001ca006c46e033e93afccbe67ed5ca893d0add155f084608f7d904",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FirstHouseBaselineTest.xml": "49c6a19a05edea644059387dd46389b1246cecdaba26256815fe923459242dfb",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FoodYieldTest.xml": "4d33dc1a7e0e47f55420647f77e0104917b8fc7edf10a4f51cad73ed91781ed1",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FramedWindowResourcesTest.xml": "ba79817832f78a2795770a91347b6da5f0a840df7e83c15d88e94796c8bccad9",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.FurnitureResourcesTest.xml": "33ad86a608e71356da163c553c60e6d00a18cfeae80694d9dd653212a9a75b20",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.GiftValueTest.xml": "a69ebbe272894acedb0de088e91a4ba0d73507dccd3e29da137554af793c76f2",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.GovernanceTest.xml": "6fdb71a6917785e301134d8c0d65a218f94903258186c41b2da997fbd2a3a444",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.LocalisationTest.xml": "ffb3aec706353e5aec7e6db26cf21ea2d4b8a57ce2e333c95fa245767aca67fe",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.MineAreaTest.xml": "13c364a71839e0e62c5f8977eb089ce2960772e5f5cb370523c6571b8d9aa295",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.MineDriveTest.xml": "93d8de3063c4e6dc8557ad86aa43ccd619c5de901635d7eb3837226b022a4017",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.NaturalLayoutTest.xml": "17d538f799471eb49219b5b43f2fe2d3c51f70feb2e178929d5802c5a037e5fc",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.OrganicLotsTest.xml": "39c20c41562ad4865ab9bdbb3b0b5c15e2d507c167d1b2deaae22fe63735cf02",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.RationsTest.xml": "efb1ca12f040a2f0daaebb5358e68c340e602152867dfabf5da491cd74c9418f",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.ResearchCatalogTest.xml": "759b93e46557cd2a1d57c209f0ce4ea309a7944bcbd418878d0525d2230685d7",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.ResearchMigrationTest.xml": "cf6f878a1651cf438f75e0fcc3d4772735eff1be1ccf46bdac5cbf9a14026e3c",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.ResidentProfileTest.xml": "779c62b2f108cb80e91092eaa81ff05e98bd8369a8b02261c7c6400013a9a101",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.RestaurantCapacityTest.xml": "5bdda0754673e6c19ee1f004b42d734e767b0b446e4eccde2cf2d7b03b9a86e5",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.SettlementTest.xml": "57d7cac11c80a6fa8c827d92572c0e5e5bb7b969b302ee50e18c655cc8094272",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.domain.VillageNamesTest.xml": "c42d85cbf4413a1c4bbedbe06e39fbffca4c52e402fdfa43d403278767845bc8",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.persistence.AtomicRecordTest.xml": "f74a78f856badce2f7c59353d94017b49f91790a184301f6ee45233e274fc846",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.world.ForesterHutTest.xml": "0fbdbe949dcaf41b85d6ff9c666829363b4f784982c8d55f69d22c67e174bbc3",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.world.HallSiteTest.xml": "279ac7347ebd01b04ad1582e4a5a3d236556015ec33ef9db389261c527e12f20",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.world.VillageStyleDoorTest.xml": "8756062fa06c63ebe092c60cb17d7703413e174531f666d2506de362a7c4455a",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.world.WallOutlineTest.xml": "862411d71d9f61650ee450e1abec7f7aefca0a8c91d3002dae07a119641e5704",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.world.WarehouseBalanceTest.xml": "012792f8e37667c3e92341ee56c354d7bc3dffa9803ff6dfa67d894455cfd6ca",
+    "docs/runs/warehouse-relief-unit-results-20261010/TEST-org.villageastra.world.WarehouseDesignTest.xml": "168e062aac2692c17fef7f712ad54afda117b9e86797985dc08e54eccd58e5e3",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-haul/772c3f02-0473-45b9-a03b-c33f2c6ba32c.bin": "9984555e0c409be60939ea76c0e08d53161b3a3b7de5ea4ea760142a9fa03aed",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-haul/913214dd-6327-40a2-b418-c196f9417727.bin": "6f5b605a24b20c943596f1c0ee818273291de105b55dac976d1bd1fe830c26c6",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-haul/df9891c5-3372-45fd-abbb-4b196bd6283c.bin": "8b7314dff3a77cb3bc3e3cb284845f21094aea534bace52b5e82751ec3624b21",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-journal/8fd6afff-c47e-3e32-a16e-01f34e25c151.bin": "c11893d2823046e6089209396577a56e835ae24a5a9f42886a3b9ac4fae5f231",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-journal/a3708a9d-325f-3e8f-99b1-c70c1a07e1aa.bin": "d28d3b7ab1b4f92f1c2ad3d7030cea30858e534e464b51b049c3b56b94cabe5e",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-journal/b2acd83e-1daa-3325-bce3-2c4ef8a3b7ab.bin": "8a297649d7c1faee6fc638e589e3f49ac4dc83b51707b90273304fa96f42d5af",
+    "docs/runs/warehouse-relief-dispatched-receipts-evidence-20261010/data/astra-journal/c51d41e8-83d2-33ea-9ec3-f4337e81832a.bin": "595a9c6cf1b2e5d3bae01fb60be4f423530b7e90d0df66873508005843af679a",
+    "docs/runs/warehouse-relief-admission-closed-world-evidence-20261010/data/astra-haul/dd0731af-c018-477d-9141-a001ad4df507.bin": "00e63b63bf9e0a0f02e1ad8d0928faf455b555d01a8afa0829cbafc91874d85d",
+    "docs/runs/warehouse-relief-admission-closed-world-evidence-20261010/data/villageastra.dat": "493f261400d52c1195690e21f24f3d97db56937a241445645f4a44332e780061",
+    "docs/runs/warehouse-relief-admission-closed-world-evidence-20261010/entities/r.10240.0.mca": "db670612747f97bd42fba546011374089e44c7168cc8b352fcc0cd92b2175374",
+    "docs/runs/warehouse-relief-combined-closed-world-evidence-20261010/data/astra-haul/76281d78-8e2a-4e7b-b3fa-cf7db7572c7e.bin": "73a3d4772b8736703f89bc727e9dbe96a1c5bfc900b4757ea41254571eb31f72",
+    "docs/runs/warehouse-relief-combined-closed-world-evidence-20261010/data/villageastra.dat": "4c2cc304721d9d1dbde99ac5840cb9256de7a5dd48a294ad4d6d933a931a2c61",
+    "docs/runs/warehouse-relief-combined-closed-world-evidence-20261010/entities/r.10241.-1.mca": "4e20dcb83a9df8ec3f3c9c43e4a8455d4b4d321c4b9149c216c3466781c0865f",
+    "docs/runs/warehouse-relief-combined-closed-world-evidence-20261010/entities/r.10241.0.mca": "006a1c1dea581df9db03d45b76ed50a0338f0630e5984dd8621d3bd147341da1",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.client.OfficeGridTest.xml": "67ed7212f6c6893ac639cb14fabd7eebaefe0752753c54ee671cf59e35de9340",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.client.ResearchTreeModelTest.xml": "40d2ad88e4283c553c27a5bb020ac9a436f466f8669cd84fd26433416bd1324d",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.client.SchematicModelTest.xml": "7b891a8e378d0af8884205f4bff7d9d4dfd28e7354271bc0d9298ff2cc8b6b31",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.CastleLotsTest.xml": "06419eab8d9e3c647b3bd43449fe52f226da2a0fc37d2ea26fd39cb69a95a7a4",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.CivilizationTest.xml": "74e206a671ebf335caa754225120fcfcddf34717c36e2b2fa16a2f87bc2bb861",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.ConstructionTest.xml": "aa82c5c23ad2efd3a82777134c266bbef207cfefcbdbbd3fd1883c6939e1b128",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.CoreRecipesTest.xml": "efabe62d19fe8f52e40f5654ee31474b3d7fa4533e2340bea725369fdb0ed7ac",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.DiningMathTest.xml": "736c436a6cb620e9bfdbca5345b35fbd61d93a8a6f385ffb17546c46a819dfc1",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.ElectionRollTest.xml": "b70d0ac87afe03309c18c70c42424d5b94efdb48bd94c7dba3c33918f2e80f0c",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FarChartTest.xml": "7ac5dd58937544ffc8e046a6693325ffa536ea450a364176c4c064ecffce594c",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FarmFieldTableTest.xml": "03c64869f41ce2ab10f6483a910569dd8de406af93beead13bc67d38cfb9a585",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FarmLotTest.xml": "8a7b77aa38eb0fd19036f5f6c50db6c86a14808120296d5e188c328ce00d54a1",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FarmYieldTest.xml": "ea0c06e318e941798e1470f2311b5984a1ddca148ef4a177ea86b491855bd1e1",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FirstHouseBaselineTest.xml": "79d491073cacb69cd4ddf541ab7fdeea3a501d94cc4ab4f3156b1673b8d13900",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FoodYieldTest.xml": "9914769740540b6424f6b1d2012ea151acf63f0351f11b6e41a1dc7f445ecc50",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FramedWindowResourcesTest.xml": "b3805ca1aaeb8108d9754fa04c31c5badeaf2479c4f45d7b6a3a6ec28639b76d",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.FurnitureResourcesTest.xml": "2dea505dbc3d45b712a86b14f738314d17e549ff47aafd24d6b1bf672b637e67",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.GiftValueTest.xml": "328741d49bfc42433b9084b29081d3db9ccd2d92d10f22093880950f5162b1bd",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.GovernanceTest.xml": "801e296aaf373d48c054bde30af6600aead13ce91ee5a12ae318fa3702c6d3ed",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.LocalisationTest.xml": "1e08841f2293954a2e1a5e6031ac4a5b040ad43e8d7168f74cfe2b5f3d47c0e8",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.MineAreaTest.xml": "a2c6ce14473faf6be651a051b95c8d670f0de4c3a9b9ebd648b51405a5ef2d1a",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.MineDriveTest.xml": "209d0b0fba2cda73394445f50aa062c2a7e31ac8195415dbe551790241cadcf9",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.NaturalLayoutTest.xml": "95fff538c901b521860cc99880bf8dc34be1ef9ffad7aedd75c20b9be9aa7922",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.OrganicLotsTest.xml": "25aee2b5c26d34b61c1170fee9a51093955fc167071e0746be86ce63a3cb1ccb",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.RationsTest.xml": "619a88fbc6ff6906f0a4eb9fc29038a81529367049655c011917d500c7fca5ea",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.ResearchCatalogTest.xml": "9d80a77bd503edae24ca9a9ef329bf6dcf91bdd8eba1691127be43a0aa41162b",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.ResearchMigrationTest.xml": "a2ab8b42ceeef422dc712aa6bf3cbf28235eae9f4671e2e1b967144e64ba7209",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.ResidentProfileTest.xml": "962b5667ab8a5361c52276115c4395022916e160b023d595095df6d5ed3d45a2",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.RestaurantCapacityTest.xml": "e2db6ff29339e61b21af98b3d2da44d9e9d46d1d5cfc13048da09c28a7184b15",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.SettlementTest.xml": "cb135fda7888b4ccbff209ba9747367630322155bbc09c280622c0f95fb297b3",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.domain.VillageNamesTest.xml": "121613520a564ecdf658fc4f3599f36568fcdde40d5f262b02f6c1cfcfd101eb",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.persistence.AtomicRecordTest.xml": "5444a347fb7a35ddb0bef1cd6a87fde6bd0b82aed954e70871e38c82623ca4fe",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.world.ForesterHutTest.xml": "d004ec730691ebc9884c9e3d3ddb483c8248828b2d6b9c4f7f2800d0243a76b9",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.world.HallSiteTest.xml": "a302923d17dcaf6c6e46a9545f38daee220d9ce8b33fe85c89791d25acf1ebea",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.world.VillageStyleDoorTest.xml": "aa45206c8461f74d5a2c17e69402dbfc037b6fb00c640f49f7da4f26d046f6e2",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.world.WallOutlineTest.xml": "83d35174c86ac3b001652ecf50aa69e49106ce21228340338058c9a6c7718578",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.world.WarehouseBalanceTest.xml": "31251aa67cb89a9f78571d06bc54af11a21b5bd090f4b05567f6bb55453b5557",
+    "docs/runs/warehouse-relief-unit-private-20261010/TEST-org.villageastra.world.WarehouseDesignTest.xml": "ba62b27f0e8382f41a748b80f6b266ca9a9522e1d1ba519c29a6967644d8ae49",
+    "docs/runs/warehouse-relief-integrated-private-20261010.log": "1e9ababe5541226f37463a3578cfdfbc0d567324d6386242e037d113832f70c9",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.client.OfficeGridTest.xml": "1d957fdf986e901e708b7153775bd76cff36cc896fe5db684028dbe5b11adf88",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.client.ResearchTreeModelTest.xml": "b9ad3334edc6d4388e04d5bc5551f056cf53d0b26e789ad1059d5f3d567ad50f",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.client.SchematicModelTest.xml": "aa918107c573d250e2b23e3e0784045c600b2edb335df6af8b7c17919375b8b7",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.CastleLotsTest.xml": "016ac032410b9464bf324bb054f03926cc7fe45ef739792dc6620ee8b551b1cf",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.CivilizationTest.xml": "c43c2e82c0766b6074f44034c544d6e32cad67d5e3cf7497ca36ffd9984de4a1",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.ConstructionTest.xml": "2783ad8f5ddf4f6c8152e53c8ca655636a99e94e44f5aad4ec6df9f88fee078b",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.CoreRecipesTest.xml": "8fde569f1946916c0613c648d129ec986e7d7bffa7bb8ec96f92a808d33fcc0b",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.DiningMathTest.xml": "6e48ae71f77ebf592607781c5d9e4ffc26564acbf741d4f95ebd08b335840477",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.ElectionRollTest.xml": "04fb857af351e9f721fc5ab57f4bb52c0072588609a71fa4ee068d82f12a2ff5",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FarChartTest.xml": "b18a7bb4e13b0af7dbdeec1737fe9bf63caedf0b426b8eb4da72961856c486ba",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FarmFieldTableTest.xml": "2631912fdc1f8fcb0eb5f6a52b0a3b80ef6981ab264d1a2ee16f0c0f9ddb51b9",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FarmLotTest.xml": "a1df76fdd5161c37cd7a1f19c157632d0cfde7e5c9f860db546a4eb4d1072ce5",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FarmYieldTest.xml": "3e61bafadb0c379680d9840423130c2aba098ddad8f73107cec793f1ab50a688",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FirstHouseBaselineTest.xml": "2118e00fd031156b913823752ff03517cb760634d705a339f6448684a567baee",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FoodYieldTest.xml": "47ba7a27bbef18ecb6c82326433f62f72626ea79f469e3867c0eb4485a3e9b0b",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FramedWindowResourcesTest.xml": "234a150a801f52d0598fee4b081e2c698178fb18c8e85b94e023c76704026081",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.FurnitureResourcesTest.xml": "0e3fd4780dae7170a93cac5ad03d57222a9401c7dce197486379acbd5e2a783e",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.GiftValueTest.xml": "55eea71c37edffe1b1990082e5905eb50d3de351210c184978022bb64b606526",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.GovernanceTest.xml": "d2d32a7726cc2b1386e9ba2de078fea20571783cf0869857d650b4c7e3909beb",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.LocalisationTest.xml": "9fdae148ff9fa85d58e8b6ab9555b54c44f833244e4bdfb95449804a8bf8463e",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.MineAreaTest.xml": "7e0014d7a8b7288a9b2b20a8538ebfe51c7cfbedc83cac9694eec76b8ea4016e",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.MineDriveTest.xml": "45d407df4c2412f7a2b0cb0d635ad56f529fac9da36d6803e33f434e339bd235",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.NaturalLayoutTest.xml": "5d5be45a187c3720b95ee0d305018dcd0f4c31a8af8d461173c25e96b758cacb",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.OrganicLotsTest.xml": "26f7d8fb0d76d69e62fd682e1bec3bd41dd50cffea51b18d8d9f41980481dfe0",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.RationsTest.xml": "926ae4d4bb7c2067353c904fc404807566960327464745761a695a3c70f6dd72",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.ResearchCatalogTest.xml": "b614f9d7dfa274d2e2c63192c029cfe30744f8ea700f82f494285c2c25c7569e",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.ResearchMigrationTest.xml": "4caa84f13cb9dd7ba6dd07677ac753d6144d1ca1f82d966bdefeac6f7532fc6f",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.ResidentProfileTest.xml": "5ef36d5c1025d046cb5f0ad0c819eca25b940061e7057161a17e3820b2f68583",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.RestaurantCapacityTest.xml": "e2db6ff29339e61b21af98b3d2da44d9e9d46d1d5cfc13048da09c28a7184b15",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.SettlementTest.xml": "10acd538f6defb967e1f1e08caebd222c273c15d30dd151edf97d9d106e2899c",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.domain.VillageNamesTest.xml": "d071438485e1fbe5f62562b20398f76512c139807ffa9a857b3972e060137300",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.persistence.AtomicRecordTest.xml": "7c0e6e3cb1727bf16f797104de19ef35616a56f9479a4594443c3779d526eefb",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.world.ForesterHutTest.xml": "1a6ab99ebf86a1897d0979b8aa8f7bc42cdbd814728eb2e9ee2d260e5dd4e7b8",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.world.HallSiteTest.xml": "69aee4857076cbd9babc3b68e4ae225729d81b89fc3e5861805a2fc72dd7e30a",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.world.VillageStyleDoorTest.xml": "adec4df82f4ce9e7b6f9c96e247fa2f1951def221797d3455b5269ac3a94080a",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.world.WallOutlineTest.xml": "d90012d963ec9cf79244c00fb8d08db6f1cbc43989f4c84559798bb58851bf25",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.world.WarehouseBalanceTest.xml": "31251aa67cb89a9f78571d06bc54af11a21b5bd090f4b05567f6bb55453b5557",
+    "docs/runs/warehouse-relief-unit-independent-20261010/TEST-org.villageastra.world.WarehouseDesignTest.xml": "e3b9085f531c67b0fca1d826ae830df60cb26dae999c1cf37faf46a4598b0adc",
+    "docs/runs/warehouse-relief-integrated-independent-20261010.log": "c7be346e1c939bcbf362d6b691ae06e8efd086655cec5bc7bdb5de4bd68da0cc",
+    "build/publication/warehouse-relief-integration-before-20261010/before.json": "3c315b7f223875e3069cabd9f4942b9416151f9d1668f9f7e25793f358695201",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/gametest/WarehouseStorageGameTests.java": "fca71d23c6ec8906052160775b8027e71ee63158da44c11827d170c84bc7561c",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/gametest/WarehouseUpkeepGameTests.java": "e46981ca6fb64f9632f868f2b57268d58d99b1c188186c0fa9f153e16302b327",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/world/CartWolves.java": "450b509ba5e563f8e4a179196426755e003abe4d42bf79393685b85bf9e86b38",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/world/VillageDogs.java": "225c831473e54a8fbeb5ef1daee2492dd595a386feda1abd459cd06d5c0c7cae",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/world/VillageWolves.java": "d4e62bdcc2b3c48119e9ec887755f9c3d7b288410f9545f5b6ec6d49e9a51d32",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/world/WarehouseTrips.java": "5973e624717f11094adc4e5ad72964bd8921bf7c5bc28f26f5abc57f7c954ce6",
+    "build/publication/warehouse-relief-integration-before-20261010/independent/src/main/java/org/villageastra/world/WolfKennelGoal.java": "550ae0920402595cbd7000f6599dc7562b8e9c387b215d0e10c8a1a0c48d2490",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/gametest/WarehouseStorageGameTests.java": "fca71d23c6ec8906052160775b8027e71ee63158da44c11827d170c84bc7561c",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/gametest/WarehouseUpkeepGameTests.java": "e46981ca6fb64f9632f868f2b57268d58d99b1c188186c0fa9f153e16302b327",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/world/CartWolves.java": "450b509ba5e563f8e4a179196426755e003abe4d42bf79393685b85bf9e86b38",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/world/VillageDogs.java": "225c831473e54a8fbeb5ef1daee2492dd595a386feda1abd459cd06d5c0c7cae",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/world/VillageWolves.java": "d4e62bdcc2b3c48119e9ec887755f9c3d7b288410f9545f5b6ec6d49e9a51d32",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/world/WarehouseTrips.java": "5973e624717f11094adc4e5ad72964bd8921bf7c5bc28f26f5abc57f7c954ce6",
+    "build/publication/warehouse-relief-integration-before-20261010/private/src/main/java/org/villageastra/world/WolfKennelGoal.java": "550ae0920402595cbd7000f6599dc7562b8e9c387b215d0e10c8a1a0c48d2490"
+  },
+  "history": [
+    {
+      "log": "docs/runs/warehouse-relief-baseline-20261010.log",
+      "result": "1 expected FAIL; carts=0, trips=0, freeFedWolf=1, slots=0, PORTER->MINER"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-fixed-first-20261010.log",
+      "result": "compile NOT_RUN (fixture API errors)"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-fixed-second-20261010.log",
+      "result": "2/3 PASS; unloaded fixture wrongly discarded cart"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-fixed-third-20261010.log",
+      "result": "5/5 PASS"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-final-regression-20261010.log",
+      "result": "24/24 PASS + fresh166"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-final-strict-20261010.log",
+      "result": "5/6 PASS; distant initial wolf failed pickup"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-final-supported-20261010.log",
+      "result": "6/6 PASS"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-first-fixed-fetch-baseline-20261010.log",
+      "result": "NOT_RUN cart bay entity readiness premise"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-first-fixed-fetch-ready-baseline-20261010.log",
+      "result": "1 expected FAIL; unpaid distant fetch wrongly relieved posts"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-hitch-fixed-first-20261010.log",
+      "result": "7/10 PASS; synthetic fetch+manual take, human fixture cart timing, idle post oracle failed"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-current-eligibility-diagnostic-20261010.log",
+      "result": "3/4 PASS; synthetic fetch+paid failed exact warehouse32, audit32/0/32"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-reachable-fixed-20261010.log",
+      "result": "11/11 PASS"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-final-combined-20261010.log",
+      "result": "28/29 PASS + fresh166; recovery test never reached take, clock0 excludes hunger"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-cardinal-focused-20261010.log",
+      "result": "4/11 PASS; excessive path prerequisite rejected7 fixtures"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-cardinal-reach-focused-20261010.log",
+      "result": "0/4 PASS; excessive path prerequisite rejected4 fixtures"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-confirmed-admission-focused-20261010.log",
+      "result": "3/4 PASS; recovery never took cargo, fetch/away500, clock0"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-dispatched-focused-20261010.log",
+      "result": "Unchanged control CLOSED3/4: protected patch assertion aborted before write; recovery never took cargo"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-dispatched-fixed-focused-20261010.log",
+      "result": "3/4 PASS: physical return worked; over-specific put/0 oracle rejected actual back/0"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-exact-return-focused-20261010.log",
+      "result": "3/4 PASS; recovery actual back32 PASS, independent physical fetch FAIL"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-cardinal-hitch-focused-20261010.log",
+      "result": "2/2 PASS; supported pre-add hitch admission, original put32/replay5"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-native-route-focused-20261010.log",
+      "result": "2/4 PASS; early NoAI ground premise rejected both physical cases"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-native-ground-focused-20261010.log",
+      "result": "2/4 PASS; grounded canReach33, both ordinary-parity go/nullnav/no-take"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-native-route-diagnostic-20261010.log",
+      "result": "1/1 PASS separate single ordinary cadence positive"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-native-cadence-diagnostic-20261010.log",
+      "result": "1/2 PASS; even physical paid return PASS, odd active real goal/no-nav/no-take FAIL"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-repath-baseline-20261010.log",
+      "result": "1/2 PASS expected baseline on unchanged WolfKennelGoal: even425/put32 success; odd observedMask2 paidfalse go/nullnav failure"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-repath-fixed-focused-20261010.log",
+      "result": "6/6 PASS"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-repath-final-combined-20261010.log",
+      "result": "29/31 PASS +fresh166: human readiness prerequisite FAIL before admission; unchanged legacy page immediate drop60 FAIL"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-scene-diagnostic-combined-20261010.log",
+      "result": "30/31 PASS: human404 now PASS, legacy page immediate drop60 FAIL;12scene chunk ranges nonoverlapping"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-old-page-control-20261010.log",
+      "result": "compile NOT_RUN because new tests depend on absent original pickupReady API"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-old-page-clean-control-20261010.log",
+      "result": "1/1 PASS original existing sources, new2 dependent tests excluded from compilation; single control only"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-page-diagnostic-combined-20261010.log",
+      "result": "30/31 PASS: before destroy page/master entitiesLoaded=false and entityTicking=false, actual drops0/kept0; unchanged actual60 oracle FAIL"
+    },
+    {
+      "log": "docs/runs/warehouse-relief-verified-final-combined-20261010.log",
+      "result": "31/31 PASS"
+    }
+  ],
+  "limitations": [
+    "No natural MAX proof, no claim that this bug caused current main-world stall. Cart selfSupply escape exists.",
+    "Physical positives choose supported free cardinal hitch admission BEFORE add, then allow normal physics with empty selectors and NoAI disabled, assert canonical native grounded reachable outbound path before restoring the real WolfKennelGoal. Controlled normal unpaid dispatch; not free natural admission. InitialSENT did not cure distant fetch, so early idle wander is unproven cause.",
+    "Exact put/0 XOR back/0 at original warehouse, same signed UUID/address/data after replay5. Intermediate back32 recovery is a separate passed boundary. Prior trace index-empty on completion was not cart loss; final observer requires active after record, snapshots before mutation, and prints pre-loss away/blocked/current bodies/SENT.",
+    "Hall/warehouseVI and research registry are fixture; research uses legacy fixture gates, not paid research-chain proof.",
+    "Cart is a finite fixture item actually debited by normal WorldJournal; beef finite normal feeding debit; stones finite fixture supply, not natural mining labor proof.",
+    "Actual native wolf/human walking and exact receipts tested, with unchanged health and no post-admission teleport. Fresh signed reader/checkpoint replay is same-server evidence, not whole-world restart.",
+    "AD478 modifies only SENT elapsed-bodytick repath; requiresUpdateEveryTick stays false, all kennel/cull wait/penned and other exact%10 branches unchanged and unaudited by this fix.",
+    "Read-only readiness performs no send/feed/heal/dispatch. No balance/work/resource changes. Root/public/live untouched."
+  ],
+  "unsupported_state": "Synthetic fetch plus manually committed take is defensive compatibility only, not a demonstrated normal crash window. Normal production durably saves go before first take. Synthetic diagnostic still fails exact32 warehouse oracle with audit[32,0,32]; grace/finish/drop not changed. Full failing source/raw retained.",
+  "main_loaded": false,
+  "maximum_verified": false,
+  "release_binary_updated": false
+}

@@ -573,3 +573,10 @@ A second autonomous bread batch now has its complete saved work record and six c
 ### Fuel parcels match the selected fuel
 
 Workers now calculate current fuel deliveries from actual burn time. A400-tick shortage fetches four sticks, eight bamboo or one coal, within the existing carrying limit. Construction reservations, incoming parcels and chest capacity remain respected. Construction input requests also account for fuel already paid into the building. Both copies passed34 native checks and166 fresh unit tests, including a baker physically delivering all four paid sticks without duplicate output. The continuing natural world has not loaded this patch yet; maximum autonomous development remains unverified.
+
+
+### Warehouse couriers and wolf movement
+
+Human warehouse couriers keep working until a wolf can actually take over at its cart or has begun a supported delivery. Cargo already carried by a resident keeps that resident assigned. Sent wolves now recalculate their route after elapsed ticks, avoiding a scheduling case that could prevent movement entirely.
+
+Both integrated copies passed31 native checks and166 fresh unit tests. Tests include physical deliveries on both ordinary scheduling parities, exact original warehouse deposits and repeated receipt recovery. These are prepared scenarios; the same natural village still needs to load this update and complete its growth.

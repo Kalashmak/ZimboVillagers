@@ -49,16 +49,15 @@ public final class WarehouseStorageGameTests {
  }
  /** Breaking a page drops the stacks it shows once, and the master no longer holds them. */
  @GameTest(template="empty",timeoutTicks=200) public static void breakingAPageDoesNotDuplicate(GameTestHelper h){
-  var v=village(h,2);
-  try{var b=v.kept();for(int i=0;i<6;i++)v.stock().setItem(108+i,new ItemStack(Items.IRON_INGOT,10));
+  var v=village(h,2);var page=WarehouseStore.at(v.e(),v.kept(),WarehouseStore.chests(2).get(4));var master=v.stock().getBlockPos();var held=PhysicalFixtureChunks.force(v.l(),master,Math.min(0,page.getX()-master.getX()),Math.max(0,page.getX()-master.getX()),Math.min(0,page.getZ()-master.getZ()),Math.max(0,page.getZ()-master.getZ()));for(var c:held)v.l().getChunk(c.x,c.z);
+  h.startSequence().thenWaitUntil(()->h.assertTrue(v.l().areEntitiesLoaded(net.minecraft.world.level.ChunkPos.asLong(page))&&v.l().areEntitiesLoaded(net.minecraft.world.level.ChunkPos.asLong(master))&&v.l().isPositionEntityTicking(page)&&v.l().isPositionEntityTicking(master),"Actual page and master chunks are entity loaded and ticking before finite stacks and drop")).thenExecute(()->{try{var b=v.kept();for(int i=0;i<6;i++)v.stock().setItem(108+i,new ItemStack(Items.IRON_INGOT,10));
    int before=count(v.stock(),Items.IRON_INGOT);
-   var page=WarehouseStore.at(v.e(),b,WarehouseStore.chests(2).get(4));
    h.assertTrue(HallStorage.partAt(v.l(),page),"Chest 4 is the first half of the third page");
+   com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_WAREHOUSE_PAGE beforeDestroy=true page={} master={} entitiesLoaded={} entityTicking={} block={} before={}",page,v.stock().getBlockPos(),v.l().areEntitiesLoaded(net.minecraft.world.level.ChunkPos.asLong(page)),v.l().isPositionEntityTicking(page),v.l().getBlockState(page),before);
    v.l().destroyBlock(page,true);
    int dropped=0;for(var it:v.l().getEntitiesOfClass(ItemEntity.class,new AABB(page).inflate(3)))if(it.getItem().is(Items.IRON_INGOT)){dropped+=it.getItem().getCount();it.discard();}
-   int after=count(v.stock(),Items.IRON_INGOT);
+   int after=count(v.stock(),Items.IRON_INGOT);com.mojang.logging.LogUtils.getLogger().info("ZIMBOVILLAGERS_WAREHOUSE_PAGE afterDestroy=true page={} entitiesLoaded={} entityTicking={} dropped={} kept={} before={}",page,v.l().areEntitiesLoaded(net.minecraft.world.level.ChunkPos.asLong(page)),v.l().isPositionEntityTicking(page),dropped,after,before);
    h.assertTrue(dropped+after==before&&dropped==60,"Nothing doubled: dropped "+dropped+", kept "+after+" of "+before);
-  }finally{done(v);}
-  h.succeed();
+  }finally{done(v);PhysicalFixtureChunks.release(v.l(),held);}}).thenSucceed();
  }
 }

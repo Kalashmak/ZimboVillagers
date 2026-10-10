@@ -22,6 +22,8 @@ public final class VillageDogs {
   default boolean send(ServerLevel l,SettlementData.Entry e,UUID dog,net.minecraft.core.BlockPos to){return false;}
   /** AD-147: whether the dog stands within {@code r} of a place (false for a dog not loaded or gone). */
   default boolean near(ServerLevel l,SettlementData.Entry e,UUID dog,net.minecraft.core.BlockPos at,double r){return false;}
+  /** Read-only readiness at this hitch, allowing the dog's own pending warehouse assignment. */
+  default boolean pickupReady(ServerLevel l,SettlementData.Entry e,UUID dog,CartEntity cart){return cart!=null&&near(l,e,dog,cart.blockPosition(),3);}
   /** AD-147: whether this source answers harness/send/near (its dogs pull carts). The kennel registry (VillageWolves.DOGS) does not yet:
    *  until it does, the warehouse's wolves stay planned even with kennel wolves (their couriers are never relieved for wolves that cannot pull). */
   default boolean pulls(){return false;}
@@ -41,4 +43,5 @@ public final class VillageDogs {
  public static boolean harness(ServerLevel l,SettlementData.Entry e,UUID dog,CartEntity cart){var s=source;return s!=null&&dog!=null&&cart!=null&&s.harness(l,e,dog,cart);}
  public static boolean send(ServerLevel l,SettlementData.Entry e,UUID dog,net.minecraft.core.BlockPos to){var s=source;return s!=null&&dog!=null&&s.send(l,e,dog,to);}
  public static boolean near(ServerLevel l,SettlementData.Entry e,UUID dog,net.minecraft.core.BlockPos at,double r){var s=source;return s!=null&&dog!=null&&s.near(l,e,dog,at,r);}
+ public static boolean pickupReady(ServerLevel l,SettlementData.Entry e,UUID dog,CartEntity cart){var s=source;return s!=null&&dog!=null&&cart!=null&&s.pickupReady(l,e,dog,cart);}
 }

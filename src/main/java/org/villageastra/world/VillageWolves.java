@@ -94,8 +94,9 @@ public final class VillageWolves {
  public static net.minecraft.core.BlockPos sentTo(Wolf wolf){return SENT.get(wolf.getUUID());}
  private static boolean busy(UUID id){return WITH.containsKey(id)||HARNESS.containsKey(id)||SENT.containsKey(id);}
  /** Physical and economic availability, before a specialist duty reserves the wolf. */
- public static boolean ready(ServerLevel l,Wolf w){return w.isAlive()&&!w.isOrderedToSit()&&!w.isLeashed()&&!w.isPassenger()&&w.getTarget()==null
-  &&!busy(w.getUUID())&&!CaravanDogs.reserved(l.getServer(),w.getUUID())&&!CULL.containsKey(w.getUUID())&&fed(l,w);}
+ private static boolean fit(ServerLevel l,Wolf w){return w.isAlive()&&!w.isOrderedToSit()&&!w.isLeashed()&&!w.isPassenger()&&w.getTarget()==null
+  &&!CaravanDogs.reserved(l.getServer(),w.getUUID())&&!CULL.containsKey(w.getUUID())&&fed(l,w);}
+ public static boolean ready(ServerLevel l,Wolf w){return !busy(w.getUUID())&&fit(l,w);}
  /** Hitches a kennel wolf of this village to a cart: the cart rolls behind it from now on. */
  public static boolean harnessDog(ServerLevel l,SettlementData.Entry e,UUID dog,CartEntity cart){
   if(cart==null||!wolves(l,e).contains(dog)||!(l.getEntity(dog) instanceof Wolf w)||!w.isAlive())return false;
@@ -129,6 +130,12 @@ public final class VillageWolves {
   @Override public boolean harness(ServerLevel l,SettlementData.Entry e,UUID dog,CartEntity cart){return harnessDog(l,e,dog,cart);}
   @Override public boolean send(ServerLevel l,SettlementData.Entry e,UUID dog,net.minecraft.core.BlockPos to){return sendDog(l,e,dog,to);}
   @Override public boolean near(ServerLevel l,SettlementData.Entry e,UUID dog,net.minecraft.core.BlockPos at,double r){return nearDog(l,dog,at,r);}
+  @Override public boolean pickupReady(ServerLevel l,SettlementData.Entry e,UUID dog,CartEntity cart){
+   if(cart.puller()!=null&&!dog.equals(cart.puller())||!(l.getEntity(dog) instanceof Wolf w)||!e.settlement().id().equals(village(w))||!wolves(l,e).contains(dog)||!fit(l,w)
+    ||WITH.containsKey(dog)||HARNESS.containsKey(dog)&&!cart.getUUID().equals(HARNESS.get(dog))
+    ||SENT.containsKey(dog)&&!cart.blockPosition().equals(SENT.get(dog))||CartographyLadder.reserved(l,e,w)||MedicineDelivery.reservedWolf(l,e,dog))return false;
+   return nearDog(l,dog,cart.blockPosition(),3);
+  }
   /** AD-147: the kennel's wolves answer harness/send/near (WolfKennelGoal walks a sent wolf, its cart follows), so they pull carts. */
   @Override public boolean pulls(){return true;}
  };

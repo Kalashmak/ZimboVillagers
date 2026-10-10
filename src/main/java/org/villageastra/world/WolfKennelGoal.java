@@ -15,7 +15,7 @@ public final class WolfKennelGoal extends Goal {
  public static final int OWNER_NEAR=16;
  /** Where the wolves lie in the kennel's own cells (x,y,z): on the three bales at the back, then on the planks by the bin. */
  public static final int[][] BEDS={{1,2,5},{2,2,5},{3,2,5},{2,1,3}};
- private final Wolf wolf;private BlockPos spot,shut;private int wait,penned;
+ private final Wolf wolf;private BlockPos spot,shut;private int wait,penned,lastSentRepath;
  /** AD-144 (dj-merge-probes-kennel): the byre's barn door has shut board leaves beside it now, so a wolf in the byre or on the walks behind
   *  it goes round the byre to the kennel's street front — a way longer than a vanilla wolf's search (16 blocks walked, 256 nodes): it gave up
   *  inside the byre by its west wall. The way home is searched with a wider reach ({@link #homeward}); nothing else of the wolf changes. */
@@ -56,7 +56,11 @@ public final class WolfKennelGoal extends Goal {
  @Override public void tick(){
   // AD-141/AD-165: a delivery uses the same extended path search as the kennel return; vanilla range can stall before a distant clinic.
   var sent=VillageWolves.sentTo(wolf);
-  if(sent!=null){wolf.setInSittingPose(false);if(wolf.distanceToSqr(sent.getX()+.5,sent.getY(),sent.getZ()+.5)>1.5*1.5){if(wolf.tickCount%10==0)homeward(sent);}else wolf.getNavigation().stop();return;}
+  if(sent!=null){wolf.setInSittingPose(false);
+   // Ordinary goal ticks may always fall on odd body ticks; elapsed time preserves the ten-body-tick replan interval.
+   if(wolf.distanceToSqr(sent.getX()+.5,sent.getY(),sent.getZ()+.5)>1.5*1.5){
+    if(wolf.tickCount-lastSentRepath>=10){lastSentRepath=wolf.tickCount;homeward(sent);}
+   }else wolf.getNavigation().stop();return;}
   // AD-139: beside its courier, a trot behind the cart; far behind (the courier went through a door or round a corner) it is by his side.
   var with=VillageWolves.courier(wolf);
   if(with!=null){var c=((ServerLevel)wolf.level()).getEntity(with);

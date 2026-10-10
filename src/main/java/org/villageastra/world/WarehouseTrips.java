@@ -86,6 +86,17 @@ public final class WarehouseTrips {
   var b=e.settlement().workplace(w.getUUID());return cart.home()!=null&&b!=null&&b.id().equals(cart.home())&&courier(e,w.getUUID())&&WarehouseCarts.open(l,e,b);}
  /** Wolves of this warehouse on trips now. */
  public static int wolves(ServerLevel l,SettlementData.Entry e,Settlement.Building b){int n=0;for(var t:index(l).values())if(t.getUUID("warehouse").equals(b.id())&&(t.getString("kind").equals("wolf")||t.hasUUID("wolf")))n++;return n;}
+ /** A fetch alone has not established replacement transport. The source confirms the hitch as wolf() does; already started trips retain
+  *  their recovery grace. A committed take paired with fetch is defensive inconsistent/legacy compatibility, not a proven normal crash window:
+  *  the normal writer saves go before the first take. Existing paid recovery remains independent of current pickup readiness.
+  *  This observation never replays a receipt or changes the trip. */
+ static boolean wolfService(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
+  for(var t:index(l).values())if(t.getUUID("settlement").equals(e.settlement().id())&&t.getUUID("warehouse").equals(b.id())&&t.getString("kind").equals("wolf")){
+   if(!t.getString("stage").equals("fetch"))return true;
+   for(int i=0;i<legs(t).size();i++)if(WorldJournal.inspectCommitted(l,op(t,"take",i))!=null)return true;
+   var cart=cart(l,t,"cart");if(cart!=null&&b.id().equals(cart.home())&&VillageDogs.pickupReady(l,e,t.getUUID("puller"),cart))return true;
+  }return false;
+ }
  /** Whether a courier of this warehouse holds anything: a trip's custody or a hand parcel (CF-M: no courier is unposted with a load). */
  public static boolean couriersBusy(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
   for(var r:e.settlement().residents()){if(!courier(e,r.id())||!e.settlement().workplace(r.id()).id().equals(b.id()))continue;

@@ -30,8 +30,12 @@ public final class CartWolves {
  private static final Map<UUID,Boolean> RELIEVED=new java.util.concurrent.ConcurrentHashMap<>();
  /** Whether the village's warehouse couriers are relieved (Population.slots of its warehouse is 0): read by the labour office. */
  public static boolean relieved(UUID settlement){return RELIEVED.getOrDefault(settlement,false);}
- /** Warehouses.tick: relieved while wolves carry and no courier of the warehouse holds a load (a courier is never unposted with one, CF-M). */
- static void update(ServerLevel l,SettlementData.Entry e,Settlement.Building b){RELIEVED.put(e.settlement().id(),teams(l,e,b)>0&&!WarehouseTrips.couriersBusy(l,e,b));}
+ /** Warehouses.tick: an established wolf trip, or a ready wolf already at its usable hitch, replaces the courier.
+  *  A free wolf alone is only capacity; no courier is unposted while its parcel or trip remains active (CF-M). */
+ static void update(ServerLevel l,SettlementData.Entry e,Settlement.Building b){
+  boolean service=alone(l,e,b)&&(WarehouseTrips.wolfService(l,e,b)||ready(l,e,WarehouseCarts.free(l,e,b,null))||ready(l,e,WarehouseCarts.stranded(l,e,b)));
+  RELIEVED.put(e.settlement().id(),service&&!WarehouseTrips.couriersBusy(l,e,b));}
+ private static boolean ready(ServerLevel l,SettlementData.Entry e,CartEntity cart){return cart!=null&&VillageDogs.available(l,e).stream().anyMatch(wolf->VillageDogs.pickupReady(l,e,wolf,cart));}
  /** Tests: forget a village's flag. */
  public static void forget(UUID settlement){RELIEVED.remove(settlement);}
 }

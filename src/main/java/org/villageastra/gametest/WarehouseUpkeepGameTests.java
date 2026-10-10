@@ -36,7 +36,8 @@ public final class WarehouseUpkeepGameTests {
  /** CF-M: while the wolves carry, the posts close; a courier still posted takes no new parcel or trip (it would be unposted with it). */
  @GameTest(template="empty",batch="warehouse_upkeep_relieved",timeoutTicks=200) public static void aRelievedCourierTakesNothingNew(GameTestHelper h){
   var v=village(h,6);research(v,6);VillageDogs.provide(new WarehouseWolvesGameTests.Kennel(1));
-  try{for(int i=0;i<4;i++)put(v.pit(),new ItemStack(Items.COBBLESTONE,64));
+  put(v.stock(),new ItemStack(VillageAstra.CART_ITEM.get()));
+  withCarts(h,v,1,40,()->{try{for(int i=0;i<4;i++)put(v.pit(),new ItemStack(Items.COBBLESTONE,64));
    var courier=adult(v,"courier",Profession.PORTER,v.kept());var c=body(v,courier,new BlockPos(16,0,4));
    Warehouses.tick(v.l(),v.e(),1);
    h.assertTrue(CartWolves.relieved(v.s().id())&&Population.slots(v.s(),v.kept())==0,"The wolves carry: the courier posts close");
@@ -45,7 +46,7 @@ public final class WarehouseUpkeepGameTests {
    Population.assign(v.e());
    h.assertTrue(!WarehouseTrips.courier(v.e(),courier.id()),"The labour office unposts it empty-handed");
   }finally{VillageDogs.provide(VillageWolves.DOGS);done(v);}
-  h.succeed();
+  h.succeed();});
  }
  /** CF-K: a courier going for a stranded cart claims it at once - a second courier does not go for the same cart. */
  @GameTest(template="empty",batch="warehouse_upkeep_stranded",timeoutTicks=400) public static void aStrandedCartIsClaimedOnce(GameTestHelper h){
