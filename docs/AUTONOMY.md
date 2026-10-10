@@ -580,3 +580,8 @@ Workers now calculate current fuel deliveries from actual burn time. A400-tick s
 Human warehouse couriers keep working until a wolf can actually take over at its cart or has begun a supported delivery. Cargo already carried by a resident keeps that resident assigned. Sent wolves now recalculate their route after elapsed ticks, avoiding a scheduling case that could prevent movement entirely.
 
 Both integrated copies passed31 native checks and166 fresh unit tests. Tests include physical deliveries on both ordinary scheduling parities, exact original warehouse deposits and repeated receipt recovery. These are prepared scenarios; the same natural village still needs to load this update and complete its growth.
+
+
+### Continuing village: source43
+
+The same saved village now runs the verified fuel-batch and warehouse-delivery fixes; all 1983 frozen runtime files match the tested build. Its restaurant is built and has produced bread from real inputs. The next home has303/419 materials, with civilizationI and18/115 research. Maximum autonomous development remains unverified.

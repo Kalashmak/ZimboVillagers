@@ -1,0 +1,48 @@
+{
+  "source_commit": "2d71520b9d1ce5ad49b8607a66751546a7d4aa56",
+  "world": "run-client-1/saves/astra-smoke-1791497240499",
+  "village": "abc410b1-9886-3cdc-9a40-2fe05d031039",
+  "resume_observed_ticks": 14470206,
+  "runtime_manifest": "docs/runs/full-growth-fresh5-runtime-segment43-20261009.json",
+  "runtime_files": 1983,
+  "pid": 29856,
+  "session": 90966,
+  "closed_previous": {
+    "log": "docs/runs/full-growth-fresh5-segment42-20261009-saved.log",
+    "sha256": "fb10d882999aacf9faeacf6e54e081ef318a9b448b965c81e6e5817efad6e49d",
+    "last_sample": [
+      "14468246",
+      "1",
+      "18"
+    ],
+    "normal_exit": true,
+    "all_dimensions_saved": true,
+    "full_acceptance": false,
+    "source_commit": "83be60fa53dd03ce46e656d37ec2651181a8f29d",
+    "checkpoint": "build/checkpoints/full-growth-fresh5-segment42-20261009"
+  },
+  "last_observation": [
+    "14479324",
+    "1",
+    "18",
+    "home",
+    "false",
+    "false",
+    "0/466"
+  ],
+  "loaded_changes": [
+    "AD479 fuel batches by actual burn time and already paid fuel bank",
+    "AD476 real wolf replacement service before releasing warehouse couriers",
+    "AD478 sent-wolf replanning on either ordinary scheduling parity"
+  ],
+  "tested_public_commit": "9e6937f0137b50774d83659ae75bf10fddfe6ca7",
+  "closed_world": {
+    "saved_absolute_ticks": 14478115,
+    "alive": 12,
+    "historical_dead": 2
+  },
+  "maximum_verified": false,
+  "live_log_hashed": false,
+  "release_binary_updated": false,
+  "verification_note": "Direct Source42 JVM exited0 and saved all dimensions. Segment-only probe wrapper exited1 because it does not contain the starter baseline and maximum progression remains incomplete; this is not a successful full autonomy verdict. The ordered chain must be evaluated as a whole."
+}
